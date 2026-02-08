@@ -30,7 +30,7 @@ rust-porting-playbook/
 │   ├── python-to-rust-porting-guide.md
 │   ├── rust-cli-best-practices.md
 │   ├── rust-code-review-checklist.md
-│   ├── test-coverage-playbook.md
+│   ├── python-to-rust-test-coverage-playbook.md
 │   ├── port-checklist-initial-template.md
 │   └── port-checklist-update-template.md
 ├── guidelines/                # Compact rules for AI agent context (~2-3k tokens each)
@@ -119,7 +119,7 @@ strategies, and a meta-analysis of what can be automated in porting workflows.
 | [python-to-rust-porting-guide.md](reference/python-to-rust-porting-guide.md) | Detailed methodology with pitfalls and automation scripts |
 | [rust-cli-best-practices.md](reference/rust-cli-best-practices.md) | Modern Rust CLI project setup (CI, linting, releases, tooling) |
 | [rust-code-review-checklist.md](reference/rust-code-review-checklist.md) | Code review checklist for Rust ports |
-| [test-coverage-playbook.md](reference/test-coverage-playbook.md) | Pre-port test coverage strategy and tooling |
+| [python-to-rust-test-coverage-playbook.md](reference/python-to-rust-test-coverage-playbook.md) | Pre-port test coverage strategy and tooling |
 | [port-checklist-initial-template.md](reference/port-checklist-initial-template.md) | 10-phase checklist template (copy and fill in) |
 | [port-checklist-update-template.md](reference/port-checklist-update-template.md) | Ongoing sync checklist template |
 
