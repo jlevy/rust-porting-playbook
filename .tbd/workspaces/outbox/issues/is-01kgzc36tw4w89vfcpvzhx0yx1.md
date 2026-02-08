@@ -11,7 +11,7 @@ priority: 2
 status: closed
 title: Review case-studies/flowmark/flowmark-port-library-choices.md
 type: is
-updated_at: 2026-02-08T19:59:32.925Z
-version: 2
+updated_at: 2026-02-08T23:39:44.198Z
+version: 3
 ---
 Review library evaluation methodology, tier criteria, 5-step process, comrak vs pulldown-cmark vs markdown-rs decision, consequences, lessons learned, strategy matrix. Fact-check library claims.

@@ -11,7 +11,7 @@ priority: 2
 status: closed
 title: Review guidelines/python-to-rust-cli-porting.md
 type: is
-updated_at: 2026-02-08T19:58:30.444Z
-version: 2
+updated_at: 2026-02-08T23:39:44.100Z
+version: 3
 ---
 Review argparse/typer/click to clap mappings, flag parity, I/O parity, cross-validation methodology, version tracking, CLI parity acceptance criteria. Fact-check technical details.

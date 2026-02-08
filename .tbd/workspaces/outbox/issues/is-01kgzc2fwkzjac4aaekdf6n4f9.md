@@ -11,7 +11,7 @@ priority: 2
 status: closed
 title: Review reference/python-to-rust-mapping-reference.md
 type: is
-updated_at: 2026-02-08T19:59:00.700Z
-version: 2
+updated_at: 2026-02-08T23:39:44.145Z
+version: 3
 ---
 Exhaustive review of type/construct mappings: primitives, collections, control flow, error handling, functions/closures, mutability, decorators, modules, type hints. Verify every Python→Rust mapping for correctness. Check code examples compile.

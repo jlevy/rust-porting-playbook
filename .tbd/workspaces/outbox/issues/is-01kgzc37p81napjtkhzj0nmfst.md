@@ -11,7 +11,7 @@ priority: 2
 status: closed
 title: Review case-studies/flowmark/flowmark-port-migration-plan.md
 type: is
-updated_at: 2026-02-08T19:59:33.779Z
-version: 2
+updated_at: 2026-02-08T23:39:44.211Z
+version: 3
 ---
 Review migration plan: 10-100x perf claims, single-process approach, markdown library feature parity, comrak selection justification. Fact-check performance claims and library feature comparisons.

@@ -11,7 +11,7 @@ priority: 2
 status: closed
 title: Review guidelines/rust-project-setup.md
 type: is
-updated_at: 2026-02-08T19:58:31.712Z
-version: 2
+updated_at: 2026-02-08T23:39:44.122Z
+version: 3
 ---
 Review Cargo.toml setup, library+binary pattern, workspace guidance, release profile, lint config approaches, CI/CD with GitHub Actions, MSRV testing, security auditing, release workflow, dev tools, docs. Fact-check all config values.
