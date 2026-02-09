@@ -168,20 +168,21 @@ fn write_with_backup(path: &Path, content: &str, backup_ext: &str) -> Result<()>
 
 ### Main Function Pattern
 
+Let `color_eyre` handle error reporting -- return `Result` from `main()` and use `?`
+throughout. Do not mix `Result` returns with manual `eprintln!`/`process::exit()`.
+
 ```rust
 fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
     let args = Args::parse();
     setup_logging(args.verbose)?;
-
-    // Run and handle errors
-    if let Err(e) = run(&args) {
-        eprintln!("error: {e}");
-        std::process::exit(1);
-    }
+    run(&args)?;
     Ok(())
 }
 ```
+
+> **Note:** `color-eyre` is in maintenance mode. For simpler applications, `anyhow` is an
+> actively maintained alternative.
 
 ### Exit Codes
 
@@ -316,6 +317,7 @@ This allows `flowmark` to be used as a library without pulling in CLI dependenci
 
 When the Rust CLI is a port of a Python CLI, show both versions:
 ```rust
+// PYTHON_SOURCE_VERSION set by build.rs — see reference/python-to-rust-porting-guide.md
 const VERSION_INFO: &str = concat!(
     env!("CARGO_PKG_VERSION"),
     " (port of python-project ",
@@ -351,6 +353,46 @@ Use `build.rs` to extract the Python version from a git submodule at compile tim
 
 For golden testing patterns, see `tbd guidelines golden-testing-guidelines`.
 For general testing rules, see `tbd guidelines general-testing-rules`.
+
+## Additional Patterns
+
+### SIGPIPE Handling
+
+Rust ignores SIGPIPE by default, causing "broken pipe" errors when piped to `head`, `less`, etc.
+
+```rust
+// At the start of main():
+#[cfg(unix)]
+unsafe {
+    libc::signal(libc::SIGPIPE, libc::SIG_DFL);
+}
+```
+
+Requires `libc` dependency. This restores Unix default behavior where writing to a closed pipe
+terminates quietly.
+
+### Shell Completions
+
+Use `clap_complete` to generate shell completion scripts for bash, zsh, fish, etc.
+
+### Exit Codes
+
+Prefer `fn main() -> ExitCode` over `process::exit()` -- it allows destructors to run and is
+cleaner:
+
+```rust
+use std::process::ExitCode;
+
+fn main() -> ExitCode {
+    match run() {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("error: {e}");
+            ExitCode::FAILURE
+        }
+    }
+}
+```
 
 ## Related Guidelines
 

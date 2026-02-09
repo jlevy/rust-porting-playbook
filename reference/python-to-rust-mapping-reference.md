@@ -28,9 +28,9 @@ code examples for each mapping. Use this as a lookup reference during porting.
 | --- | --- | --- |
 | `list[T]` | `Vec<T>` | |
 | `tuple[A, B, C]` | `(A, B, C)` | Named struct if >3 fields |
-| `dict[K, V]` | `HashMap<K, V>` | `BTreeMap` for sorted |
+| `dict[K, V]` | `HashMap<K, V>` | **No insertion order!** Use `indexmap::IndexMap` if order matters |
 | `set[T]` | `HashSet<T>` | `BTreeSet` for sorted |
-| `frozenset` | `HashSet<T>` (immutable by default) | |
+| `frozenset` | `HashSet<T>` | Immutability via `let` binding, not the type. For use as hash key, need newtype implementing Hash |
 | `deque` | `VecDeque<T>` | |
 | `defaultdict(list)` | `HashMap<K, Vec<V>>` + `.entry().or_default()` | |
 | `Counter` | `HashMap<T, usize>` | |
@@ -45,10 +45,10 @@ code examples for each mapping. Use this as a lookup reference during porting.
 | `Union[A, B]` | `enum { A(A), B(B) }` | |
 | `Any` | Generics or `Box<dyn Trait>` | Avoid if possible |
 | `TypeVar('T')` | `<T>` generics | |
-| `Protocol` | `trait` | |
-| `TypedDict` | Struct with `serde::Deserialize` | |
+| `Protocol` | `trait` | Rust traits are nominal -- must write explicit `impl Trait for Type` |
+| `TypedDict` | Struct with named fields | Add serde derives only if deserializing from data formats |
 | `Literal["a", "b"]` | `enum { A, B }` | |
-| `Callable[[A], B]` | `Fn(A) -> B` | With trait bounds |
+| `Callable[[A], B]` | `Fn(A) -> B` / `FnMut` / `FnOnce` | `Fn` -- no mutation of captures, callable repeatedly (most Python callbacks). `FnMut` -- mutates captures. `FnOnce` -- consumes captures, callable once |
 
 ## Control Flow
 
@@ -90,7 +90,7 @@ match command:
 
 ```rust
 // Rust
-match command {
+match command.as_str() { // .as_str() needed for String; &str can match directly
     "quit" => exit(),
     "hello" => greet(),
     _ => unknown(),
@@ -106,7 +106,7 @@ match command {
 | `for x in range(10):` | `for x in 0..10 {` |
 | `while condition:` | `while condition {` |
 | `break` / `continue` | `break` / `continue` |
-| `for/else` | No direct equivalent -- use flag variable |
+| `for/else` | No direct equivalent -- use `if let Some(item) = iter.find(\|x\| cond(x)) { ... } else { ... }` |
 
 ### Comprehensions to Iterators
 
@@ -145,7 +145,55 @@ let d: HashMap<_, _> = pairs.iter()
 | `raise` (re-raise) | `return Err(e)` or just `?` | |
 | `finally:` | `Drop` trait / scope guards | |
 | `with context_manager:` | Scope + `Drop` / closure patterns | |
-| `assert x == y` | `debug_assert_eq!(x, y)` | Not for production checks |
+| `assert x == y` | `assert_eq!(x, y)` | `debug_assert_eq!` only for hot-path invariants |
+
+### Context Managers to RAII
+
+Python's `with` statement maps to Rust's RAII (Resource Acquisition Is Initialization) pattern,
+where resources are cleaned up when they go out of scope via the `Drop` trait.
+
+| Python | Rust | Notes |
+| --- | --- | --- |
+| `with open(f) as fh:` | `let content = std::fs::read_to_string(path)?;` | For simple read-all; or use `{ let file = File::open(path)?; ... }` (RAII scope) |
+| `with lock:` | `let _guard = mutex.lock().unwrap();` | Guard released on scope exit |
+| `@contextmanager` generator | `impl Drop` for cleanup | Or closure-based API: `with_resource(\|r\| { ... })` |
+| `__enter__` / `__exit__` | `impl Drop` | `Drop::drop()` called automatically at scope end |
+
+```python
+# Python
+with open("data.txt") as f:
+    content = f.read()
+    process(content)
+# file closed here
+```
+
+```rust
+// Rust: simple case -- just read the file
+let content = std::fs::read_to_string("data.txt")?;
+process(&content);
+
+// Rust: RAII scope when you need the file handle
+{
+    let mut file = File::open("data.txt")?;
+    let mut content = String::new();
+    file.read_to_string(&mut content)?;
+    process(&content);
+} // file closed here (Drop called)
+```
+
+```python
+# Python: lock
+with lock:
+    shared_data.append(item)
+```
+
+```rust
+// Rust: Mutex guard
+{
+    let mut data = mutex.lock().unwrap();
+    data.push(item);
+} // lock released here (guard dropped)
+```
 
 ### Error Propagation
 
@@ -200,7 +248,7 @@ fn process(path: &Path) -> Result<Data> {
 | `s.startswith(p)` | `s.starts_with(p)` | |
 | `s.endswith(p)` | `s.ends_with(p)` | |
 | `s.upper()` / `s.lower()` | `s.to_uppercase()` / `s.to_lowercase()` | |
-| `s.find(sub)` | `s.find(sub)` | Returns `Option<usize>` |
+| `s.find(sub)` | `s.find(sub)` | Returns `Option<usize>`. **Returns byte offset, not char index!** Different for non-ASCII |
 | `s[start:end]` | `&s[start..end]` | **Panics if not char boundary!** |
 | `len(s)` | `s.len()` (bytes) / `s.chars().count()` (chars) | Different! |
 | `f"hello {name}"` | `format!("hello {name}")` | |
@@ -211,10 +259,10 @@ fn process(path: &Path) -> Result<Data> {
 | Python | Rust | Notes |
 | --- | --- | --- |
 | `re.compile(pattern)` | `Regex::new(pattern)?` | Use `LazyLock` for statics |
-| `re.match(pattern, s)` | `regex.is_match(s)` | **Add `^` anchor!** |
+| `re.match(pattern, s)` | `regex.is_match(s)` / `regex.captures(s)` | **Add `^` anchor!** Use `captures()` when match groups are accessed |
 | `re.search(pattern, s)` | `regex.find(s)` | |
 | `re.sub(pattern, repl, s)` | `regex.replace_all(s, repl)` | |
-| `re.findall(pattern, s)` | `regex.find_iter(s).collect()` | |
+| `re.findall(pattern, s)` | `regex.find_iter(s).map(\|m\| m.as_str()).collect::<Vec<_>>()` | `find_iter()` returns `Match` objects, not strings |
 | `match.group(0)` | `m.as_str()` | |
 | `match.group(1)` | `caps.get(1).map(\|m\| m.as_str())` | |
 | Look-ahead/behind | Use `fancy-regex` crate | Not in standard `regex` |
@@ -282,6 +330,179 @@ impl Animal for Dog {
 }
 ```
 
+### Dunder Methods to Rust Traits
+
+| Python Dunder | Rust Equivalent | Notes |
+| --- | --- | --- |
+| `__str__()` | `impl fmt::Display` | Used by `format!`, `println!` |
+| `__repr__()` | `#[derive(Debug)]` | Used by `{:?}` format |
+| `__eq__()`/`__ne__()` | `#[derive(PartialEq)]` | Add `Eq` if no floating-point fields |
+| `__hash__()` | `#[derive(Hash)]` | Requires `PartialEq + Eq` |
+| `__lt__()` etc. | `impl PartialOrd` / `#[derive(Ord)]` | `Ord` requires `Eq` |
+| `__len__()` | `.len()` method | No standard trait; convention only |
+| `__iter__()` + `__next__()` | `impl Iterator` | Must define `type Item` |
+| `__getitem__()` | `impl Index<Idx>` | Returns reference, not owned value |
+| `__add__()` etc. | `impl Add` from `std::ops` | One trait per operator |
+| `__enter__()`/`__exit__()` | `impl Drop` + RAII scope | See context managers below |
+| `__contains__()` | `.contains()` method | No standard trait; convention only |
+| `__bool__()` | No standard trait | Use explicit `.is_empty()` or method |
+
+### Generators to Iterators
+
+Python generators map to Rust iterators, but require explicit state management.
+
+**Simple generator (stateless):**
+
+```python
+# Python
+def evens(n):
+    for i in range(n):
+        if i % 2 == 0:
+            yield i
+```
+
+```rust
+// Rust: using std::iter::from_fn for simple one-off cases
+fn evens(n: usize) -> impl Iterator<Item = usize> {
+    let mut i = 0;
+    std::iter::from_fn(move || {
+        while i < n {
+            let current = i;
+            i += 1;
+            if current % 2 == 0 {
+                return Some(current);
+            }
+        }
+        None
+    })
+}
+```
+
+**Stateful generator -- struct implementing `Iterator`:**
+
+```python
+# Python
+def fibonacci():
+    a, b = 0, 1
+    while True:
+        yield a
+        a, b = b, a + b
+```
+
+```rust
+// Rust
+struct Fibonacci { a: u64, b: u64 }
+
+impl Fibonacci {
+    fn new() -> Self { Self { a: 0, b: 1 } }
+}
+
+impl Iterator for Fibonacci {
+    type Item = u64;
+    fn next(&mut self) -> Option<Self::Item> {
+        let result = self.a;
+        (self.a, self.b) = (self.b, self.a + self.b);
+        Some(result)
+    }
+}
+```
+
+**Note:** `gen` blocks are a reserved keyword in Edition 2024 and an experimental feature.
+When stabilized, they will allow Python-like `yield` syntax in Rust.
+
+### Dataclasses to Structs with Derives
+
+| Python `@dataclass` | Rust Equivalent | Notes |
+| --- | --- | --- |
+| `@dataclass` | `#[derive(Debug, Clone, PartialEq)]` | Closest equivalent derives |
+| `frozen=True` | No `&mut self` methods | Immutability enforced by API design, not annotation |
+| `order=True` | `#[derive(PartialOrd, Ord)]` | Requires `Eq` |
+| `field(default=...)` | `impl Default` or `#[derive(Default)]` | |
+
+```python
+# Python
+@dataclass(frozen=True, order=True)
+class Point:
+    x: float
+    y: float
+    label: str = "origin"
+```
+
+```rust
+// Rust
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
+pub struct Point {
+    pub x: f64,
+    pub y: f64,
+    pub label: String,
+}
+
+impl Default for Point {
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0, label: "origin".to_string() }
+    }
+}
+```
+
+### Python Enums to Rust Enums
+
+| Python | Rust | Notes |
+| --- | --- | --- |
+| `class Color(Enum):` | `enum Color { ... }` | |
+| `Color.RED` | `Color::Red` | Rust uses CamelCase variants |
+| `Color(1)` (by value) | Custom `from_value()` method | No built-in value lookup |
+| `color.name` | Use `strum` crate `Display` derive | `#[derive(strum::Display)]` |
+| `Color["RED"]` (by name) | Use `strum` crate `EnumString` derive | `#[derive(strum::EnumString)]` |
+| `auto()` | Explicit variants | No auto-numbering |
+
+```python
+# Python
+from enum import Enum
+
+class Color(Enum):
+    RED = "red"
+    GREEN = "green"
+    BLUE = "blue"
+```
+
+```rust
+// Rust (with strum for Display/FromStr)
+use strum::{Display, EnumString};
+
+#[derive(Debug, Clone, Copy, PartialEq, Display, EnumString)]
+pub enum Color {
+    #[strum(serialize = "red")]
+    Red,
+    #[strum(serialize = "green")]
+    Green,
+    #[strum(serialize = "blue")]
+    Blue,
+}
+```
+
+### Async Patterns
+
+| Python | Rust | Notes |
+| --- | --- | --- |
+| `async def foo()` | `async fn foo()` | |
+| `await bar()` | `bar().await` | Postfix syntax in Rust |
+| `asyncio.run(main())` | `#[tokio::main]` on `async fn main()` | Requires `tokio` runtime |
+| `asyncio.gather(a, b)` | `tokio::join!(a, b)` | |
+| `asyncio.create_task(coro)` | `tokio::spawn(future)` | Returns `JoinHandle` |
+| `async for item in aiter:` | `while let Some(item) = stream.next().await {` | Requires `tokio-stream` or `futures` |
+| `async with resource:` | Scope + `.await` on cleanup | No async Drop |
+
+### Parallelism Patterns
+
+| Python | Rust | Notes |
+| --- | --- | --- |
+| `multiprocessing.Pool.map(f, items)` | `items.par_iter().map(f).collect()` | `rayon` crate; data parallelism |
+| `threading.Thread(target=f)` | `std::thread::spawn(f)` | OS-level threads |
+| `concurrent.futures.ThreadPoolExecutor` | `rayon::ThreadPool` or `tokio::spawn` | `rayon` for CPU, `tokio` for I/O |
+| `concurrent.futures.ProcessPoolExecutor` | `rayon::ThreadPool` | Rust threads share memory; no process isolation needed |
+| `queue.Queue` | `std::sync::mpsc::channel()` | Or `crossbeam::channel` for multi-producer |
+| `threading.Lock` | `std::sync::Mutex<T>` | Mutex wraps data in Rust, not code |
+
 ## Testing
 
 | Python | Rust | Notes |
@@ -292,9 +513,9 @@ impl Animal for Dog {
 | `assert x` | `assert!(x)` | |
 | `with pytest.raises(E):` | `#[should_panic]` or `assert!(result.is_err())` | |
 | `@pytest.mark.skip` | `#[ignore]` | |
-| `@pytest.fixture` | Setup in test function or `once_cell` | |
+| `@pytest.fixture` | Setup in test function or `std::sync::LazyLock` | |
 | `@pytest.mark.parametrize` | `rstest` crate or macro-generated tests | |
-| `pytest.approx(x)` | `(x - y).abs() < epsilon` | |
+| `pytest.approx(x)` | `(x - y).abs() < epsilon` | Or use `approx` crate: `assert_relative_eq!`, `assert_abs_diff_eq!` |
 
 ## Packaging
 
@@ -336,8 +557,8 @@ the specific equivalences and pitfalls.
 | Python | Rust (Cargo) | Semantics |
 | --- | --- | --- |
 | `>=1.0,<2.0` | `">=1.0, <2.0"` | Exact range (same) |
-| `~=1.4` | `"~1.4"` | Compatible release (roughly the same) |
-| `==1.4.*` | `"1.4"` | Cargo's default `^` is "compatible with" |
+| `~=1.4` | `"^1.4"` | Compatible release (>=1.4, <2.0); caret is Cargo default |
+| `==1.4.*` | `"~1.4"` | Exact minor (>=1.4, <1.5); tilde in Cargo |
 | `>=1.4` | `">=1.4"` | Minimum version (same) |
 | `==1.4.0` | `"=1.4.0"` | Exact pin (note single `=` in Cargo) |
 | No default | `"1.4"` means `^1.4` (>=1.4.0, <2.0.0) | Cargo's default is permissive semver-compatible |
@@ -417,7 +638,7 @@ of Python type checkers entirely. There is no "gradually typed" -- it's all chec
 | `pytest-cov` / `coverage.py` | `cargo-tarpaulin` / `cargo-llvm-cov` | |
 | `pytest --cov --branch` | `cargo tarpaulin --branch` / `cargo llvm-cov --branch` | Branch coverage |
 | `pytest.fixture` (function-scoped) | Setup code in test function | No fixture injection |
-| `pytest.fixture` (module/session-scoped) | `LazyLock` / `once_cell` for shared state | |
+| `pytest.fixture` (module/session-scoped) | `std::sync::LazyLock` for shared state | |
 | `@pytest.mark.parametrize` | `rstest` crate | |
 | `@pytest.mark.skip` / `@pytest.mark.skipif` | `#[ignore]` | No conditional skip; use `#[cfg]` |
 | `@pytest.mark.xfail` | No direct equivalent | Test expected failures manually |
@@ -550,9 +771,9 @@ sections. Rust distributes config across separate files (`rustfmt.toml`, `deny.t
 
 | Python Package | Rust Crate | Quality | Notes |
 | --- | --- | --- | --- |
-| marko (Markdown) | comrak 0.47 | Good with workarounds | 12/15 differences worked around |
+| marko (Markdown) | comrak 0.50+ | Good with workarounds | 12/15 differences worked around; check for API changes in 0.50+ |
 | argparse | clap 4.5 (derive) | Excellent | Perfect mapping |
-| PyYAML | serde_yaml 0.9 | Good | Used for config/frontmatter |
+| PyYAML | serde_yaml_ng 0.10+ | Good | serde_yaml is archived |
 | re (regex) | regex 1.10 | Excellent | Different anchoring! |
 | textwrap | textwrap (crate) | Good | Also rolled custom for special cases |
 | pytest | cargo test (built-in) | Excellent | |

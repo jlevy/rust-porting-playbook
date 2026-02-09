@@ -203,7 +203,7 @@ Practices](rust-cli-best-practices.md)
 
   - [ ] Minimize allocations in hot paths
 
-  - [ ] Use lazy static regex patterns (`once_cell::sync::Lazy`)
+  - [ ] Use lazy static regex patterns (`std::sync::LazyLock`)
 
   - [ ] Consider `rayon` for parallel processing if applicable
 

@@ -28,6 +28,15 @@ For general coding rules (language-agnostic), see `tbd guidelines general-coding
 
 - Test MSRV compliance in CI with an explicit toolchain install.
 
+### Edition 2024 Key Changes (Rust 1.85+)
+
+- **`gen` is a reserved keyword** — rename any variables named `gen` (common in Python ports)
+- **`unsafe_op_in_unsafe_fn` is deny-by-default** — unsafe operations inside `unsafe fn` must be wrapped in `unsafe {}` blocks
+- **RPIT lifetime captures** — return-position `impl Trait` captures all in-scope lifetimes by default (may need `+ use<'a>` to restrict)
+- **`static mut` is soft-deprecated** — use `std::sync::Mutex`, `AtomicT`, or `LazyLock` instead
+- **Let chains** — `if let Some(x) = a && x > 0 { ... }` is now stable
+- **Resolver v3** — MSRV-aware dependency resolution; use `resolver = "3"` in workspace `Cargo.toml`
+
 ## Ownership and Borrowing
 
 - **Accept `&str` over `String`** in function parameters when you only need to read.
@@ -77,6 +86,8 @@ For general coding rules (language-agnostic), see `tbd guidelines general-coding
   ```
 
 - **Use `color-eyre` or `anyhow`** in binary crates for ergonomic error propagation.
+  Note: `color-eyre` 0.6 is in maintenance mode (no active feature development). Still
+  functional and widely used, but consider `anyhow` for simpler needs.
 
 - **Only use `Result` when the Python equivalent can raise.** When porting, if the
   Python function never raises, don't wrap in Result -- match the behavior exactly.
@@ -108,7 +119,7 @@ For more on error handling, see `tbd guidelines error-handling-rules`.
 
 ## Regex
 
-- **Use `LazyLock` (stable since Rust 1.80)** for compiled regex. Older code may use `once_cell::sync::Lazy`:
+- **Use `LazyLock` (stable since Rust 1.80)** for compiled regex. Remove the `once_cell` dependency if present — `LazyLock` fully replaces `once_cell::sync::Lazy` and is part of `std`:
   ```rust
   use std::sync::LazyLock;
   use regex::Regex;
@@ -132,7 +143,9 @@ For more on error handling, see `tbd guidelines error-handling-rules`.
 
 - **Prefer enums over booleans** for function parameters:
   ```rust
-  enum LineBreakMode { Sentence, Width, None }
+  // AVOID: `None` as a variant name — it shadows `Option::None` and causes confusing
+  // compiler errors. Use `Off`, `NoBreaks`, etc. instead.
+  enum LineBreakMode { Sentence, Width, Off }
   // NOT: fn format(text: &str, sentence_breaks: bool, width_breaks: bool)
   ```
 

@@ -104,7 +104,7 @@ Based on:
 ### Consequences
 
 - **Good:** Full feature coverage from day one. No missing features blocked development.
-- **Bad:** 15 behavioral differences with Python's marko discovered during testing. 50%
+- **Bad:** 17 behavioral differences with Python's marko discovered during testing. 50%
   of total effort spent on workarounds.
 - **Unfixable:** 3 issues due to hardcoded behavior (footnote positioning, list marker
   normalization, hyphen escape removal).

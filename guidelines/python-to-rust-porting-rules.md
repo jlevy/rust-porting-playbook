@@ -7,15 +7,17 @@ description: General patterns, type mappings, and pitfalls for porting Python ap
 Rules and patterns for systematically porting Python applications to Rust. Focuses on
 maintaining exact behavioral parity through test-driven porting.
 
-For CLI-specific porting patterns, see `tbd guidelines python-to-rust-cli-porting`.
-For Rust general rules, see `tbd guidelines rust-general-rules`.
-For Python rules, see `tbd guidelines python-rules`.
-For test coverage strategy, see `tbd guidelines test-coverage-for-porting`.
+For CLI-specific porting patterns, see `tbd guidelines python-to-rust-cli-porting (guidelines/python-to-rust-cli-porting.md)`.
+For Rust general rules, see `tbd guidelines rust-general-rules (guidelines/rust-general-rules.md)`.
+For Python rules, see `tbd guidelines python-rules (guidelines/python-rules.md)`.
+For test coverage strategy, see `tbd guidelines test-coverage-for-porting (guidelines/test-coverage-for-porting.md)`.
 
 ## Core Principles
 
 1. **Tests are the specification.** The Python test suite defines exactly what the Rust
-   port must do. Byte-for-byte output matching is the acceptance criterion.
+   port must do. Byte-for-byte output matching is the *goal*; any deviation must be
+   explicitly documented, justified, and tracked. (See Strategy Matrix for handling
+   unavoidable differences.)
 
 2. **Port behavior, not implementation.** Don't translate Python idioms literally into
    Rust. Achieve the same behavior using idiomatic Rust patterns.
@@ -40,13 +42,14 @@ For test coverage strategy, see `tbd guidelines test-coverage-for-porting`.
 | `bool` | `bool` | |
 | `None` | `Option<T>` | Never use sentinel values |
 | `bytes` | `Vec<u8>` / `&[u8]` | |
+| `str` (sometimes modified) | `Cow<'_, str>` | Avoids allocation when input unchanged |
 
 ### Collections
 
 | Python | Rust | Notes |
 | --- | --- | --- |
 | `list[T]` | `Vec<T>` | |
-| `dict[K, V]` | `HashMap<K, V>` | Or `BTreeMap` for sorted keys |
+| `dict[K, V]` | `HashMap<K, V>` | **No insertion order!** Use IndexMap if order matters |
 | `set[T]` | `HashSet<T>` | Or `BTreeSet` for sorted |
 | `tuple[A, B]` | `(A, B)` | Named struct if >3 elements |
 | `deque` | `VecDeque<T>` | |
@@ -66,7 +69,9 @@ For test coverage strategy, see `tbd guidelines test-coverage-for-porting`.
 | --- | --- | --- |
 | `try / except` | `Result<T, E>` with `?` | |
 | `raise ValueError(...)` | `return Err(Error::Validation(...))` | |
-| `assert` | `debug_assert!` or explicit checks | |
+| `assert` (invariant check) | `debug_assert!` | Only for debug-only invariants in hot paths |
+| `assert` (validation) | `assert!` or explicit `Result`-based check | Default for porting |
+| Exception classes | `thiserror` (library) / `anyhow` (binary) | Standard error handling |
 | Functions that never raise | Return `T` directly, NOT `Result<T>` | Match Python exactly |
 
 **Critical rule:** If the Python function never raises an exception, the Rust function
@@ -133,7 +138,7 @@ pub fn fill_markdown(text: &str, config: &Config) -> Result<String> {
 | Python | Rust | Quality | Notes |
 | --- | --- | --- | --- |
 | argparse / click / typer | clap | Excellent | Use derive API |
-| PyYAML | serde_yaml | Good | Check maintenance status |
+| PyYAML | serde_yaml_ng | Good | serde_yaml is archived; use serde_yaml_ng 0.10+ |
 | json | serde_json | Excellent | |
 | re | regex | Excellent | Different anchoring behavior! |
 | re (look-arounds) | fancy-regex | Good | Only when needed |
@@ -142,9 +147,13 @@ pub fn fill_markdown(text: &str, config: &Config) -> Result<String> {
 | textwrap | textwrap (crate) | Good | Or roll your own |
 | pytest | cargo test (built-in) | Excellent | |
 | typing | Rust type system | Built-in | |
-| dataclasses | struct + derive macros | Built-in | |
+| dataclasses | struct + derive macros | Built-in | Minimum: `#[derive(Debug, Clone, PartialEq)]`; add `Eq`, `Hash`, `Serialize`, `Deserialize` as needed |
 | abc (ABCs) | traits | Built-in | |
 | marko (Markdown) | comrak / pulldown-cmark | Varies | See parser selection guide |
+| logging | tracing / log | Excellent | tracing is preferred for new code |
+| asyncio | tokio | Excellent | De facto async runtime |
+| threading | std::thread / rayon | Excellent | rayon for data parallelism |
+| subprocess | std::process::Command | Excellent | stdlib |
 
 ### Library Evaluation Checklist
 
@@ -182,18 +191,29 @@ For each Python module:
 
 ### 1. Regex Anchoring
 
-Python `re.match()` anchors to start; Rust `is_match()` matches anywhere:
+Python and Rust regex have different anchoring behavior. All three Python regex
+functions need careful translation:
+
+- `re.match(pat)` -- anchors to start of string. Prepend `^` (or `\A` for multiline safety).
+- `re.search(pat)` -- matches anywhere. Use pattern as-is (both are unanchored).
+- `re.fullmatch(pat)` -- matches entire string. Wrap with `^...$` (or `\A...\z`).
+
 ```python
-# Python -- matches only at start
-re.match(r"\w+", "$hello")  # None
+# Python
+re.match(r"\w+", "$hello")      # None (anchored to start)
+re.search(r"\w+", "$hello")     # Match (anywhere)
+re.fullmatch(r"\w+", "hello")   # Match (entire string)
 ```
 ```rust
-// Rust -- matches anywhere unless anchored
-Regex::new(r"\w+").unwrap().is_match("$hello")  // true!
-Regex::new(r"^\w+").unwrap().is_match("$hello") // false (correct)
+// Rust -- all unanchored by default, must add anchors explicitly
+Regex::new(r"\w+").unwrap().is_match("$hello")      // true! (wrong for re.match)
+Regex::new(r"^\w+").unwrap().is_match("$hello")      // false (correct for re.match)
+Regex::new(r"\w+").unwrap().is_match("$hello")       // true (correct for re.search)
+Regex::new(r"^\w+$").unwrap().is_match("hello")      // true (correct for re.fullmatch)
 ```
 
-**Rule:** Add `^` to EVERY pattern used with Python `re.match()`.
+**Rule:** Add `^` to EVERY pattern used with Python `re.match()`. Wrap with `^...$`
+for `re.fullmatch()`. Use `\A`/`\z` instead of `^`/`$` when multiline mode is active.
 
 ### 2. String Preservation
 
@@ -241,19 +261,18 @@ let ch = text.chars().nth(5);
 
 Library types are version-dependent. Check current docs:
 ```rust
-// comrak NodeValue::Text might be String, CowStr, or Vec<u8>
-// depending on version -- always verify
+// comrak NodeValue::Text: String (pre-0.45), Cow<'static, str> (0.45+).
+// pulldown-cmark uses CowStr (different API). Always verify against your Cargo.lock version.
 ```
 
 ### 6. Integration Test Location
 
 ```
-// WRONG: tests in workspace root are not discovered
-project-rs/tests/test_format.rs
+// WRONG: tests/ at workspace root, outside any member crate
+my-workspace/tests/test_format.rs
 
-// CORRECT: tests in crate's tests/ directory
-project-rs/tests/test_format.rs  (single crate)
-project-rs/crates/core/tests/test_format.rs  (workspace)
+// CORRECT: tests/ inside a specific crate
+my-workspace/crates/core/tests/test_format.rs
 ```
 
 ### 7. Arena Pattern for AST Libraries
@@ -271,7 +290,19 @@ where
 }
 ```
 
-### 8. Line Ending Differences
+### 8. Edition 2024 Reserved Keywords
+
+Rust Edition 2024 reserves `gen` as a keyword. If the Python code uses `gen` as a variable
+or function name (common in generator-related code), you must rename it in Rust:
+```rust
+// WRONG: `gen` is a reserved keyword in Edition 2024
+let gen = create_generator();
+
+// CORRECT: rename to avoid keyword conflict
+let generator = create_generator();
+```
+
+### 9. Line Ending Differences
 
 Normalize line endings in tests when they're not semantically significant. Be explicit
 about expectations in byte-for-byte comparison tests.
@@ -288,11 +319,18 @@ about expectations in byte-for-byte comparison tests.
 
 ### Workaround Pattern
 
-Mark all workarounds with `XXX:` comments:
+Mark all workarounds with structured comment prefixes:
+- `HACK:` or `WORKAROUND:` for library workarounds that are intentional and stable.
+- `FIXME:` for items needing future resolution.
+- `XXX:` for anything that is incorrect or problematic but cannot be addressed now
+  (note: `XXX:` signals "dangerous/requires attention" in this project).
+
 ```rust
-/// XXX: comrak normalizes list markers to `-`, but Python preserves `*`.
+/// WORKAROUND: comrak normalizes list markers to `-`, but Python preserves `*`.
 /// This is unfixable without forking comrak's renderer.
 /// Impact: minor -- both are valid Markdown.
+
+/// FIXME: This post-processing step should be removed once comrak #567 is merged.
 ```
 
 ### When to Switch Libraries
@@ -306,16 +344,17 @@ working around one library's bugs accumulates rapidly. Research alternatives ear
 - [ ] 100% of Python tests pass in Rust
 - [ ] Byte-for-byte output match on all test fixtures
 - [ ] Cross-validation with zero diffs on representative documents
-- [ ] All known differences documented with `XXX:` comments
+- [ ] All known differences documented with `WORKAROUND:`/`HACK:`/`FIXME:`/`XXX:` comments
 - [ ] All `#[ignore]` tests have documented reasons
 - [ ] CLI help text matches Python exactly
 - [ ] Exit codes match Python behavior
+- [ ] cargo clippy -- -D warnings passes with zero warnings
 
 ## Related Guidelines
 
-- For CLI-specific porting, see `tbd guidelines python-to-rust-cli-porting`
-- For Rust general rules, see `tbd guidelines rust-general-rules`
-- For Python rules, see `tbd guidelines python-rules`
-- For test coverage, see `tbd guidelines test-coverage-for-porting`
-- For golden testing, see `tbd guidelines golden-testing-guidelines`
-- For TDD methodology, see `tbd guidelines general-tdd-guidelines`
+- For CLI-specific porting, see `tbd guidelines python-to-rust-cli-porting (guidelines/python-to-rust-cli-porting.md)`
+- For Rust general rules, see `tbd guidelines rust-general-rules (guidelines/rust-general-rules.md)`
+- For Python rules, see `tbd guidelines python-rules (guidelines/python-rules.md)`
+- For test coverage, see `tbd guidelines test-coverage-for-porting (guidelines/test-coverage-for-porting.md)`
+- For golden testing, see `tbd guidelines golden-testing-guidelines (guidelines/golden-testing-guidelines.md)`
+- For TDD methodology, see `tbd guidelines general-tdd-guidelines (guidelines/general-tdd-guidelines.md)`

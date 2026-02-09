@@ -102,10 +102,12 @@ The `case-studies/flowmark/` directory documents the port of
 [flowmark-rs](https://github.com/jlevy/flowmark-rs). Key stats:
 
 - ~800 lines Python, ~4,400 lines Rust
-- 5-6 hours total development time (AI agent + human review)
+- ~6 hours total development time (AI agent + human review)
 - 20-40x performance improvement
 - 141 tests (139 passing, 2 ignored)
 - 14 library workarounds, 3 accepted differences
+
+(See `case-studies/flowmark/` for detailed metrics and methodology.)
 
 The case study covers library evaluation methodology, all technical decisions, workaround
 strategies, and a meta-analysis of what can be automated in porting workflows.
