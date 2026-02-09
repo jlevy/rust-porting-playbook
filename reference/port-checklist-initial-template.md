@@ -529,5 +529,18 @@ Practices](rust-cli-best-practices.md)
 
   - [ ] CI/CD pipeline passes all checks
 
-**Port is complete when ALL items above are checked.
+### Case Study Observations (Optional)
+
+If conducting this port as a case study to improve the playbook:
+
+- [ ] Observations recorded for each phase using the
+  [observation template](case-study-observations-template.md)
+- [ ] Final metrics summary completed (LOC, tests, time, dependency comparison)
+- [ ] Playbook issues triaged using the
+  [improvement triage template](case-study-improvement-triage-template.md)
+- [ ] Case study artifacts placed in `case-studies/<project-name>/`
+
+See the [meta-playbook](meta-improving-this-playbook.md) for the full process.
+
+**Port is complete when ALL mandatory items above are checked.
 Zero failures accepted.**

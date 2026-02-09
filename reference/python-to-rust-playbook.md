@@ -17,7 +17,8 @@ Rust port must do. Without tests, porting is guesswork. With them, 100% passing 
 equals correctness by definition.
 
 For detailed reference on any step, see the companion docs listed in the
-[README](../README.md).
+[README](../README.md). To improve this playbook through your port, see the
+[meta-playbook](meta-improving-this-playbook.md).
 
 ---
 

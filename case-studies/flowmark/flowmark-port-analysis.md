@@ -6,7 +6,8 @@ for automation, and future research directions.
 **Related:**
 [Library Choices](flowmark-port-library-choices.md) |
 [Decision Log](flowmark-port-decision-log.md) |
-[Python-to-Rust Porting Guide](../../reference/python-to-rust-porting-guide.md)
+[Python-to-Rust Porting Guide](../../reference/python-to-rust-porting-guide.md) |
+[Improving This Playbook](../../reference/meta-improving-this-playbook.md)
 
 **Last update:** 2026-02-08
 
