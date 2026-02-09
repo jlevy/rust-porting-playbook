@@ -13,6 +13,8 @@ child_order_hints:
   - is-01kgzwv309d1y3knhhrnf4mjj5
   - is-01kgzwv3ewr8zdzk50pq485awq
   - is-01kgzwv3wcy4ky32n7c5aq4qcr
+close_reason: "Phase 3 complete: all 13 IMPORTANT fixes applied"
+closed_at: 2026-02-09T00:55:47.857Z
 created_at: 2026-02-08T23:39:10.929Z
 dependencies: []
 id: is-01kgzsz76j7ykszy5wc27rjqp8
@@ -21,10 +23,10 @@ labels: []
 parent_id: is-01kgzwqqpdyvgsce3v16mn8pjb
 priority: 1
 spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
-status: open
+status: closed
 title: "Phase 3: Fix IMPORTANT wrong/misleading guidance"
 type: is
-updated_at: 2026-02-09T00:31:03.700Z
-version: 16
+updated_at: 2026-02-09T00:55:59.543Z
+version: 17
 ---
 Fix byte-for-byte contradiction, add thiserror/anyhow to deps, fix XXX: convention, fix frozenset note, fix str.find byte offset, fix effort percentages, update checkout action version, note color-eyre status, add Callable 3 traits, fix TypedDict/Protocol notes, fix ring hash, update comrak versions. 13 items.

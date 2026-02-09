@@ -13,6 +13,8 @@ child_order_hints:
   - is-01kgzwx1bqrt2465w30w53zjk6
   - is-01kgzwx1swe6d22hqtazk2jg69
   - is-01kgzwx28te7kpwc9fe2dsmqzs
+close_reason: "Phase 5 complete: all 13 SUGGESTION improvements applied"
+closed_at: 2026-02-09T00:55:48.692Z
 created_at: 2026-02-08T23:39:11.700Z
 dependencies: []
 id: is-01kgzsz7yntqwrmm79pqdp2x46
@@ -21,10 +23,10 @@ labels: []
 parent_id: is-01kgzwqqpdyvgsce3v16mn8pjb
 priority: 2
 spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
-status: open
+status: closed
 title: "Phase 5: Apply SUGGESTION improvements"
 type: is
-updated_at: 2026-02-09T00:31:03.716Z
-version: 16
+updated_at: 2026-02-09T00:55:59.558Z
+version: 17
 ---
 Add file path cross-refs, fix for/else mapping, add clippy gate, add derive guidance, add cargo-dist, add SIGPIPE, add shell completions, add ExitCode, fix LineBreakMode::None, add approx crate, fix README stats, add rejected alternatives, add --cov-branch. 13 items.

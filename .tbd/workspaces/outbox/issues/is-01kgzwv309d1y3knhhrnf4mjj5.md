@@ -1,4 +1,6 @@
 ---
+close_reason: "Fixed: Protocol nominal vs structural note added"
+closed_at: 2026-02-09T00:55:02.240Z
 created_at: 2026-02-09T00:29:21.288Z
 dependencies: []
 id: is-01kgzwv309d1y3knhhrnf4mjj5
@@ -7,10 +9,10 @@ labels: []
 parent_id: is-01kgzsz76j7ykszy5wc27rjqp8
 priority: 1
 spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
-status: open
+status: closed
 title: 3.11 Add ring license hash staleness warning
 type: is
-updated_at: 2026-02-09T00:29:21.288Z
-version: 1
+updated_at: 2026-02-09T00:55:59.774Z
+version: 3
 ---
 Hash 0xbd0eed23 is version-specific, will break on ring update. Add comment in: guidelines/rust-project-setup.md L317-320

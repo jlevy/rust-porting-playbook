@@ -12,6 +12,8 @@ child_order_hints:
   - is-01kgzwsa3c5z05260c5xwsmz18
   - is-01kgzwsagymy5b1zwdrnp60f0t
   - is-01kgzwsayf60nqp8awaz917dn5
+close_reason: "Phase 1 complete: all 12 CRITICAL factual errors fixed"
+closed_at: 2026-02-09T00:54:42.184Z
 created_at: 2026-02-08T23:39:10.147Z
 dependencies: []
 id: is-01kgzsz6e4fe510fgy92fzysnf
@@ -20,10 +22,10 @@ labels: []
 parent_id: is-01kgzwqqpdyvgsce3v16mn8pjb
 priority: 0
 spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
-status: open
+status: closed
 title: "Phase 1: Fix all CRITICAL factual errors"
 type: is
-updated_at: 2026-02-09T00:31:03.686Z
-version: 15
+updated_at: 2026-02-09T00:55:59.529Z
+version: 16
 ---
 Fix serde_yaml→serde_yaml_ng, resolver v3, non-compiling build.rs, pitfall#6 identical examples, assert→debug_assert danger, version constraint swap, archived actions, comrak CowStr error, dict insertion-order warning, wrapping/decision-log contradiction, workaround count inconsistencies, main() error handling contradiction. 12 items.

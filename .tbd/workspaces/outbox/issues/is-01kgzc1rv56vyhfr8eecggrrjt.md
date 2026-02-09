@@ -11,7 +11,7 @@ priority: 2
 status: closed
 title: Review guidelines/rust-cli-app-patterns.md
 type: is
-updated_at: 2026-02-09T00:31:03.542Z
-version: 4
+updated_at: 2026-02-09T00:55:59.395Z
+version: 5
 ---
 Review CLI project patterns: single binary + lib structure, clap derive API, I/O patterns, error reporting, logging, config, cross-platform, feature flags, testing. Fact-check crate versions and API details.
