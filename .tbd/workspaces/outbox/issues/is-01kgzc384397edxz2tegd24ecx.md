@@ -11,7 +11,7 @@ priority: 2
 status: closed
 title: Review case-studies/flowmark/flowmark-port-cross-validation.md
 type: is
-updated_at: 2026-02-08T23:39:44.217Z
-version: 3
+updated_at: 2026-02-09T00:31:03.664Z
+version: 4
 ---
 Review cross-validation results: unit test pass rates, known differences, escape handling table, footnote positioning issues, workaround functions inventory. Verify technical accuracy.

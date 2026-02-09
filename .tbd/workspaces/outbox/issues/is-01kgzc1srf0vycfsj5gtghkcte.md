@@ -11,7 +11,7 @@ priority: 2
 status: closed
 title: Review guidelines/test-coverage-for-porting.md
 type: is
-updated_at: 2026-02-08T23:39:44.131Z
-version: 3
+updated_at: 2026-02-09T00:31:03.557Z
+version: 4
 ---
 Review test-as-spec philosophy, pre-port coverage strategy, fixture organization, porting tests to Rust, coverage tools and targets, cross-validation, test categories checklist. Assess completeness and accuracy.

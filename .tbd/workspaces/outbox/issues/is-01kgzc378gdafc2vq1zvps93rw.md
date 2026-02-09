@@ -11,7 +11,7 @@ priority: 2
 status: closed
 title: Review case-studies/flowmark/flowmark-port-decision-log.md
 type: is
-updated_at: 2026-02-08T23:39:44.204Z
-version: 3
+updated_at: 2026-02-09T00:31:03.648Z
+version: 4
 ---
 Review all key decisions: workspace vs single package, escape handling, cross-validation methodology, Python bugs. Validate decision rationale and consequences.

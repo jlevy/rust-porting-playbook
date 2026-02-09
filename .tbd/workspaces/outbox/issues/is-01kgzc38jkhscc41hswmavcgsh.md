@@ -11,7 +11,7 @@ priority: 2
 status: closed
 title: Review case-studies/flowmark/flowmark-port-comrak-bug.md
 type: is
-updated_at: 2026-02-08T23:39:44.224Z
-version: 3
+updated_at: 2026-02-09T00:31:03.671Z
+version: 4
 ---
 Review parser bug report: code fences with indented lists, severity assessment, root cause analysis, test cases, proposed fix. Verify the bug description is technically accurate.
