@@ -442,7 +442,7 @@ Choosing between Rust editions 2021 and 2024 for the project.
 - Comprehensive migration plan (200+ lines covering feature parity matrix, architecture
   decisions, and library selection justification).
 - Feature parity matrix listing every Python feature mapped to the Rust library.
-- Single-process approach decision. For a project this size (~800 lines Python), porting
+- Single-process approach decision. For a project this size (~2,000 lines Python app code), porting
   everything at once was the right call.
 
 **What we'd do differently:**
@@ -502,8 +502,11 @@ Most painful phase and source of the most important lessons. See
 | Performance improvement | 20-40x over Python |
 | Binary size | ~2.5MB (stripped) |
 | Startup time | <10ms |
-| Lines of Rust | ~4,400 |
-| Lines of tests | ~1,260 |
+| Lines of Python (app) | ~2,000 |
+| Lines of Python (tests) | ~1,500 |
+| Lines of Rust (app) | ~3,400 |
+| Lines of Rust (tests) | ~2,900 (1,600 inline + 1,300 integration) |
+| Rust/Python app code ratio | ~1.7x |
 
 ## Summary of Key Tactics
 

@@ -101,10 +101,13 @@ The `case-studies/flowmark/` directory documents the port of
 [flowmark](https://github.com/jlevy/flowmark) (a Python Markdown formatter) to
 [flowmark-rs](https://github.com/jlevy/flowmark-rs). Key stats:
 
-- ~800 lines Python, ~4,400 lines Rust
+- Python: ~2,000 lines app code + ~1,500 lines tests (~3,500 total)
+- Rust: ~3,400 lines app code + ~2,900 lines tests (~6,200 total)
+- Rust/Python ratio: ~1.7x app code, ~1.8x total
 - ~6 hours total development time (AI agent + human review)
 - 20-40x performance improvement
-- 141 tests (139 passing, 2 ignored)
+- 141 tests (139 passing, 2 ignored): 93 unit, 42 integration, 6 doctests
+  (doctests run on large real documents with various flags, providing significant end-to-end coverage)
 - 14 library workarounds, 3 accepted differences
 
 (See `case-studies/flowmark/` for detailed metrics and methodology.)

@@ -8,7 +8,7 @@ full knowledge base.
 **Scope:** Any Python application with a test suite. Emphasis on CLI tools but the
 process applies to libraries, services, and other application types.
 
-**Time estimate:** For a well-tested Python CLI of ~1,000 lines, expect 5-8 hours of
+**Time estimate:** For a well-tested Python CLI of ~2,000 lines of app code, expect ~6 hours of
 agent time with 2-3 human review points. Half of that time will be spent on library
 workarounds and cross-validation, not initial implementation.
 
