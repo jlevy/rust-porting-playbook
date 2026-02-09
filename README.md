@@ -32,7 +32,10 @@ rust-porting-playbook/
 │   ├── rust-code-review-checklist.md
 │   ├── python-to-rust-test-coverage-playbook.md
 │   ├── port-checklist-initial-template.md
-│   └── port-checklist-update-template.md
+│   ├── port-checklist-update-template.md
+│   ├── meta-improving-this-playbook.md
+│   ├── case-study-observations-template.md
+│   └── case-study-improvement-triage-template.md
 ├── guidelines/                # Compact rules for AI agent context (~2-3k tokens each)
 │   ├── python-to-rust-porting-rules.md
 │   ├── python-to-rust-cli-porting.md
@@ -101,11 +104,16 @@ The `case-studies/flowmark/` directory documents the port of
 [flowmark](https://github.com/jlevy/flowmark) (a Python Markdown formatter) to
 [flowmark-rs](https://github.com/jlevy/flowmark-rs). Key stats:
 
-- ~800 lines Python, ~4,400 lines Rust
-- 5-6 hours total development time (AI agent + human review)
+- Python: ~2,000 lines app code + ~1,500 lines tests (~3,500 total)
+- Rust: ~3,400 lines app code + ~2,900 lines tests (~6,200 total)
+- Rust/Python ratio: ~1.7x app code, ~1.8x total
+- ~6 hours total development time (AI agent + human review)
 - 20-40x performance improvement
-- 141 tests (139 passing, 2 ignored)
+- 141 tests (139 passing, 2 ignored): 93 unit, 42 integration, 6 doctests
+  (doctests run on large real documents with various flags, providing significant end-to-end coverage)
 - 14 library workarounds, 3 accepted differences
+
+(See `case-studies/flowmark/` for detailed metrics and methodology.)
 
 The case study covers library evaluation methodology, all technical decisions, workaround
 strategies, and a meta-analysis of what can be automated in porting workflows.
@@ -122,6 +130,32 @@ strategies, and a meta-analysis of what can be automated in porting workflows.
 | [python-to-rust-test-coverage-playbook.md](reference/python-to-rust-test-coverage-playbook.md) | Pre-port test coverage strategy and tooling |
 | [port-checklist-initial-template.md](reference/port-checklist-initial-template.md) | 10-phase checklist template (copy and fill in) |
 | [port-checklist-update-template.md](reference/port-checklist-update-template.md) | Ongoing sync checklist template |
+| [meta-improving-this-playbook.md](reference/meta-improving-this-playbook.md) | Process for improving the playbook through case studies |
+| [case-study-observations-template.md](reference/case-study-observations-template.md) | Template for recording observations during a port |
+| [case-study-improvement-triage-template.md](reference/case-study-improvement-triage-template.md) | Template for triaging observations into playbook changes |
+
+## Improving This Playbook
+
+This playbook improves through real-world case studies. Each port conducted using the
+playbook generates structured feedback that is integrated back into the playbook,
+making it more accurate and complete with every case study.
+
+See [`reference/meta-improving-this-playbook.md`](reference/meta-improving-this-playbook.md)
+for the full process.
+
+### How to contribute a case study
+
+1. Pick a Python project to port (ideally 500+ lines with good test coverage)
+2. Follow the playbook end-to-end, recording observations using the
+   [observation template](reference/case-study-observations-template.md)
+3. Submit a PR with your case study in `case-studies/<project-name>/`
+4. The observations will be triaged and integrated into the playbook
+
+### Case studies completed
+
+| Project | Size | Domain | Key learnings |
+| --- | --- | --- | --- |
+| [flowmark](case-studies/flowmark/) | ~2,000 lines | Markdown formatting CLI | Parser library differences dominate effort; Rust deps 7x larger than Python deps |
 
 ## Contributing
 

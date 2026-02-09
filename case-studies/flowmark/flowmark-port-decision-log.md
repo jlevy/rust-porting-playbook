@@ -16,6 +16,95 @@ Each decision follows: Context → Decision → Consequences → Lessons.
 
 ---
 
+## D1: Parser Library Selection (comrak)
+
+> **Note (2026-02-09):** The parser library selection was the most critical decision in
+> the port but was documented separately rather than in this log. See
+> [Library Choices -- Parser Selection Decision](flowmark-port-library-choices.md#parser-selection-decision)
+> for the full evaluation of comrak vs pulldown-cmark vs markdown-rs, selection rationale,
+> and consequences.
+
+---
+
+## D9: Error Handling Strategy
+
+**Date:** 2025-11-02 | **Impact:** Low
+
+> **Note (2026-02-09):** This decision was not recorded during the original port.
+> Reconstructed from the implementation for completeness.
+
+### Context
+
+Needed to choose an error handling approach for a CLI tool that processes Markdown files.
+
+### Decision
+
+**`anyhow` for the CLI, `thiserror` for the library.** Application-level errors use
+`anyhow::Result` for convenience. Library-level errors use `thiserror`-derived enums for
+type safety.
+
+### Consequences
+
+- **Good:** Standard Rust pattern. Clean separation between library and application error
+  handling.
+- **Good:** `anyhow` provides context chaining (`.context("reading input file")`) which
+  improves error messages for users.
+
+### Alternatives Considered
+
+- **`anyhow` everywhere** (no typed errors in the library): Rejected because it loses
+  type safety for library consumers who may want to match on specific error variants.
+- **Custom error enums without `thiserror`**: Rejected as unnecessary boilerplate;
+  `thiserror` generates the same code with less maintenance burden.
+
+### Lessons
+
+- For CLI tools, `anyhow` + `thiserror` is the default choice unless you have specific
+  reasons to do otherwise.
+
+---
+
+## D10: String Ownership Strategy
+
+**Date:** 2025-11-02 | **Impact:** Medium
+
+> **Note (2026-02-09):** This decision was not recorded during the original port.
+> Reconstructed from the implementation for completeness.
+
+### Context
+
+Python strings are immutable and reference-counted. Rust requires explicit ownership
+decisions for string data passed between functions and stored in data structures.
+
+### Decision
+
+**Owned `String` types throughout, with `&str` borrows for read-only access.** The
+post-processing pipeline takes `&str` and returns `String`. AST nodes use comrak's
+arena-allocated strings.
+
+### Consequences
+
+- **Good:** Simple ownership model. No lifetime complexity in the post-processing
+  pipeline.
+- **Neutral:** Some unnecessary allocations compared to a `Cow<str>` approach, but
+  performance is not a bottleneck for this tool.
+
+### Lessons
+
+- **Start with owned types.** For a port, simplicity of ownership beats micro-optimization.
+  You can always switch to borrowed types later if profiling shows allocation overhead.
+- **Match the Python mental model.** Python developers think in owned values. Starting
+  with `String` makes the port more straightforward.
+
+### Alternatives Considered
+
+- **`Cow<'a, str>` throughout** for zero-copy where possible: Rejected because the
+  lifetime complexity was not justified; profiling showed no allocation bottleneck.
+- **`&str` with explicit lifetimes**: Rejected because tying output lifetimes to input
+  lifetimes made the post-processing pipeline unwieldy and hard to compose.
+
+---
+
 ## D2: Workspace vs Single Package
 
 **Date:** 2025-11-02 (initial) / 2025-11-03 (changed) | **Impact:** Medium
@@ -48,6 +137,12 @@ This followed the recommended pattern in our best practices doc.
 - **Feature flags are sufficient** for separating CLI from library concerns.
 - **Start simple, split later.** You can always extract a workspace later if needed.
 
+### Alternatives Considered
+
+- **Keep the Cargo workspace** with separate `flowmark-core` and `flowmark-cli` crates:
+  Rejected after experiencing path issues in tests and unnecessary build complexity. The
+  workspace pattern is better suited to larger projects with independent versioning needs.
+
 ---
 
 ## D3: Escape Handling Strategy
@@ -67,7 +162,7 @@ rendering to match Python's escape handling.
 
 ### Consequences
 
-- **Good:** 12 of 15 escape differences resolved. The post-processing approach is
+- **Good:** 14 of 17 behavioral differences resolved. The post-processing approach is
   flexible and each fix is independent.
 - **Bad:** Post-processing can't restore information lost during parsing (e.g., `\-`
   is removed by comrak's parser, not its renderer, so it can't be recovered).
@@ -81,6 +176,15 @@ rendering to match Python's escape handling.
   marker bug and unreferenced footnotes both required pre-processing.
 - **Some differences are truly unfixable** without forking the library. Accept these
   and document them clearly.
+
+### Alternatives Considered
+
+- **Fork comrak** and fix escape handling at the parser level: Rejected because
+  maintaining a fork is a long-term burden, and most differences were fixable via
+  post-processing without modifying the parser.
+- **Pre-processing only** (rewrite input before parsing): Rejected as the primary
+  strategy because pre-processing is riskier (modifies parser input) and can't address
+  differences that arise during rendering. Used selectively for 2 specific cases.
 
 ---
 
@@ -115,6 +219,14 @@ Needed a systematic way to verify that Rust output matches Python output for all
 - **Use real documents as test fixtures**, not just synthetic test cases.
 - **Run cross-validation frequently** during development, not just at the end.
 
+### Alternatives Considered
+
+- **Unit tests only** (no cross-validation): Rejected because unit tests with synthetic
+  inputs missed behavioral differences that only appeared with complex real-world
+  documents. Cross-validation caught every one of these.
+- **Manual spot-checking** against Python output: Rejected because it is not repeatable,
+  not scalable, and misses regressions when workarounds interact.
+
 ---
 
 ## D5: Handling Python Bugs Found During Porting
@@ -146,6 +258,15 @@ Documented as "Rust is more consistent" rather than replicating the Python quirk
   call because the Rust behavior is objectively more consistent.
 - **Document every intentional divergence.** Future developers need to know these are
   choices, not bugs.
+
+### Alternatives Considered
+
+- **Replicate Python's bugs exactly** for byte-for-byte parity: Rejected because Rust's
+  behavior is objectively more consistent (e.g., always adding a blank line after
+  headings). Replicating known bugs would make the Rust version worse for users.
+- **Add a `--python-compat` flag** to toggle bug-compatible behavior: Deferred to future
+  work. Not worth the complexity for the initial port, but remains an option if exact
+  parity becomes a requirement.
 
 ---
 
@@ -181,11 +302,29 @@ passing to comrak, then un-escape after rendering.
 - **Consider vendoring** for critical bugs. Having a patched local copy is sometimes
   better than a fragile workaround.
 
+### Alternatives Considered
+
+- **Vendor/fork comrak** and fix the fence parsing bug at the source: Rejected for the
+  initial port because maintaining a fork is a long-term burden for a single bug. Would
+  reconsider if more parser-level bugs accumulate.
+- **Accept the bug** and document it as an unfixable difference: Rejected because the bug
+  affected real-world documents (YAML in fenced code blocks is common). The pre-processing
+  workaround was effective enough.
+
 ---
 
 ## D7: Wrapping Algorithm Approach
 
 **Date:** 2025-11-02 | **Impact:** Medium
+
+> **Revision note (2026-02-09):** This entry describes the hybrid approach developed
+> during the initial port (comrak joins lines via a large `render.width`, custom code
+> handles sentence-aware wrapping, `hardbreaks = true` preserves the result). The
+> approach later evolved into a simpler configuration-based solution using comrak's
+> built-in `render.width` with `hardbreaks = false`, documented in
+> [Wrapping Solution](flowmark-port-wrapping-solution.md). The simpler approach
+> lets comrak handle basic line wrapping directly, while the hybrid approach described
+> here remains relevant for advanced sentence-aware semantic wrapping.
 
 ### Context
 
@@ -220,6 +359,17 @@ preserve the custom line breaks.
 - **Check how a library's options interact.** The interplay between `render.width`,
   `hardbreaks`, and parse-time vs render-time options required careful tuning.
 
+### Alternatives Considered
+
+- **Pure AST transformation** (rewrite paragraph nodes in the tree): Rejected as the
+  initial approach because it was too complex -- comrak's arena-based AST makes node
+  manipulation verbose, and handling all edge cases (quotes, lists, nested structures)
+  required extensive code.
+- **Pure `render.width`** (let comrak handle all wrapping): This simpler approach was
+  later adopted for basic wrapping (see
+  [Wrapping Solution](flowmark-port-wrapping-solution.md)), but was initially
+  insufficient because comrak's built-in wrapping is not sentence-aware.
+
 ---
 
 ## D8: Edition 2024 (Rust 1.85+)
@@ -247,6 +397,13 @@ Choosing between Rust editions 2021 and 2024 for the project.
 - **Use the latest edition for new projects.** The benefits of modern features outweigh
   the minor compatibility risk.
 - **Always declare MSRV** in Cargo.toml and test it in CI.
+
+### Alternatives Considered
+
+- **Edition 2021** for broader CI and toolchain compatibility: Rejected because it would
+  require the `once_cell` crate for lazy statics (Edition 2024 provides
+  `std::sync::LazyLock` in std) and miss other ergonomic improvements. The compatibility
+  risk was mitigated by declaring an explicit MSRV.
 
 ---
 
@@ -285,7 +442,7 @@ Choosing between Rust editions 2021 and 2024 for the project.
 - Comprehensive migration plan (200+ lines covering feature parity matrix, architecture
   decisions, and library selection justification).
 - Feature parity matrix listing every Python feature mapped to the Rust library.
-- Single-process approach decision. For a project this size (~800 lines Python), porting
+- Single-process approach decision. For a project this size (~2,000 lines Python app code), porting
   everything at once was the right call.
 
 **What we'd do differently:**
@@ -341,12 +498,15 @@ Most painful phase and source of the most important lessons. See
 | Implementation time | ~2-3 hours |
 | Bug-fixing time | ~2-3 hours (50% of total!) |
 | Tests ported | 111 (100% passing) |
-| Parser workarounds | 14 (12 fixable, 3 unfixable) |
+| Parser workarounds | 17 total (14 fixable, 3 unfixable) |
 | Performance improvement | 20-40x over Python |
 | Binary size | ~2.5MB (stripped) |
 | Startup time | <10ms |
-| Lines of Rust | ~4,400 |
-| Lines of tests | ~1,260 |
+| Lines of Python (app) | ~2,000 |
+| Lines of Python (tests) | ~1,500 |
+| Lines of Rust (app) | ~3,400 |
+| Lines of Rust (tests) | ~2,900 (1,600 inline + 1,300 integration) |
+| Rust/Python app code ratio | ~1.7x |
 
 ## Summary of Key Tactics
 

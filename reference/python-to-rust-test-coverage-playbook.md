@@ -27,7 +27,7 @@ Each phase builds on the previous one. Complete them in order.
 
 ```bash
 cd python-repo
-uv run pytest --cov=myproject --cov-report=term-missing --cov-report=html
+uv run pytest --cov=myproject --cov-branch --cov-report=term-missing --cov-report=html
 ```
 
 Open `htmlcov/index.html` to see line-by-line coverage visualization.
@@ -221,6 +221,12 @@ golden_test!(golden_basic, "basic.md");
 golden_test!(golden_complex, "complex-formatting.md");
 golden_test!(golden_edge_cases, "edge-cases.md");
 ```
+
+**Alternative: `insta` for snapshot testing.** The [`insta`](https://crates.io/crates/insta)
+crate provides snapshot testing that automatically manages expected output files. On first
+run it captures output; on subsequent runs it compares against the stored snapshot. Use
+`cargo insta review` to interactively accept or reject changes. This is particularly useful
+for output-heavy CLI tools and is used by cargo itself.
 
 ## Phase 4: Document Manual Test Procedures
 

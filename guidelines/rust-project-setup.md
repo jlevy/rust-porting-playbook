@@ -76,7 +76,7 @@ Test without default features in CI: `cargo test --no-default-features`
 ```toml
 [workspace]
 members = ["crates/project-core", "crates/project-cli"]
-resolver = "2"
+resolver = "3"                     # Edition 2024 uses resolver v3 (MSRV-aware)
 
 [workspace.lints.clippy]
 pedantic = { level = "warn", priority = -1 }
@@ -186,7 +186,7 @@ jobs:
     name: Format Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
@@ -196,7 +196,7 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -210,7 +210,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
@@ -222,7 +222,7 @@ jobs:
     name: MSRV Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@1.85   # Match rust-version in Cargo.toml
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --all-features --locked  # Full test, not just check
@@ -231,7 +231,7 @@ jobs:
     name: Security Audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: rustsec/audit-check@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -240,14 +240,14 @@ jobs:
     name: Dependency Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: EmbarkStudios/cargo-deny-action@v2
 
   docs:
     name: Documentation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo doc --no-deps --all-features
@@ -256,7 +256,7 @@ jobs:
 ```
 
 **Key patterns from real-world projects:**
-- Use `actions/checkout@v5` (current), `dtolnay/rust-toolchain` (not `actions-rs`)
+- Use `actions/checkout@v6` (current), `dtolnay/rust-toolchain` (not `actions-rs`)
 - `Swatinem/rust-cache@v2` with `shared-key` per job type
 - `--locked` in test/build to enforce Cargo.lock reproducibility
 - Test with `--no-default-features` to verify library builds without CLI deps
@@ -317,7 +317,7 @@ allow = [
 [[licenses.clarify]]
 name = "ring"
 expression = "MIT AND ISC AND OpenSSL"
-license-files = [{ path = "LICENSE", hash = 0xbd0eed23 }]
+license-files = [{ path = "LICENSE", hash = 0xbd0eed23 }]  # IMPORTANT: hash is version-specific; update after cargo update
 
 [bans]
 multiple-versions = "warn"          # Warn on duplicate deps in tree
@@ -366,7 +366,9 @@ crates.io publish.
 ### Release CI Workflow
 
 All major Rust CLI projects (ripgrep, bat, fd, jj) hand-roll their release workflows.
-No major project uses cargo-dist. The standard pattern:
+For simpler release needs, `cargo-dist` has matured significantly and can handle
+cross-compilation and installer generation with minimal configuration. For full control,
+the standard hand-rolled pattern:
 
 1. **cargo-release** bumps version, commits, tags, pushes
 2. **Tag push** triggers release workflow
@@ -384,17 +386,13 @@ permissions:
 jobs:
   create-release:
     runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.release.outputs.upload_url }}
     steps:
-      - uses: actions/checkout@v5
-      - id: release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v6
+      - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
 
   build:
     needs: create-release
@@ -409,7 +407,7 @@ jobs:
           - { os: macos-latest, target: aarch64-apple-darwin, name: macos-aarch64 }
           - { os: windows-latest, target: x86_64-pc-windows-msvc, name: windows-x86_64 }
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -423,7 +421,7 @@ jobs:
     needs: [create-release, build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo publish --locked
         env:

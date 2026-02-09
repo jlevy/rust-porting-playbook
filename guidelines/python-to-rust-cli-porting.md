@@ -8,9 +8,9 @@ CLI-specific rules and patterns for porting Python command-line applications to 
 Covers argument parsing migration, cross-validation methodology, and acceptance criteria
 for CLI parity.
 
-For general porting rules, see `tbd guidelines python-to-rust-porting-rules`.
-For Rust CLI patterns, see `tbd guidelines rust-cli-app-patterns`.
-For Python CLI patterns, see `tbd guidelines python-cli-patterns`.
+For general porting rules, see `tbd guidelines python-to-rust-porting-rules` (guidelines/python-to-rust-porting-rules.md).
+For Rust CLI patterns, see `tbd guidelines rust-cli-app-patterns` (guidelines/rust-cli-app-patterns.md).
+For Python CLI patterns, see `tbd guidelines python-cli-patterns` (guidelines/python-cli-patterns.md).
 
 ## CLI Argument Mapping
 
@@ -89,6 +89,38 @@ All error messages go to stderr. All program output goes to stdout.
 | General error | 1 | 1 | |
 | Usage error | 2 | 2 | clap returns 2 automatically |
 | SIGINT | 130 | 130 | Register ctrlc handler |
+
+### SIGPIPE Handling
+
+Rust ignores SIGPIPE by default, which causes "broken pipe" errors when output is
+piped to tools like `head`, `less`, or any process that closes the read end early.
+Python handles SIGPIPE transparently, so this is a common gotcha when porting CLI tools.
+
+**Fix:** Reset SIGPIPE to the default behavior at the start of `main()`:
+```rust
+// Reset SIGPIPE signal handling to default (terminate silently).
+// Without this, piping to `head` etc. causes "broken pipe" errors.
+#[cfg(unix)]
+{
+    unsafe {
+        libc::signal(libc::SIGPIPE, libc::SIG_DFL);
+    }
+}
+```
+
+Alternatively, handle `BrokenPipe` errors gracefully in your write calls:
+```rust
+use std::io::{self, Write};
+
+fn main() {
+    if let Err(e) = run() {
+        if e.kind() != io::ErrorKind::BrokenPipe {
+            eprintln!("error: {e}");
+            std::process::exit(1);
+        }
+    }
+}
+```
 
 ## Cross-Validation Methodology
 
@@ -246,8 +278,8 @@ When the Python repo gets updates:
 
 ## Related Guidelines
 
-- For general porting rules, see `tbd guidelines python-to-rust-porting-rules`
-- For Rust CLI patterns, see `tbd guidelines rust-cli-app-patterns`
-- For Python CLI patterns, see `tbd guidelines python-cli-patterns`
-- For test coverage, see `tbd guidelines test-coverage-for-porting`
-- For golden testing, see `tbd guidelines golden-testing-guidelines`
+- For general porting rules, see `tbd guidelines python-to-rust-porting-rules` (guidelines/python-to-rust-porting-rules.md)
+- For Rust CLI patterns, see `tbd guidelines rust-cli-app-patterns` (guidelines/rust-cli-app-patterns.md)
+- For Python CLI patterns, see `tbd guidelines python-cli-patterns` (guidelines/python-cli-patterns.md)
+- For test coverage, see `tbd guidelines test-coverage-for-porting` (guidelines/test-coverage-for-porting.md)
+- For golden testing, see `tbd guidelines golden-testing-guidelines` (guidelines/golden-testing-guidelines.md)

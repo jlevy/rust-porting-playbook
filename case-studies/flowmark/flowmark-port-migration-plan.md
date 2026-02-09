@@ -131,6 +131,12 @@ semi-automatically track the Python repository, with:
 
 **Selected Library**: `comrak` (latest: 0.29+)
 
+> **Version note (2026-02-09):** This evaluation was performed against comrak 0.29
+> (November 2025). Comrak has evolved significantly since then (0.30+ through 0.50+),
+> with changes to APIs, rendering behavior, and bug fixes. If starting a new project
+> or upgrading, re-evaluate against the current version and re-run cross-validation,
+> as workaround behavior may have changed.
+
 **Justification:**
 
 1. **Complete GFM Parity**:
@@ -3160,17 +3166,19 @@ comrak vs marko differences.**
 The Rust implementation uses `comrak` (CommonMark) while Python uses `marko` (Markdown).
 These have different rendering behaviors that required post-processing workarounds.
 
-**Summary: 13 Issues Total**
+**Summary: 17 Issues Total**
 
-- ✅ **12 Fixed** with post-processing workarounds
+- ✅ **14 Fixed** with pre/post-processing workarounds (12 post-processing, 2
+  pre-processing)
 
-- ❌ **1 Cannot Fix**: Footnote positioning (comrak moves all footnotes to end, Python
-  keeps them in place)
+- ❌ **3 Cannot Fix**: Footnote positioning (comrak moves all footnotes to end),
+  list marker normalization (comrak hardcodes `-`), hyphen escape removal (comrak
+  removes `\-` during parsing)
 
 **Major Issue Categories:**
 
-1. **Escaping Differences** (7 issues): Thematic breaks, numbered headings, underscores,
-   less-than, hashes, URL parentheses, footnote references
+1. **Escaping Differences** (9 issues): Thematic breaks, numbered headings, underscores,
+   less-than, hashes, URL parentheses, footnote references, dollar signs, square brackets
 
 2. **Footnote Handling** (3 issues): Reference escaping, definition format, unreferenced
    footnote removal
@@ -3178,6 +3186,8 @@ These have different rendering behaviors that required post-processing workaroun
 3. **Formatting** (2 issues): Quote block blank lines, image link wrapping
 
 4. **Bugs** (1 issue): Fenced code block indentation parsing
+
+5. **Unfixable Rendering** (2 issues): List marker normalization, hyphen escape removal
 
 **Critical Limitation (FIXME in code):**
 

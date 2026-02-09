@@ -53,66 +53,13 @@ version = "0.5.5"
 ```rust
 use clap::Parser;
 
-const PYTHON_VERSION: &str = env!("CARGO_PKG_METADATA_PYTHON_SOURCE_VERSION",
-    "unknown");
+// Reads env var set by build.rs at compile time
+const PYTHON_SOURCE_VERSION: &str = env!("PYTHON_SOURCE_VERSION");
 
-#[derive(Parser)]
-#[command(
-    version = concat!(
-        env!("CARGO_PKG_VERSION"),
-        " (port of python-project ",
-        PYTHON_VERSION,
-        ")"
-    )
-)]
-struct Cli {
-    // ... args
-}
-```
-
-Or use a build script for more flexibility:
-
-**`build.rs`**:
-```rust
-use std::process::Command;
-
-fn main() {
-    // Read Python version from submodule
-    let python_version = std::fs::read_to_string("python-source/VERSION")
-        .or_else(|_| {
-            // Fallback: try git describe
-            Command::new("git")
-                .args(["describe", "--tags", "--always"])
-                .current_dir("python-source")
-                .output()
-                .ok()
-                .and_then(|output| String::from_utf8(output.stdout).ok())
-        })
-        .unwrap_or_else(|_| "unknown".to_string());
-
-    println!("cargo:rustc-env=PYTHON_SOURCE_VERSION={}", python_version.trim());
-
-    // Get submodule commit hash
-    let commit = Command::new("git")
-        .args(["rev-parse", "HEAD"])
-        .current_dir("python-source")
-        .output()
-        .ok()
-        .and_then(|output| String::from_utf8(output.stdout).ok())
-        .unwrap_or_else(|| "unknown".to_string());
-
-    println!("cargo:rustc-env=PYTHON_SOURCE_COMMIT={}", &commit[..7].trim());
-}
-```
-
-**Then in CLI**:
-```rust
 const VERSION_INFO: &str = concat!(
     env!("CARGO_PKG_VERSION"),
     " (port of python-project ",
     env!("PYTHON_SOURCE_VERSION"),
-    " @ ",
-    env!("PYTHON_SOURCE_COMMIT"),
     ")"
 );
 
@@ -120,6 +67,66 @@ const VERSION_INFO: &str = concat!(
 #[command(version = VERSION_INFO)]
 struct Cli {
     // ... args
+}
+```
+
+The `env!()` macro reads an environment variable at compile time.
+`concat!()` only accepts literals and other macros (like `env!()`), not `const`
+variables. Use a `build.rs` script to set custom env vars at compile time:
+
+**`build.rs`**:
+```rust
+// build.rs
+use std::process::Command;
+
+fn main() {
+    // Re-run if the Python source changes
+    println!("cargo:rerun-if-changed=python-source");
+
+    let version = Command::new("python3")
+        .args(["-c", "import myproject; print(myproject.__version__)"])
+        .output()
+        .ok()
+        .and_then(|o| if o.status.success() {
+            String::from_utf8(o.stdout).ok()
+        } else {
+            None
+        })
+        .map(|s| s.trim().to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    println!("cargo:rustc-env=PYTHON_SOURCE_VERSION={version}");
+}
+```
+
+Alternatively, read the version from a file with a git-describe fallback:
+
+```rust
+// build.rs
+use std::process::Command;
+
+fn main() {
+    println!("cargo:rerun-if-changed=python-source");
+
+    let version = std::fs::read_to_string("python-source/VERSION")
+        .map(|s| s.trim().to_string())
+        .unwrap_or_else(|_| {
+            // Fallback: try git describe
+            Command::new("git")
+                .args(["describe", "--tags", "--always"])
+                .current_dir("python-source")
+                .output()
+                .ok()
+                .and_then(|o| if o.status.success() {
+                    String::from_utf8(o.stdout).ok()
+                } else {
+                    None
+                })
+                .map(|s| s.trim().to_string())
+                .unwrap_or_else(|| "unknown".to_string())
+        });
+
+    println!("cargo:rustc-env=PYTHON_SOURCE_VERSION={version}");
 }
 ```
 
@@ -250,7 +257,7 @@ setup.
 | Python | Rust | Notes |
 | --- | --- | --- |
 | argparse/click | [clap](https://docs.rs/clap) | CLI parsing |
-| PyYAML | [serde_yaml](https://docs.rs/serde_yaml) | Check maintenance status |
+| PyYAML | [serde_yaml_ng](https://docs.rs/serde_yaml_ng) | Successor to archived serde_yaml |
 | pytest | Built-in #[test] + cargo test |  |
 | Markdown libs | [comrak](https://github.com/kivikakk/comrak) / [pulldown-cmark](https://docs.rs/pulldown-cmark) | Choose based on features |
 
@@ -775,11 +782,11 @@ where
 ### Lazy Static Regex
 
 ```rust
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 use regex::Regex;
 
-static PATTERN: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"pattern").unwrap());
+static PATTERN: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"pattern").unwrap());
 
 pub fn process(text: &str) -> String {
     PATTERN.replace_all(text, "replacement").to_string()

@@ -8,7 +8,7 @@ full knowledge base.
 **Scope:** Any Python application with a test suite. Emphasis on CLI tools but the
 process applies to libraries, services, and other application types.
 
-**Time estimate:** For a well-tested Python CLI of ~1,000 lines, expect 5-8 hours of
+**Time estimate:** For a well-tested Python CLI of ~2,000 lines of app code, expect ~6 hours of
 agent time with 2-3 human review points. Half of that time will be spent on library
 workarounds and cross-validation, not initial implementation.
 
@@ -17,7 +17,8 @@ Rust port must do. Without tests, porting is guesswork. With them, 100% passing 
 equals correctness by definition.
 
 For detailed reference on any step, see the companion docs listed in the
-[README](../README.md).
+[README](../README.md). To improve this playbook through your port, see the
+[meta-playbook](meta-improving-this-playbook.md).
 
 ---
 
@@ -43,7 +44,7 @@ Create a dependency table:
 | --- | --- | --- | --- |
 | argparse/click/typer | CLI parsing | clap | Low |
 | pytest | Testing | cargo test | Low |
-| pyyaml | YAML parsing | serde_yaml | Low |
+| pyyaml | YAML parsing | serde_yaml_ng | Low |
 | marko | Markdown parsing | comrak / pulldown-cmark | **High** |
 
 **Risk levels:**
@@ -54,7 +55,7 @@ Create a dependency table:
 ### 1.3 Assess test coverage
 
 ```bash
-pytest --cov=myproject --cov-report=term-missing
+uv run pytest --cov=myproject --cov-branch --cov-report=term-missing
 ```
 
 **Coverage thresholds for porting readiness:**
@@ -205,7 +206,7 @@ List every feature/behavior in Python and map to Rust:
 | Sentence splitting | text_utils.py | regex + unicode-segmentation | Planned |
 | Paragraph wrapping | formatter.py | Custom + comrak render.width | Planned |
 | CLI --auto flag | cli.py | clap derive | Planned |
-| YAML config loading | config.py | serde_yaml | Planned |
+| YAML config loading | config.py | serde_yaml_ng | Planned |
 
 ### 3.3 Plan the module porting order
 
@@ -355,9 +356,9 @@ For each module, in dependency order:
   // Python: re.match(pattern, text) -- note: anchored at start
   if regex.is_match(text) { ... }
   ```
-- Mark every workaround with `XXX:` comments:
+- Mark library workarounds with `HACK:` comments and items needing future resolution with `FIXME:`:
   ```rust
-  /// XXX: comrak escapes underscores but Python doesn't.
+  /// HACK: comrak escapes underscores but Python doesn't.
   /// Workaround: post-process to remove unnecessary escapes.
   fn fix_underscore_escaping(text: &str) -> String { ... }
   ```
@@ -422,12 +423,12 @@ For each library difference, try in order:
 
 ### 6.3 Track workarounds systematically
 
-Every workaround gets a consistent `XXX:` comment with:
+Every workaround gets a consistent `HACK:` comment (for library workarounds) or `FIXME:` comment (for items needing future resolution) with:
 - What the difference is
 - Why it exists (library behavior)
 - Impact level (cosmetic / functional / critical)
 
-This creates a searchable inventory: `grep -n "XXX:" src/`
+This creates a searchable inventory: `grep -rn "HACK:\|FIXME:" src/`
 
 ### 6.4 Handling bugs in the original
 
@@ -557,8 +558,8 @@ Over time, intentional divergences accumulate. Track them:
 | 2. Research | 30-60 min | 10% |
 | 3. Plan | 15-30 min | 5% |
 | 4. Set up | 15-30 min | 5% |
-| 5. Port | 2-4 hours | 35% |
-| 6. Library fixes | 2-4 hours | 35% |
+| 5. Port | 2-4 hours | 33% |
+| 6. Library fixes | 2-4 hours | 32% |
 | 7. Finalize | 30-60 min | 10% |
 | **Total** | **5-8 hours** | **100%** |
 
@@ -599,7 +600,7 @@ PORT
 ☐ Port tests first, then implementation
 ☐ Port modules in dependency order (leaf → integration → CLI)
 ☐ Maintain traceability (mapping comments, function name parity)
-☐ Mark all workarounds with XXX: comments
+☐ Mark all workarounds with HACK:/FIXME: comments
 ☐ Run cross-validation continuously
 
 LIBRARY FIXES

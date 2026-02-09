@@ -6,7 +6,8 @@ for automation, and future research directions.
 **Related:**
 [Library Choices](flowmark-port-library-choices.md) |
 [Decision Log](flowmark-port-decision-log.md) |
-[Python-to-Rust Porting Guide](../../reference/python-to-rust-porting-guide.md)
+[Python-to-Rust Porting Guide](../../reference/python-to-rust-porting-guide.md) |
+[Improving This Playbook](../../reference/meta-improving-this-playbook.md)
 
 **Last update:** 2026-02-08
 
@@ -91,6 +92,82 @@ Marking every workaround with `XXX:` creates a searchable inventory of technical
 This pattern generalizes to any project where you're working around third-party library
 behavior.
 
+## Empirical Data from the Flowmark Port
+
+The following data comes from the actual flowmark port (Python v0.5.5 → Rust v0.1.3),
+verified against the source repos.
+
+### Code Metrics
+
+| Metric | Python | Rust |
+| --- | --- | --- |
+| Application code | ~2,000 lines (14 files) | ~3,400 lines (21 files) |
+| Test code | ~1,500 lines (10 files, 45 functions) | ~2,900 lines (93 unit + 42 integration + 6 doctests) |
+| Total | ~3,500 lines | ~6,200 lines |
+| Rust/Python ratio | -- | ~1.7x app, ~1.8x total |
+
+The 6 doctests run on large real documents with various formatting flags, providing
+significant end-to-end coverage beyond their line count.
+
+### Dependency Footprint
+
+| Dependency | Python LOC | Rust Equivalent | Rust LOC |
+| --- | --- | --- | --- |
+| Markdown parser | marko: ~3,800 | comrak: ~47,600 | 12.5x larger |
+| Regex engine | regex: ~10,000 (Python wrapper + C ext) | regex: ~12,000 (pure Rust) | ~1.2x |
+| Serialization | -- | serde + serde_yaml: ~30,600 | -- |
+| Unicode | -- | unicode-segmentation: ~8,400 | -- |
+| Error handling | -- | thiserror: ~2,800 | -- |
+| Total deps | ~14,800 | ~101,400 (core only) | ~6.9x |
+
+The Rust dependency footprint is much larger because Rust crates implement more
+functionality in library code that Python delegates to C extensions or the runtime.
+
+### Time Breakdown
+
+From the author's account (source: [flowmark-rs README](https://github.com/jlevy/flowmark-rs)):
+
+| Phase | Time | Notes |
+| --- | --- | --- |
+| Background research | ~1 hour | Ecosystem survey, CLI best practices doc |
+| Porting plan | ~1 hour | Migration plan, library evaluation |
+| Additional plans | ~1 hour (parallel) | CI/CD plan, port checklist template |
+| Initial implementation | 2-3 hours | TDD, module-by-module, 8-9 encouragement prompts needed |
+| Bug-fixing | 2-3 hours | "The most painful part" — 50% of total effort |
+| **Total** | **~6 hours** | |
+
+### Key Operational Insights
+
+1. **100% AI-generated Rust code.** Every line of Rust was written by Claude. The human's
+   role was organizing architecture and testing up front, providing guidance during
+   bug-fixing, and enforcing quality standards.
+
+2. **Zero-tolerance for output divergence.** The agent repeatedly insisted results were
+   "close enough" — the human had to enforce exact byte-for-byte matching. This
+   discipline is critical: relaxing it compounds into unacceptable drift.
+
+3. **Bug-fixing required explicit prompting to read code.** During the bug-fixing phase,
+   the agent had to be reminded multiple times to read code carefully and understand root
+   causes rather than attempting workarounds. The agent also needed explicit instruction
+   to read comrak's source code to identify specific flags and behavior.
+
+4. **Multiple work trees for parallel investigation.** Claude Code cloud with multiple
+   work trees avoided blocking on slow CI runs during the bug-fixing phase.
+
+5. **Porting reveals bugs in the original.** About a dozen corner case issues were
+   discovered, including actual bugs in the Python implementation. These were fixed in
+   Python with new tests, then the submodule was updated.
+
+6. **Cross-model review.** GPT-5 High was used as a sanity check on the planning
+   documents, contributing minor improvements.
+
+7. **Vendoring may be required.** Some remaining parser differences can only be fixed by
+   vendoring comrak to patch its behavior directly.
+
+8. **Documentation artifacts are reusable.** The porting process produced several
+   standalone documents (CLI best practices, migration plan, CI/CD plan, port checklist
+   template) that became the foundation for this playbook.
+
 ## How AI Agents Can Drive Porting
 
 ### The Ideal Agent-Driven Workflow
@@ -127,6 +204,12 @@ Based on the flowmark experience:
 - **Performance optimization:** Profiling and trade-off analysis require human judgment.
 - **Architecture decisions:** When to use workspace vs single package, trait vs enum,
   etc.
+- **"Close enough" bias:** Agents tend to accept approximate output matching. Humans must
+  enforce zero-tolerance for byte-level divergence.
+- **Workaround-first instinct:** Agents attempt workarounds before understanding root
+  causes. Humans need to redirect them to read dependency source code.
+- **Sustained focus:** The initial implementation required 8-9 encouragement prompts
+  to keep the agent working through the full module set.
 
 ## Handling Library Bugs: Generalizable Strategies
 

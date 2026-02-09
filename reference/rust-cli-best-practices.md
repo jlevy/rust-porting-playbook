@@ -467,6 +467,17 @@ cargo doc --no-deps --open    # Generate and open
 
 - `mdbook` - Long-form documentation (like Rust CLI Book [^cli-book])
 
+### 5.3 Shell Completions
+
+**`clap_complete`** - Generate shell completion scripts from clap definitions:
+```toml
+clap_complete = "4.5"
+```
+
+Generate completions for bash, zsh, fish, elvish, and PowerShell at build time or via
+a hidden CLI subcommand. This gives users tab-completion for all commands, flags, and
+arguments with no manual maintenance.
+
 ## 6. Build & Release
 
 ### 6.1 Build Configuration
@@ -585,7 +596,7 @@ jobs:
     name: Format Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
@@ -595,7 +606,7 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -609,7 +620,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
@@ -621,7 +632,7 @@ jobs:
     name: MSRV Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@1.85
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --all-features --workspace --locked
@@ -630,7 +641,7 @@ jobs:
     name: Security Audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: rustsec/audit-check@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -639,14 +650,14 @@ jobs:
     name: Dependency Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: EmbarkStudios/cargo-deny-action@v2
 
   docs:
     name: Documentation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo doc --no-deps --all-features
@@ -655,7 +666,7 @@ jobs:
 ```
 
 **Key points:**
-- Use `actions/checkout@v5` (current), `dtolnay/rust-toolchain` (not deprecated `actions-rs`)
+- Use `actions/checkout@v6` (current), `dtolnay/rust-toolchain` (not deprecated `actions-rs`)
 - `Swatinem/rust-cache@v2` with `shared-key` per job type for cache isolation
 - `--locked` in test/build to enforce Cargo.lock reproducibility
 - Test with `--no-default-features` to verify library builds without CLI deps

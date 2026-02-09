@@ -8,10 +8,10 @@ Guidelines for building comprehensive test coverage as the specification for a
 Python-to-Rust port. High test coverage in the Python source directly translates to a
 higher-quality, more automatable port.
 
-For golden testing patterns, see `tbd guidelines golden-testing-guidelines`.
-For general testing rules, see `tbd guidelines general-testing-rules`.
-For TDD methodology, see `tbd guidelines general-tdd-guidelines`.
-For porting rules, see `tbd guidelines python-to-rust-porting-rules`.
+For golden testing patterns, see `tbd guidelines golden-testing-guidelines` (guidelines/golden-testing-guidelines.md).
+For general testing rules, see `tbd guidelines general-testing-rules` (guidelines/general-testing-rules.md).
+For TDD methodology, see `tbd guidelines general-tdd-guidelines` (guidelines/general-tdd-guidelines.md).
+For porting rules, see `tbd guidelines python-to-rust-porting-rules` (guidelines/python-to-rust-porting-rules.md).
 
 ## Core Principle
 
@@ -25,7 +25,7 @@ coverage = more precise Rust specification = fewer bugs in the port.
 
 ```bash
 cd python-repo
-uv run pytest --cov=myproject --cov-report=term-missing
+uv run pytest --cov=myproject --cov-branch --cov-report=term-missing
 ```
 
 Target: identify uncovered code paths that will need tests.
@@ -160,6 +160,32 @@ fn test_format_basic() {
 }
 ```
 
+### Snapshot Testing with insta
+
+The [`insta`](https://insta.rs/) crate is the standard for snapshot testing in Rust.
+It works similarly to golden tests but manages snapshots automatically, making it
+an excellent complement to the fixture-based approach above:
+
+```rust
+use insta::assert_snapshot;
+
+#[test]
+fn test_format_basic() {
+    let input = include_str!("../../test-fixtures/input/basic.md");
+    let result = format_document(input, &Config::default());
+    assert_snapshot!(result);
+}
+```
+
+Run `cargo insta review` to interactively accept or reject snapshot changes.
+This is especially useful during active porting when outputs are stabilizing.
+
+Add to `Cargo.toml`:
+```toml
+[dev-dependencies]
+insta = "1"
+```
+
 ### Property-Based Tests
 
 Add `proptest` tests for algorithmic properties:
@@ -217,7 +243,7 @@ of the CI pipeline during development:
 cross-validate:
   runs-on: ubuntu-latest
   steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         submodules: recursive
     - uses: dtolnay/rust-toolchain@stable
@@ -253,8 +279,8 @@ As you port each module:
 
 ## Related Guidelines
 
-- For golden testing patterns, see `tbd guidelines golden-testing-guidelines`
-- For general testing rules, see `tbd guidelines general-testing-rules`
-- For TDD methodology, see `tbd guidelines general-tdd-guidelines`
-- For porting rules, see `tbd guidelines python-to-rust-porting-rules`
-- For CLI porting, see `tbd guidelines python-to-rust-cli-porting`
+- For golden testing patterns, see `tbd guidelines golden-testing-guidelines` (guidelines/golden-testing-guidelines.md)
+- For general testing rules, see `tbd guidelines general-testing-rules` (guidelines/general-testing-rules.md)
+- For TDD methodology, see `tbd guidelines general-tdd-guidelines` (guidelines/general-tdd-guidelines.md)
+- For porting rules, see `tbd guidelines python-to-rust-porting-rules` (guidelines/python-to-rust-porting-rules.md)
+- For CLI porting, see `tbd guidelines python-to-rust-cli-porting` (guidelines/python-to-rust-cli-porting.md)

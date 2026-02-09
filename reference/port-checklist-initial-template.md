@@ -15,8 +15,8 @@ Practices](rust-cli-best-practices.md)
 * * *
 
 > **Completion Gate:** Acceptance requires exact 100% passing of every test, exact 100%
-> parity with every original Python test, and exact byte-for-byte matching on all
-> comparisons (zero diffs).
+> parity with every original Python test, and byte-for-byte matching with documented
+> exceptions on all comparisons (zero unexplained diffs).
 > This includes:
 > 
 > - Test output and processing results
@@ -127,7 +127,7 @@ Practices](rust-cli-best-practices.md)
   - [ ] Logging: `tracing = "0.1"`, `tracing-subscriber = { version = "0.3", features =
     ["env-filter"] }`
 
-  - [ ] Serialization (if needed): `serde`, `toml`, `serde_json`, `serde_yaml`
+  - [ ] Serialization (if needed): `serde`, `toml`, `serde_json`, `serde_yaml_ng`
 
   - [ ] Domain-specific libraries (markdown, file ops, etc.)
 
@@ -300,7 +300,7 @@ Practices](rust-cli-best-practices.md)
 
   - [ ] Minimize allocations in hot paths
 
-  - [ ] Use lazy static regex patterns (`once_cell::sync::Lazy`)
+  - [ ] Use lazy static regex patterns (`std::sync::LazyLock`)
 
   - [ ] Consider `rayon` for parallel processing if applicable
 
@@ -529,5 +529,18 @@ Practices](rust-cli-best-practices.md)
 
   - [ ] CI/CD pipeline passes all checks
 
-**Port is complete when ALL items above are checked.
+### Case Study Observations (Optional)
+
+If conducting this port as a case study to improve the playbook:
+
+- [ ] Observations recorded for each phase using the
+  [observation template](case-study-observations-template.md)
+- [ ] Final metrics summary completed (LOC, tests, time, dependency comparison)
+- [ ] Playbook issues triaged using the
+  [improvement triage template](case-study-improvement-triage-template.md)
+- [ ] Case study artifacts placed in `case-studies/<project-name>/`
+
+See the [meta-playbook](meta-improving-this-playbook.md) for the full process.
+
+**Port is complete when ALL mandatory items above are checked.
 Zero failures accepted.**

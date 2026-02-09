@@ -173,7 +173,7 @@ Tests validate output against Python Flowmark on real-world documents:
 
 **Compatibility**: ~95% byte-for-byte identical output on real-world documents
 
-**Fixed Issues**: 12/13 parser differences successfully worked around (92%)
+**Fixed Issues**: 14/17 parser differences successfully worked around (82%)
 
 **Unfixable Issues**:
 
