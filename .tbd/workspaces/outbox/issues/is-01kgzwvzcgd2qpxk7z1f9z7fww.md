@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 4.6 Add async patterns mapping table
 type: is
-updated_at: 2026-02-09T00:55:59.830Z
-version: 3
+updated_at: 2026-02-09T01:18:11.809Z
+version: 5
 ---
 async def→async fn, await→.await, asyncio.run→#[tokio::main], asyncio.gather→tokio::join!, asyncio.sleep→tokio::time::sleep. Fix in: reference/python-to-rust-mapping-reference.md new section

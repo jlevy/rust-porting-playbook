@@ -11,7 +11,7 @@ priority: 2
 status: closed
 title: Review guidelines/rust-general-rules.md
 type: is
-updated_at: 2026-02-09T00:55:59.388Z
-version: 5
+updated_at: 2026-02-09T01:18:11.375Z
+version: 7
 ---
 Review Edition 2024 patterns, ownership/borrowing advice, error handling (thiserror/anyhow), string handling, regex patterns, code organization, anti-patterns, testing, performance. Fact-check version requirements and API details.

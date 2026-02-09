@@ -26,7 +26,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: "Phase 5: Apply SUGGESTION improvements"
 type: is
-updated_at: 2026-02-09T00:55:59.558Z
-version: 17
+updated_at: 2026-02-09T01:18:11.540Z
+version: 19
 ---
 Add file path cross-refs, fix for/else mapping, add clippy gate, add derive guidance, add cargo-dist, add SIGPIPE, add shell completions, add ExitCode, fix LineBreakMode::None, add approx crate, fix README stats, add rejected alternatives, add --cov-branch. 13 items.

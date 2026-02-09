@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 1.2 Fix resolver=2 to resolver=3 for Edition 2024
 type: is
-updated_at: 2026-02-09T00:55:59.580Z
-version: 3
+updated_at: 2026-02-09T01:18:11.560Z
+version: 5
 ---
 Edition 2024 uses resolver v3 (MSRV-aware). Fix in: guidelines/rust-project-setup.md L79, reference/rust-cli-best-practices.md (search)

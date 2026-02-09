@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 2.5 Add match command.as_str() pattern
 type: is
-updated_at: 2026-02-09T00:55:59.693Z
-version: 3
+updated_at: 2026-02-09T01:18:11.660Z
+version: 5
 ---
 match command { 'quit' => } won't compile if command is String. Fix in: reference/python-to-rust-mapping-reference.md L93

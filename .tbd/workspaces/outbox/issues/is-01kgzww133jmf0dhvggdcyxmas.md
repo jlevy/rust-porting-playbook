@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 4.10 Add missing decision entries to flowmark decision log
 type: is
-updated_at: 2026-02-09T00:55:59.857Z
-version: 3
+updated_at: 2026-02-09T01:18:11.833Z
+version: 5
 ---
 Missing: D1 cross-ref to library choices, error handling strategy, string ownership strategy, arena pattern rationale. Fix in: case-studies/flowmark/flowmark-port-decision-log.md

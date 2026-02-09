@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 5.7 Add shell completions guidance (clap_complete)
 type: is
-updated_at: 2026-02-09T00:55:59.905Z
-version: 3
+updated_at: 2026-02-09T01:18:11.879Z
+version: 5
 ---
 clap_complete for shell completion scripts missing. Fix in: guidelines/rust-cli-app-patterns.md, reference/rust-cli-best-practices.md

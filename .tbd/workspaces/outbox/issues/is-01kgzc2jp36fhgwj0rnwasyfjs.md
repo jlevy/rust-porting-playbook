@@ -11,7 +11,7 @@ priority: 2
 status: closed
 title: Review reference/port-checklist-update-template.md
 type: is
-updated_at: 2026-02-09T00:55:59.472Z
-version: 5
+updated_at: 2026-02-09T01:18:11.458Z
+version: 7
 ---
 Review ongoing sync checklist template: sync Python changes, categorize, port bug fixes, port new features, port tests. Assess completeness of sync workflow.

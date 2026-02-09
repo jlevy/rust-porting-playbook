@@ -25,7 +25,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: "Phase 1: Fix all CRITICAL factual errors"
 type: is
-updated_at: 2026-02-09T00:55:59.529Z
-version: 16
+updated_at: 2026-02-09T01:18:11.509Z
+version: 18
 ---
 Fix serde_yaml→serde_yaml_ng, resolver v3, non-compiling build.rs, pitfall#6 identical examples, assert→debug_assert danger, version constraint swap, archived actions, comrak CowStr error, dict insertion-order warning, wrapping/decision-log contradiction, workaround count inconsistencies, main() error handling contradiction. 12 items.

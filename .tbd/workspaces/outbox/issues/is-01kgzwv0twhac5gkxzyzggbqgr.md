@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 3.6 Fix effort table percentages summing to 105%
 type: is
-updated_at: 2026-02-09T00:55:59.736Z
-version: 3
+updated_at: 2026-02-09T01:18:11.725Z
+version: 5
 ---
 5+10+5+5+35+35+10=105%. Adjust to sum to 100%. Fix in: reference/python-to-rust-playbook.md L554-563

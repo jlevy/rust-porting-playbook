@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 1.10 Fix wrapping solution / decision log contradiction
 type: is
-updated_at: 2026-02-09T00:55:59.643Z
-version: 3
+updated_at: 2026-02-09T01:18:11.613Z
+version: 5
 ---
 Wrapping doc says hardbreaks=false+width=target. Decision log D7 says hardbreaks=true+width=999999+240 lines custom code. Mutually exclusive. Fix in: case-studies/flowmark/flowmark-port-decision-log.md D7, case-studies/flowmark/flowmark-port-wrapping-solution.md

@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 3.9 Add Callable → three Rust function traits explanation
 type: is
-updated_at: 2026-02-09T00:55:59.758Z
-version: 3
+updated_at: 2026-02-09T01:18:11.744Z
+version: 5
 ---
 Fn vs FnMut vs FnOnce not explained. Fix in: reference/python-to-rust-mapping-reference.md L51

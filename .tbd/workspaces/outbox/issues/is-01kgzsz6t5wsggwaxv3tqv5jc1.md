@@ -18,7 +18,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: "Phase 2: Add CRITICAL missing content"
 type: is
-updated_at: 2026-02-09T00:55:59.536Z
-version: 9
+updated_at: 2026-02-09T01:18:11.520Z
+version: 11
 ---
 Add Edition 2024 actual changes, replace once_cell with LazyLock, add Cow<str> to type mappings, add re.search/re.fullmatch regex mappings, add match command.as_str() pattern. 5 items.

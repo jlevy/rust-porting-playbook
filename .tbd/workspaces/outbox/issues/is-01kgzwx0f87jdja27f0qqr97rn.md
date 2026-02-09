@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 5.9 Fix LineBreakMode::None shadowing Option::None
 type: is
-updated_at: 2026-02-09T00:55:59.919Z
-version: 3
+updated_at: 2026-02-09T01:18:11.893Z
+version: 5
 ---
 enum variant None shadows Option::None causing confusing errors. Rename to NoBreaks or Off. Fix in: guidelines/rust-general-rules.md L135

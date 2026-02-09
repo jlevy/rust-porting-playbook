@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 3.1 Fix byte-for-byte parity contradiction with strategy matrix
 type: is
-updated_at: 2026-02-09T00:55:59.700Z
-version: 3
+updated_at: 2026-02-09T01:18:11.667Z
+version: 5
 ---
 Core principle says byte-for-byte is THE criterion; strategy matrix says accept cosmetic diffs. Reword as goal with documented exceptions. Fix in: guidelines/python-to-rust-porting-rules.md L18, reference/port-checklist-initial-template.md L17-19

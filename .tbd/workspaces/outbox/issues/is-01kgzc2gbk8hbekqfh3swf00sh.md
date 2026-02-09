@@ -11,7 +11,7 @@ priority: 2
 status: closed
 title: Review reference/python-to-rust-porting-guide.md
 type: is
-updated_at: 2026-02-09T00:55:59.433Z
-version: 5
+updated_at: 2026-02-09T01:18:11.423Z
+version: 7
 ---
 Review version requirements, version tracking, build.rs implementation, README version table, CHANGELOG references, version display format. Fact-check Python 3.11+ and Rust 1.85+ requirements and rationale.

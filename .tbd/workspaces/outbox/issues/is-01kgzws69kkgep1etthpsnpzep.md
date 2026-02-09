@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 1.1 Replace serde_yaml with serde_yaml_ng everywhere
 type: is
-updated_at: 2026-02-09T00:55:59.573Z
-version: 3
+updated_at: 2026-02-09T01:18:11.554Z
+version: 5
 ---
 serde_yaml archived March 2024. Update in: guidelines/python-to-rust-porting-rules.md L136, reference/python-to-rust-playbook.md L46+L208, reference/python-to-rust-mapping-reference.md L555, reference/python-to-rust-porting-guide.md (search all)

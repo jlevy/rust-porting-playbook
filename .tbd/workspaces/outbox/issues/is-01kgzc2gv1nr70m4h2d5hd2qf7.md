@@ -11,7 +11,7 @@ priority: 2
 status: closed
 title: Review reference/rust-cli-best-practices.md
 type: is
-updated_at: 2026-02-09T00:55:59.441Z
-version: 5
+updated_at: 2026-02-09T01:18:11.430Z
+version: 7
 ---
 Review production-ready CLI standards, cross-references (ripgrep/bat/fd/jj), project structure, Cargo.toml essentials, core dependencies, feature flags, workspace patterns. Validate version numbers and API details.

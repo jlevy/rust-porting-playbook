@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 2.3 Add Cow<str> to type mappings in porting rules
 type: is
-updated_at: 2026-02-09T00:55:59.680Z
-version: 3
+updated_at: 2026-02-09T01:18:11.646Z
+version: 5
 ---
 Essential for text-processing ports. Add row after L42 in guidelines/python-to-rust-porting-rules.md: str (sometimes modified) → Cow<'_, str>

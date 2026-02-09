@@ -23,7 +23,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: "Phase 4: Add IMPORTANT missing content"
 type: is
-updated_at: 2026-02-09T00:55:59.550Z
-version: 14
+updated_at: 2026-02-09T01:18:11.533Z
+version: 16
 ---
 Add dunder methods table, generators→iterators, context managers→RAII, dataclasses→derives, enum.Enum, async patterns, parallelism patterns, concurrency deps, insta snapshot testing, missing decision log entries. 10 items.

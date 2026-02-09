@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: "3.3 Fix XXX: comment convention to standard markers"
 type: is
-updated_at: 2026-02-09T00:55:59.715Z
-version: 3
+updated_at: 2026-02-09T01:18:11.705Z
+version: 5
 ---
 XXX: not recognized by IDEs/linters. Change to HACK:/WORKAROUND: or define explicitly. Fix in: guidelines/python-to-rust-porting-rules.md L291-296, reference/python-to-rust-playbook.md L358-362+L425-430, case study files

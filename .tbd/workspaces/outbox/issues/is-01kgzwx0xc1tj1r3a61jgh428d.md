@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 5.10 Add pytest.approx → approx crate mapping
 type: is
-updated_at: 2026-02-09T00:55:59.925Z
-version: 3
+updated_at: 2026-02-09T01:18:11.899Z
+version: 5
 ---
 Manual abs() < epsilon is error-prone near zero. Add approx crate assert_relative_eq!. Fix in: reference/python-to-rust-mapping-reference.md L297

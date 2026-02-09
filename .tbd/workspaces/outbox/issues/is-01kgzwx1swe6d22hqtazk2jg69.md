@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 5.12 Add rejected alternatives to decision log entries
 type: is
-updated_at: 2026-02-09T00:55:59.939Z
-version: 3
+updated_at: 2026-02-09T01:18:11.910Z
+version: 5
 ---
 No decision has Alternatives Considered section. Add brief subsections to D2-D8. Fix in: case-studies/flowmark/flowmark-port-decision-log.md

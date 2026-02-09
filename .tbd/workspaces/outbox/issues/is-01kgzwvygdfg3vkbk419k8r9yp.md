@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 4.4 Add dataclasses → struct-with-derives mapping
 type: is
-updated_at: 2026-02-09T00:55:59.816Z
-version: 3
+updated_at: 2026-02-09T01:18:11.797Z
+version: 5
 ---
 @dataclass→#[derive(Debug,Clone,PartialEq)], frozen=True→no &mut self, order=True→PartialOrd+Ord. Fix in: reference/python-to-rust-mapping-reference.md new section

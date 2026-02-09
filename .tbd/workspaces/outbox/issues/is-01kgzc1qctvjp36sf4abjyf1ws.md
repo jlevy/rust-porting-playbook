@@ -11,7 +11,7 @@ priority: 2
 status: closed
 title: Review guidelines/python-to-rust-porting-rules.md
 type: is
-updated_at: 2026-02-09T00:55:59.373Z
-version: 5
+updated_at: 2026-02-09T01:18:11.355Z
+version: 7
 ---
 Review type mappings, dependency mappings, porting sequence, 8 key pitfalls, library workaround strategy matrix, acceptance criteria. Fact-check all Rust/Python equivalences. Identify gaps, ambiguities, better approaches.

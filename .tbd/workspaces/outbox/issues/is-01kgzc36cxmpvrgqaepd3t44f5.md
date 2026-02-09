@@ -11,7 +11,7 @@ priority: 2
 status: closed
 title: Review case-studies/flowmark/flowmark-port-analysis.md
 type: is
-updated_at: 2026-02-09T00:55:59.479Z
-version: 5
+updated_at: 2026-02-09T01:18:11.465Z
+version: 7
 ---
 Review automatable vs judgment-required analysis, 5 generalizable patterns, ideal agent workflow, agent struggle areas, library bug triage framework. Assess whether lessons generalize beyond flowmark.

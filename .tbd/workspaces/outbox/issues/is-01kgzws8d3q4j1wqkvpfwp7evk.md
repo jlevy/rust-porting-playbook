@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 1.6 Fix swapped version constraint mappings
 type: is
-updated_at: 2026-02-09T00:55:59.610Z
-version: 3
+updated_at: 2026-02-09T01:18:11.586Z
+version: 5
 ---
 ~=1.4→~1.4 is WRONG (should be caret 1.4). ==1.4.*→1.4 is WRONG (should be ~1.4). The two rows are swapped. Fix in: reference/python-to-rust-mapping-reference.md L339-340

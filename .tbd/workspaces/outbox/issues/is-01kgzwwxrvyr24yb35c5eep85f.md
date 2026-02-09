@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 5.3 Add clippy quality gate to acceptance criteria
 type: is
-updated_at: 2026-02-09T00:55:59.878Z
-version: 3
+updated_at: 2026-02-09T01:18:11.852Z
+version: 5
 ---
 cargo clippy -- -D warnings missing from checklist. Fix in: guidelines/python-to-rust-porting-rules.md after L312

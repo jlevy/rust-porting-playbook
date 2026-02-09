@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 3.11 Add ring license hash staleness warning
 type: is
-updated_at: 2026-02-09T00:55:59.774Z
-version: 3
+updated_at: 2026-02-09T01:18:11.756Z
+version: 5
 ---
 Hash 0xbd0eed23 is version-specific, will break on ring update. Add comment in: guidelines/rust-project-setup.md L317-320

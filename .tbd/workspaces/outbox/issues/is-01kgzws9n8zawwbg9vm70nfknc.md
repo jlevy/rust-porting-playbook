@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 1.9 Add dict→HashMap insertion-order warning
 type: is
-updated_at: 2026-02-09T00:55:59.634Z
-version: 3
+updated_at: 2026-02-09T01:18:11.607Z
+version: 5
 ---
 Python dict preserves insertion order since 3.7; HashMap does not. Add IndexMap guidance. Fix in: guidelines/python-to-rust-porting-rules.md L49, reference/python-to-rust-mapping-reference.md L31

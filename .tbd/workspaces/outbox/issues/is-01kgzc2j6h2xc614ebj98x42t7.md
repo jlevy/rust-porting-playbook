@@ -11,7 +11,7 @@ priority: 2
 status: closed
 title: Review reference/port-checklist-initial-template.md
 type: is
-updated_at: 2026-02-09T00:55:59.464Z
-version: 5
+updated_at: 2026-02-09T01:18:11.452Z
+version: 7
 ---
 Review 10-step implementation checklist template: project setup, dependencies, core setup, module-by-module porting. Check for completeness, ordering, and accuracy of steps.

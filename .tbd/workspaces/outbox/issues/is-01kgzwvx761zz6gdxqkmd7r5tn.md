@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 4.1 Add dunder methods → Rust traits table
 type: is
-updated_at: 2026-02-09T00:55:59.796Z
-version: 3
+updated_at: 2026-02-09T01:18:11.778Z
+version: 5
 ---
 Highest-value missing content. Add __str__→Display, __repr__→Debug, __eq__→PartialEq, __hash__→Hash, __lt__→PartialOrd, __len__→.len(), __iter__→Iterator, __getitem__→Index, __add__→ops::Add, __enter__/__exit__→Drop. Fix in: reference/python-to-rust-mapping-reference.md after L283

@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 1.5 Fix assert→debug_assert dangerous default
 type: is
-updated_at: 2026-02-09T00:55:59.602Z
-version: 3
+updated_at: 2026-02-09T01:18:11.580Z
+version: 5
 ---
 debug_assert! stripped in release builds. Fix in: guidelines/python-to-rust-porting-rules.md L69, reference/python-to-rust-mapping-reference.md L148. Split into invariant vs validation rows.

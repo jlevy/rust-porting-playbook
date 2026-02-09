@@ -12,7 +12,7 @@ spec_path: docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md
 status: closed
 title: 5.13 Add --cov-branch to pytest coverage commands
 type: is
-updated_at: 2026-02-09T00:55:59.945Z
-version: 3
+updated_at: 2026-02-09T01:18:11.916Z
+version: 5
 ---
 Branch coverage more meaningful than line coverage. Fix in: reference/python-to-rust-playbook.md L57, reference/python-to-rust-test-coverage-playbook.md, guidelines/test-coverage-for-porting.md L28
