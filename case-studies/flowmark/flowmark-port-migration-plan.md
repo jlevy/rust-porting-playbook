@@ -1,6 +1,37 @@
 # Flowmark Rust CLI Migration Plan
 
+**Related:**
+[Library Choices](flowmark-port-library-choices.md) |
+[Decision Log](flowmark-port-decision-log.md) |
+[Analysis](flowmark-port-analysis.md) |
+[Cross-Validation](flowmark-port-cross-validation.md) |
+[Comrak Bug](flowmark-port-comrak-bug.md) |
+[Wrapping Solution](flowmark-port-wrapping-solution.md)
+
 **Version:** 2.4 | **Date:** 2025-11-02
+
+## Table of Contents
+
+1. [Executive Summary](#executive-summary)
+2. [Markdown Library Feature Parity Analysis](#1-markdown-library-feature-parity-analysis)
+3. [Rust Architecture Design](#2-rust-architecture-design)
+4. [Dependencies and Crate Selection](#3-dependencies-and-crate-selection)
+5. [Custom Renderer Implementation](#4-custom-renderer-implementation)
+6. [Line Wrapping Implementation](#5-line-wrapping-implementation)
+7. [Public API Design](#6-public-api-design)
+8. [Testing Strategy](#7-testing-strategy)
+9. [Build and Release Configuration](#8-build-and-release-configuration)
+10. [Single-Process Implementation Plan](#9-single-process-implementation-plan)
+11. [Performance Targets](#10-performance-targets)
+12. [Success Criteria](#11-success-criteria)
+13. [Risk Mitigation](#12-risk-mitigation)
+14. [Tooling Decisions: Modern vs Traditional](#13-tooling-decisions-modern-vs-traditional)
+15. [Future Enhancements](#14-future-enhancements)
+16. [Appendices](#appendices)
+17. [Lessons Learned from Implementation](#lessons-learned-from-implementation)
+18. [Conclusion](#conclusion)
+19. [Corner Cases and Known Issues](#corner-cases-and-known-issues)
+20. [Wrapping Algorithm Implementation](#wrapping-algorithm-implementation---complete-)
 
 ## Executive Summary
 
@@ -213,6 +244,12 @@ semi-automatically track the Python repository, with:
 ## 2. Rust Architecture Design
 
 ### 2.1 Project Structure
+
+> **Implementation note (2026-02-09):** This section describes the originally planned
+> workspace structure. During implementation, the project was consolidated to a single
+> package with feature flags (see [Decision Log D2](flowmark-port-decision-log.md#d2-workspace-vs-single-package)).
+> The structure below is retained for reference but the actual implementation uses a
+> simpler single-package layout.
 
 ```
 flowmark-rs/                        # Repository name (clear it's Rust implementation)
@@ -611,9 +648,14 @@ Following recommendations from the [Rust CLI Book](https://rust-cli.github.io/bo
 [rust-cli-recommendations](https://rust-cli-recommendations.sunshowers.io/), and modern
 Rust CLI tooling (2025):
 
+<!-- Version note (2026-02-09): Dependencies below reflect versions at time of planning
+     (November 2025). comrak 0.29 has since evolved to 0.30+ through 0.50+. Re-evaluate
+     versions when starting implementation. -->
+
 ```toml
 [dependencies]
 # Markdown parsing (SELECTED: comrak over pulldown-cmark)
+# NOTE: version 0.29 was current at time of evaluation (Nov 2025); check for updates
 comrak = { version = "0.29", default-features = false, features = [
     "syntect",  # Syntax highlighting plugin (optional)
 ] }
@@ -633,7 +675,8 @@ clap_complete = "4.5"              # Shell completion generation
 unicode-segmentation = "1.11"      # Grapheme/word boundaries
 unicode-normalization = "0.1"      # Unicode NFC/NFD
 regex = "1.10"                     # Regex engine (sentence splitting)
-once_cell = "1.19"                 # Lazy statics for compiled regexes
+# NOTE: once_cell was replaced by std::sync::LazyLock in Edition 2024 (see D8)
+# once_cell = "1.19"              # No longer needed with Rust 1.85+/Edition 2024
 
 # Error handling (CHOICE: color-eyre for modern, colored errors)
 # Alternative considered: anyhow + thiserror
@@ -1373,11 +1416,12 @@ impl LineWrapper for SentenceWrapper {
 Port from `sentence_split_regex.py`:
 
 ```rust
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 use regex::Regex;
 
 // Port SENTENCE_SPLIT_RE from Python (line 8-40 in sentence_split_regex.py)
-static SENTENCE_SPLIT_RE: Lazy<Regex> = Lazy::new(|| {
+// NOTE: Uses LazyLock (Edition 2024 / Rust 1.85+) instead of once_cell::Lazy
+static SENTENCE_SPLIT_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(?x)
         (?<=[.!?])              # After sentence-ending punctuation
         (?<!Mr\.)(?<!Mrs\.)(?<!Dr\.)(?<!Ms\.)  # Not abbreviations
@@ -2339,7 +2383,7 @@ The strategy:
 
 ### 10.2 Optimization Strategies
 
-1. **Regex Compilation**: Use `once_cell::sync::Lazy` for all compiled patterns
+1. **Regex Compilation**: Use `std::sync::LazyLock` (Edition 2024) for all compiled patterns
 
 2. **String Allocation**: Pre-allocate with `String::with_capacity()`
 
@@ -2625,7 +2669,7 @@ clap_complete = "4.5"  # Shell completions
 
 ## 14. Future Enhancements
 
-### 13.1 Post-v1.0 Features
+### 14.1 Post-v1.0 Features
 
 **Performance:**
 
@@ -2667,13 +2711,16 @@ clap_complete = "4.5"  # Shell completions
 
 ### B. Dependency Comparison
 
+> **Version note (2026-02-09):** Versions below were current at time of planning
+> (November 2025). comrak 0.29 has since evolved to 0.50+. Re-evaluate when implementing.
+
 | Feature | Python | Rust |
 | --- | --- | --- |
 | Markdown | `marko>=2.1.3` | `comrak>=0.29` |
 | Regex | `regex>=2024.11.6` | `regex>=1.10` |
 | Atomic I/O | `strif>=3.0.1` | `tempfile>=3.10` |
 | CLI | argparse (stdlib) | `clap>=4.5` |
-| Error handling | (stdlib) | `anyhow + thiserror` |
+| Error handling | (stdlib) | `color-eyre + thiserror` (see [D9](flowmark-port-decision-log.md#d9-error-handling-strategy)) |
 
 ### C. Repository Structure
 
@@ -2754,11 +2801,11 @@ behavior).
 
 **Implementation**:
 ```rust
-static PARAGRAPH_BREAK_PATTERN: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"\n\s*\n").unwrap());
+static PARAGRAPH_BREAK_PATTERN: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\n\s*\n").unwrap());
 ```
 
-**Lesson**: Regex patterns compile once using `once_cell::Lazy` for performance.
+**Lesson**: Regex patterns compile once using `std::sync::LazyLock` (Edition 2024) for performance.
 
 #### 4. Frontmatter Preservation
 
@@ -3036,11 +3083,12 @@ a **single unified process** while maintaining **exact feature parity** through
 
 **Architecture:**
 
-- ✅ **Git submodule** strategy for shared test fixtures
+- ✅ **Hybrid Copy+CI** strategy for shared test fixtures (initially planned as git
+  submodule, revised to hybrid approach in [Section 2.2](#22-python-rust-sync-strategy))
 
   - Source: Best practices for cross-language validation
 
-  - Rationale: Single source of truth, automated sync
+  - Rationale: Simpler for contributors than submodules, CI validates against live Python
 
 - ✅ **Cross-validation script** ensures byte-for-byte identical output
 
@@ -3082,7 +3130,7 @@ Following the [Rust CLI Book](https://rust-cli.github.io/book/) tutorial structu
 
 3. **First implementation** of core formatting
 
-4. **Nicer error reporting** with anyhow + context
+4. **Nicer error reporting** with color-eyre/anyhow + context (see [Section 13](#13-tooling-decisions-modern-vs-traditional) for final choice)
 
 5. **Output for humans and machines** (colors, JSON)
 
@@ -3152,16 +3200,17 @@ validate continuously against Python, release when cross-validation passes 100%.
 
 * * *
 
-**Document Version:** 2.2 **Last Updated:** 2025-11-02 **Status:** Ready for
-Implementation **References:** Rust CLI Book, rust-cli-recommendations, comrak
+**Document Version:** 2.4 | **Last Updated:** 2025-11-02 | **Status:** Ready for
+Implementation | **References:** Rust CLI Book, rust-cli-recommendations, comrak
 documentation, modern CLI tooling (2025)
 
 ## Corner Cases and Known Issues
 
 ### Comrak vs Marko Rendering Differences
 
-⚠️ **See [comrak-issues.md](./comrak-issues.md) for comprehensive documentation of all
-comrak vs marko differences.**
+**See [Cross-Validation Report](flowmark-port-cross-validation.md) and
+[Library Choices](flowmark-port-library-choices.md#all-workarounds-implemented) for
+comprehensive documentation of all comrak vs marko differences.**
 
 The Rust implementation uses `comrak` (CommonMark) while Python uses `marko` (Markdown).
 These have different rendering behaviors that required post-processing workarounds.

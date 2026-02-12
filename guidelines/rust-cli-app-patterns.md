@@ -58,6 +58,7 @@ path = "src/main.rs"
 ### Derive API (Recommended)
 
 ```rust
+use std::path::PathBuf;
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -96,6 +97,8 @@ pub struct Args {
 ### Subcommands (when needed)
 
 ```rust
+use clap::Subcommand;
+
 #[derive(Subcommand)]
 enum Commands {
     /// Format a document
@@ -112,10 +115,13 @@ enum Commands {
 The standard CLI I/O pattern -- read from file or stdin, write to file or stdout:
 
 ```rust
-fn read_input(path: Option<&Path>) -> Result<String> {
+use anyhow::Context;
+use std::io::Read;
+
+fn read_input(path: Option<&Path>) -> anyhow::Result<String> {
     match path {
         Some(p) => std::fs::read_to_string(p)
-            .map_err(|e| Error::Io(format!("reading {}: {e}", p.display()))),
+            .with_context(|| format!("reading {}", p.display())),
         None => {
             let mut buf = String::new();
             std::io::stdin().read_to_string(&mut buf)?;
@@ -124,10 +130,10 @@ fn read_input(path: Option<&Path>) -> Result<String> {
     }
 }
 
-fn write_output(content: &str, path: Option<&Path>) -> Result<()> {
+fn write_output(content: &str, path: Option<&Path>) -> anyhow::Result<()> {
     match path {
         Some(p) => std::fs::write(p, content)
-            .map_err(|e| Error::Io(format!("writing {}: {e}", p.display()))),
+            .with_context(|| format!("writing {}", p.display())),
         None => {
             print!("{content}");
             Ok(())
@@ -141,9 +147,10 @@ fn write_output(content: &str, path: Option<&Path>) -> Result<()> {
 For in-place file modification, use atomic writes via `tempfile`:
 
 ```rust
+use std::io::Write;
 use tempfile::NamedTempFile;
 
-fn atomic_write(path: &Path, content: &str) -> Result<()> {
+fn atomic_write(path: &Path, content: &str) -> anyhow::Result<()> {
     let dir = path.parent().unwrap_or(Path::new("."));
     let mut tmp = NamedTempFile::new_in(dir)?;
     tmp.write_all(content.as_bytes())?;
@@ -155,7 +162,7 @@ fn atomic_write(path: &Path, content: &str) -> Result<()> {
 ### Backup Before Modification
 
 ```rust
-fn write_with_backup(path: &Path, content: &str, backup_ext: &str) -> Result<()> {
+fn write_with_backup(path: &Path, content: &str, backup_ext: &str) -> anyhow::Result<()> {
     if path.exists() {
         let backup = path.with_extension(backup_ext);
         std::fs::copy(path, &backup)?;
@@ -164,12 +171,51 @@ fn write_with_backup(path: &Path, content: &str, backup_ext: &str) -> Result<()>
 }
 ```
 
-## Error Reporting
+## Error Handling and Exit Codes
 
-### Main Function Pattern
+### Recommended: `ExitCode` with explicit error printing
 
-Let `color_eyre` handle error reporting -- return `Result` from `main()` and use `?`
-throughout. Do not mix `Result` returns with manual `eprintln!`/`process::exit()`.
+Prefer `fn main() -> ExitCode` over `process::exit()` -- it allows destructors to run
+and gives you full control over error formatting. Keep a separate `run()` function that
+returns `Result`:
+
+```rust
+use std::process::ExitCode;
+
+fn main() -> ExitCode {
+    // SIGPIPE: restore default behavior (see "SIGPIPE Handling" below)
+    #[cfg(unix)]
+    unsafe {
+        libc::signal(libc::SIGPIPE, libc::SIG_DFL);
+    }
+
+    match run() {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("error: {e:#}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn run() -> anyhow::Result<()> {
+    let args = Args::parse();
+    setup_logging(args.verbose)?;
+    // ... application logic
+    Ok(())
+}
+```
+
+This pattern is preferred because:
+- `ExitCode` runs destructors and flushes buffers (unlike `process::exit()`)
+- Error formatting is explicit -- you control what the user sees
+- `run()` returns `Result` so you can use `?` throughout your logic
+
+### Alternative: `color-eyre` for rich error reports
+
+For tools where backtraces and rich error context aid debugging, use `color-eyre`.
+Return `Result` from `main()` directly -- do **not** also catch errors manually with
+`if let Err(e)` and call `process::exit(1)`, as that defeats `color-eyre`'s formatting:
 
 ```rust
 fn main() -> color_eyre::Result<()> {
@@ -181,8 +227,10 @@ fn main() -> color_eyre::Result<()> {
 }
 ```
 
-> **Note:** `color-eyre` is in maintenance mode. For simpler applications, `anyhow` is an
-> actively maintained alternative.
+> **Maintenance note:** `color-eyre` is in maintenance mode (last published 2023).
+> It still works, but `anyhow` is actively maintained and is the safer long-term choice
+> for most CLIs. Use `color-eyre` only when you specifically need its colorized
+> backtraces and `SpanTrace` integration.
 
 ### Exit Codes
 
@@ -192,6 +240,10 @@ Follow Unix conventions and match Python when porting:
 - `2` -- usage/validation error (clap handles this automatically)
 - `130` -- interrupted (SIGINT / Ctrl-C)
 
+Avoid `process::exit()` in library code -- it terminates immediately without running
+destructors. If you need custom exit codes beyond SUCCESS/FAILURE, use
+`ExitCode::from(n)`.
+
 ### Diagnostics to Stderr
 
 - **stdout**: program output only (data, formatted results)
@@ -200,15 +252,32 @@ Follow Unix conventions and match Python when porting:
 
 ## Logging and Tracing
 
+### `tracing` vs `log`
+
+Rust has two major logging ecosystems:
+
+- **`log`** -- the original facade crate. Simple, widely supported, sufficient for basic
+  CLI apps that only need leveled log messages.
+- **`tracing`** -- a superset of `log`. Adds structured fields, spans (timed scopes),
+  and async-aware instrumentation. Preferred for new projects because it is backwards-
+  compatible with `log` (libraries using `log` emit events into `tracing` subscribers).
+
+**Recommendation:** Use `tracing` + `tracing-subscriber` for CLI applications. Libraries
+should depend on `tracing` (or just `log` if they want minimal dependencies -- `tracing`
+picks up `log` events automatically).
+
+### Setup
+
 ```rust
 use tracing::{debug, info, warn};
 use tracing_subscriber::EnvFilter;
 
-fn setup_logging(verbose: bool) -> Result<()> {
+fn setup_logging(verbose: bool) -> anyhow::Result<()> {
     let filter = if verbose {
         EnvFilter::new("debug")
     } else {
-        EnvFilter::new("warn")
+        EnvFilter::from_default_env()  // respects RUST_LOG if set, else "warn"
+            .add_directive("warn".parse()?)
     };
     tracing_subscriber::fmt()
         .with_env_filter(filter)
@@ -218,7 +287,8 @@ fn setup_logging(verbose: bool) -> Result<()> {
 }
 ```
 
-Enable with `RUST_LOG=debug` or `--verbose` flag.
+Enable with `RUST_LOG=debug` or `--verbose` flag. The `EnvFilter::from_default_env()`
+call lets users override with `RUST_LOG` even without `--verbose`.
 
 ## Progress Reporting
 
@@ -242,6 +312,8 @@ pb.finish_with_message("done");
 
 **Agent/CI compatibility:** Disable progress bars when not a TTY:
 ```rust
+use std::io::IsTerminal;
+
 if !std::io::stderr().is_terminal() {
     pb.set_draw_target(indicatif::ProgressDrawTarget::hidden());
 }
@@ -249,10 +321,11 @@ if !std::io::stderr().is_terminal() {
 
 ## Configuration Management
 
-### Builder Pattern
+### Config Struct with Defaults
 
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct Config {
     pub line_width: usize,
     pub typography: TypographyOptions,
@@ -270,6 +343,9 @@ impl Default for Config {
 }
 ```
 
+The `#[serde(default)]` attribute ensures missing fields in a config file fall back to
+`Default::default()`, so users only need to specify values they want to override.
+
 ### Config from CLI Args
 
 Map from clap args to config in one place:
@@ -284,16 +360,54 @@ impl From<&Args> for Config {
 }
 ```
 
+### Layered Configuration
+
+For tools that support config files, layer sources with CLI args taking highest priority:
+
+1. **Built-in defaults** (`Config::default()`)
+2. **Config file** (e.g., `.project.toml` or `pyproject.toml` section)
+3. **Environment variables** (optional)
+4. **CLI arguments** (highest priority)
+
+```rust
+fn load_config(args: &Args) -> anyhow::Result<Config> {
+    let mut config = Config::default();
+
+    // Layer 2: config file
+    if let Some(path) = find_config_file()? {
+        let text = std::fs::read_to_string(&path)?;
+        config = toml::from_str(&text)?;
+    }
+
+    // Layer 4: CLI overrides
+    if let Some(width) = args.width {
+        config.line_width = width;
+    }
+
+    Ok(config)
+}
+```
+
+Use `Option<T>` in the Args struct for overridable fields so you can distinguish
+"user passed a value" from "clap used a default".
+
 ## Cross-Platform Concerns
 
 - **Path handling:** Use `std::path::Path` and `PathBuf`, never string concatenation.
 - **Line endings:** Normalize to `\n` on read. Rust writes bytes verbatim (`\n` stays `\n`
   even on Windows), which is usually correct for text processing tools.
 - **Terminal colors:** Use `console` or `crossterm` for cross-platform color support.
-- **Signal handling:** Register `ctrlc` handler for graceful shutdown:
+- **Signal handling:** For graceful Ctrl-C shutdown, use the `ctrlc` crate. Set an
+  `AtomicBool` flag and check it in your processing loop rather than calling
+  `process::exit()` (which skips destructors):
   ```rust
+  use std::sync::atomic::{AtomicBool, Ordering};
+  use std::sync::Arc;
+
+  let interrupted = Arc::new(AtomicBool::new(false));
+  let flag = interrupted.clone();
   ctrlc::set_handler(move || {
-      std::process::exit(130);
+      flag.store(true, Ordering::Relaxed);
   })?;
   ```
 
@@ -304,7 +418,7 @@ Use Cargo features to separate CLI-only dependencies from the library:
 ```toml
 [features]
 default = ["cli"]
-cli = ["clap", "color-eyre", "tracing-subscriber", "indicatif"]
+cli = ["clap", "anyhow", "tracing-subscriber", "indicatif"]
 
 [[bin]]
 name = "flowmark"
@@ -317,7 +431,7 @@ This allows `flowmark` to be used as a library without pulling in CLI dependenci
 
 When the Rust CLI is a port of a Python CLI, show both versions:
 ```rust
-// PYTHON_SOURCE_VERSION set by build.rs — see reference/python-to-rust-porting-guide.md
+// PYTHON_SOURCE_VERSION set by build.rs -- see reference/python-to-rust-porting-guide.md
 const VERSION_INFO: &str = concat!(
     env!("CARGO_PKG_VERSION"),
     " (port of python-project ",
@@ -330,7 +444,13 @@ const VERSION_INFO: &str = concat!(
 struct Args { /* ... */ }
 ```
 
-Use `build.rs` to extract the Python version from a git submodule at compile time.
+> **Important:** `env!("PYTHON_SOURCE_VERSION")` will fail to compile unless a `build.rs`
+> script sets this variable via `cargo:rustc-env=PYTHON_SOURCE_VERSION=...`. See
+> `tbd reference python-to-rust-porting-guide` for complete `build.rs` examples that
+> extract the version from a Python submodule, a VERSION file, or `git describe`.
+>
+> If you do not have a Python source to track, omit this pattern entirely and use the
+> built-in `version` attribute from `Cargo.toml` (which clap reads automatically).
 
 ## Testing CLI Applications
 
@@ -354,45 +474,53 @@ Use `build.rs` to extract the Python version from a git submodule at compile tim
 For golden testing patterns, see `tbd guidelines golden-testing-guidelines`.
 For general testing rules, see `tbd guidelines general-testing-rules`.
 
-## Additional Patterns
+## SIGPIPE Handling
 
-### SIGPIPE Handling
+Rust ignores SIGPIPE by default, which causes "broken pipe" errors when output is piped
+to `head`, `less`, or any command that closes the read end early. This is a common
+surprise when porting Unix CLI tools.
 
-Rust ignores SIGPIPE by default, causing "broken pipe" errors when piped to `head`, `less`, etc.
+Add this at the very start of `main()`:
 
 ```rust
-// At the start of main():
+// Restore default SIGPIPE behavior so piping to `head` etc. works correctly.
+// Must be the first thing in main(), before any I/O.
 #[cfg(unix)]
 unsafe {
     libc::signal(libc::SIGPIPE, libc::SIG_DFL);
 }
 ```
 
-Requires `libc` dependency. This restores Unix default behavior where writing to a closed pipe
-terminates quietly.
+Add `libc` as a dependency:
+```toml
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+```
 
-### Shell Completions
+Without this fix, `your-tool generate | head -5` will print an error on every run.
+This is already included in the recommended `main()` pattern above.
 
-Use `clap_complete` to generate shell completion scripts for bash, zsh, fish, etc.
+## Shell Completions
 
-### Exit Codes
-
-Prefer `fn main() -> ExitCode` over `process::exit()` -- it allows destructors to run and is
-cleaner:
+Use `clap_complete` to generate shell completion scripts at build time or via a hidden
+subcommand:
 
 ```rust
-use std::process::ExitCode;
+use clap::CommandFactory;
+use clap_complete::{generate, Shell};
 
-fn main() -> ExitCode {
-    match run() {
-        Ok(()) => ExitCode::SUCCESS,
-        Err(e) => {
-            eprintln!("error: {e}");
-            ExitCode::FAILURE
-        }
-    }
+/// Print shell completions to stdout.
+fn print_completions(shell: Shell) {
+    let mut cmd = Args::command();
+    generate(shell, &mut cmd, "project", &mut std::io::stdout());
 }
 ```
+
+Typical usage: `project completions bash > ~/.local/share/bash-completion/completions/project`
+
+For build-time generation (e.g., for packaging), generate completions in `build.rs` and
+include them in your release artifacts. See the
+[clap_complete documentation](https://docs.rs/clap_complete) for details.
 
 ## Related Guidelines
 

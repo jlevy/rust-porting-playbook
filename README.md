@@ -88,15 +88,16 @@ be loaded into an AI agent's context window before starting work. If using
 [tbd](https://github.com/jlevy/tbd), load them with:
 
 ```bash
-tbd guidelines python-to-rust-porting-rules
-tbd guidelines rust-project-setup
-tbd guidelines test-coverage-for-porting
-tbd guidelines python-to-rust-cli-porting
-tbd guidelines rust-general-rules
-tbd guidelines rust-cli-app-patterns
+tbd guidelines python-to-rust-porting-rules    # guidelines/python-to-rust-porting-rules.md
+tbd guidelines rust-project-setup               # guidelines/rust-project-setup.md
+tbd guidelines test-coverage-for-porting        # guidelines/test-coverage-for-porting.md
+tbd guidelines python-to-rust-cli-porting       # guidelines/python-to-rust-cli-porting.md
+tbd guidelines rust-general-rules               # guidelines/rust-general-rules.md
+tbd guidelines rust-cli-app-patterns            # guidelines/rust-cli-app-patterns.md
 ```
 
-Otherwise, include the raw markdown content in your agent's system prompt or context.
+Otherwise, include the raw markdown files from `guidelines/` in your agent's system prompt
+or context.
 
 ## Case Study: Flowmark
 
@@ -107,7 +108,6 @@ The `case-studies/flowmark/` directory documents the port of
 - Python: ~2,000 lines app code + ~1,500 lines tests (~3,500 total)
 - Rust: ~3,400 lines app code + ~2,900 lines tests (~6,200 total)
 - Rust/Python ratio: ~1.7x app code, ~1.8x total
-- ~6 hours total development time (AI agent + human review)
 - 20-40x performance improvement
 - 141 tests (139 passing, 2 ignored): 93 unit, 42 integration, 6 doctests
   (doctests run on large real documents with various flags, providing significant end-to-end coverage)

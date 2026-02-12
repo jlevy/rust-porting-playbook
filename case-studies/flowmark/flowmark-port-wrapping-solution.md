@@ -1,6 +1,11 @@
 # Wrapping Algorithm Solution
 
-**Status**: ✅ COMPLETE - Systematic wrapping fully implemented
+**Related:**
+[Decision Log D7](flowmark-port-decision-log.md#d7-wrapping-algorithm-approach) |
+[Library Choices](flowmark-port-library-choices.md#wrapping-algorithm-a-hybrid-solution) |
+[Cross-Validation](flowmark-port-cross-validation.md)
+
+**Status**: COMPLETE - Systematic wrapping fully implemented
 
 > **Note (2026-02-09):** This document describes the final refined wrapping approach
 > using comrak's built-in `render.width` option with `hardbreaks = false`. An earlier,

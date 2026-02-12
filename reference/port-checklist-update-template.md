@@ -2,22 +2,23 @@
 
 **Reference:** This checklist implements the update process described in [Python to Rust
 CLI Porting Guide](python-to-rust-porting-guide.md) (see Phase 4: Ongoing
-Synchronization). See that guide for detailed explanations and handling strategies.
+Synchronization of Python Code Changes). See that guide for detailed explanations and
+handling strategies.
 
-**Instructions:** Copy this document to port-checklist-update-202Y-MM-DD.md (filling in
-the date as appropriate).
-Then fill in the copy, so that this template can be reused multiple times.
+**Instructions:** Copy this document to `port-checklist-update-YYYY-MM-DD.md` (filling
+in the date of the sync). Then fill in the copy, so that this template can be reused
+for each subsequent sync cycle.
 
-**Related:** [Initial Port Checklist](port-checklist-initial.md) | [Rust CLI Best
+**Related:** [Initial Port Checklist](port-checklist-initial-template.md) | [Rust CLI Best
 Practices](rust-cli-best-practices.md)
 
 * * *
 
 > **Completion Gate:** Acceptance requires exact 100% passing of every test, exact 100%
-> parity with every original Python test, and exact byte-for-byte matching on all
-> comparisons (zero diffs).
+> parity with every original Python test, and byte-for-byte matching with documented
+> exceptions on all comparisons (zero unexplained diffs).
 > This includes:
-> 
+>
 > - Test output and processing results
 >
 > - CLI command output (help, errors, warnings, status messages)
@@ -25,6 +26,23 @@ Practices](rust-cli-best-practices.md)
 > - Cross-validation across all fixtures
 >
 > - File outputs (no whitespace or encoding differences unless documented)
+
+## Automated Upstream Tracking (Recommended)
+
+Consider setting up automated detection of upstream Python changes to avoid manual
+polling:
+
+- **GitHub Actions scheduled workflow**: Run `scripts/sync-from-python.sh` on a
+  schedule (e.g., weekly via `cron: '0 0 * * 1'`). If changes are detected, open a PR
+  or issue automatically.
+
+- **Dependabot-style submodule updates**: Use a CI job that checks whether the
+  submodule pointer is behind `origin/main` and notifies if so.
+
+- **CI parity gate**: Add `scripts/validate-parity.sh` as a CI step so that any
+  submodule update that breaks parity is caught automatically.
+
+These are optional but strongly recommended for projects with active Python upstreams.
 
 ## Phase 1: Sync Python Changes
 
@@ -40,23 +58,35 @@ Practices](rust-cli-best-practices.md)
 
 - [ ] **Review Python Changes**
 
-  - [ ] Run `cd python-source && git log <old-commit>..HEAD` to see changes
+  - [ ] Identify the previous and current Python commit hashes from the sync script
+    output (or from `git log` on the submodule)
 
-  - [ ] Read commit messages and diffs
+  - [ ] Run `cd python-source && git log <previous-commit>..HEAD --oneline` to list
+    changes
+
+  - [ ] Read commit messages and diffs: `git log <previous-commit>..HEAD -p`
 
   - [ ] Identify which modules/functions were modified
 
   - [ ] Categorize each change as: bug fix, new feature, test addition, or refactor
 
+- [ ] **Update Version Tracking**
+
+  - [ ] Verify `[package.metadata.python_source]` in `Cargo.toml` was updated by sync
+    script (version, commit, date) -- update manually if needed
+
+  - [ ] Update `docs/version-history.md` with new Rust/Python version correspondence
+
 - [ ] **Document Changes**
 
-  - [ ] Create new entry in `docs/python-sync-log.md` with date and commit hash
+  - [ ] Create new entry in `docs/python-sync-log.md` with date and Python commit hash
+    range
 
   - [ ] List Python changes discovered
 
   - [ ] List Rust updates required
 
-  - [ ] Mark status as “In progress”
+  - [ ] Mark status as "In progress"
 
 ## Phase 2: Port Changes to Rust
 
@@ -112,6 +142,13 @@ Practices](rust-cli-best-practices.md)
 
   - [ ] Maintain module/function mapping comments
 
+- [ ] **Document Deferred or Skipped Changes** (if any Python changes are intentionally
+  not ported)
+
+  - [ ] Record each skipped change with rationale in `docs/python-sync-log.md`
+
+  - [ ] Create tracking issues for deferred features if they may be ported later
+
 ## Phase 3: CLI Updates
 
 - [ ] **Update CLI Interface** (if changed in Python)
@@ -128,7 +165,8 @@ Practices](rust-cli-best-practices.md)
 
 - [ ] **Validate CLI Parity** *(Completion Gate: Zero diffs on all CLI output)*
 
-  - [ ] Generate Python help: `python-source/cli.py --help > python-help.txt`
+  - [ ] Generate Python help: `python -m project --help > python-help.txt` (or
+    `python-source/cli.py --help`, depending on project structure)
 
   - [ ] Generate Rust help: `cargo run -- --help > rust-help.txt`
 
@@ -153,9 +191,10 @@ Practices](rust-cli-best-practices.md)
   - [ ] Add property tests (via `proptest`) for algorithmic correctness if new
     algorithms added
 
-  - [ ] Run `cargo test --all` (all tests pass)
+  - [ ] Run `cargo test --all-features --workspace` (all tests pass)
 
-  - [ ] Run `cargo test --all-features` (with feature combinations)
+  - [ ] Run `cargo test --no-default-features --workspace` (library builds without CLI
+    deps)
 
   - [ ] Run `cargo test --doc` (doc tests pass)
 
@@ -183,6 +222,12 @@ Practices](rust-cli-best-practices.md)
 
   - [ ] `cargo doc --no-deps` (documentation builds without errors)
 
+- [ ] **CI Verification**
+
+  - [ ] All CI checks pass (or confirm locally with `just check` / equivalent)
+
+  - [ ] Cross-validation script passes in CI environment (not just locally)
+
 ## Phase 5: Performance & Optimization
 
 - [ ] **Performance Targets**
@@ -190,8 +235,8 @@ Practices](rust-cli-best-practices.md)
   - [ ] Binary size < 10MB (release build, stripped; use `cargo-bloat` to identify size
     issues if needed)
 
-  - [ ] Processing speed maintained or improved vs previous version (benchmark critical
-    paths)
+  - [ ] Processing speed maintained or improved vs previous Rust version (benchmark
+    critical paths; target remains 50-100x faster than Python)
 
   - [ ] Startup time < 50ms
 
@@ -225,10 +270,13 @@ Practices](rust-cli-best-practices.md)
 
   - [ ] Add entry to `CHANGELOG.md` (use keep-a-changelog format)
 
-  - [ ] Update any divergence documentation if needed
+  - [ ] Update divergence documentation if any new intentional differences from Python
+    were introduced (document rationale and acceptance criteria)
+
+  - [ ] Update `docs/version-history.md` with final version correspondence entry
 
   - [ ] Update `docs/python-sync-log.md`: mark all items completed, change status to
-    “Completed”, note any intentional divergences or deferred features
+    "Completed", note any intentional divergences or deferred features
 
 ## Phase 7: Final Acceptance Criteria
 
@@ -255,7 +303,7 @@ Practices](rust-cli-best-practices.md)
 
   - [ ] Help output diff shows zero differences (byte-for-byte)
 
-  - [ ] Exit codes remain correct (0, 1, 2)
+  - [ ] Exit codes remain correct (0 success, 1 errors, 2 usage)
 
   - [ ] stdin/stdout piping still works
 
@@ -312,7 +360,8 @@ Practices](rust-cli-best-practices.md)
 
 - [ ] **Runtime Performance**
 
-  - [ ] Processing speed 50-100x faster than Python (benchmark critical paths)
+  - [ ] Processing speed maintained or improved vs previous Rust version (target:
+    50-100x faster than Python)
 
   - [ ] No performance regressions in hot paths
 
@@ -351,7 +400,8 @@ Practices](rust-cli-best-practices.md)
 
   - [ ] Update version in `Cargo.toml`
 
-  - [ ] Update `Cargo.lock` via `cargo update -p <package-name>`
+  - [ ] Update `Cargo.lock` via `cargo update --workspace` (or `cargo generate-lockfile`
+    for a clean regeneration)
 
 - [ ] **Pre-Release Checks**
 
@@ -365,9 +415,8 @@ Practices](rust-cli-best-practices.md)
 
   - [ ] Commit all changes with descriptive message
 
-  - [ ] Create git tag: `git tag v<version>`
-
-  - [ ] Push changes and tag: `git push && git push --tags`
+  - [ ] Tag and push using `cargo release` (preferred) or manually:
+    `git tag v<version> && git push && git push --tags`
 
 - [ ] **Optional Publishing**
 
@@ -375,5 +424,5 @@ Practices](rust-cli-best-practices.md)
 
   - [ ] Create GitHub release with changelog excerpt
 
-**Update is complete when ALL items above are checked.
-Zero failures accepted.**
+**Update is complete when ALL mandatory items above are checked.
+Zero unexplained failures accepted.**

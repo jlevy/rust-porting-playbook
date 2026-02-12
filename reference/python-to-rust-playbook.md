@@ -8,9 +8,9 @@ full knowledge base.
 **Scope:** Any Python application with a test suite. Emphasis on CLI tools but the
 process applies to libraries, services, and other application types.
 
-**Time estimate:** For a well-tested Python CLI of ~2,000 lines of app code, expect ~6 hours of
-agent time with 2-3 human review points. Half of that time will be spent on library
-workarounds and cross-validation, not initial implementation.
+**Effort profile:** Roughly half of total effort goes to library workarounds and
+cross-validation (Phases 5-6), not initial implementation. Expect 2-3 human review
+points regardless of project size.
 
 **Key principle:** Tests are the specification. The Python test suite defines what the
 Rust port must do. Without tests, porting is guesswork. With them, 100% passing tests
@@ -87,7 +87,7 @@ bugs in the original -- this is expected and valuable.
 **Proceed if:**
 - Core test coverage is >= 80%
 - All critical dependencies have identified Rust equivalents
-- No high-risk dependency has more than one candidate to evaluate
+- No high-risk dependency remains unevaluated (candidates identified for all)
 - The project scope is well-understood
 
 **Pause and prepare if:**
@@ -99,8 +99,9 @@ bugs in the original -- this is expected and valuable.
 
 ## Phase 2: Research and Library Evaluation
 
-**Goal:** Choose all Rust dependencies, especially the high-risk ones. This phase
-determines 50% of total porting effort.
+**Goal:** Choose all Rust dependencies, especially the high-risk ones. Library choices
+made here predetermine how much time you'll spend in Phase 6 (typically 30-50% of total
+effort).
 
 **Time:** 30-60 minutes.
 
@@ -162,7 +163,7 @@ Before writing any code, spend 30 minutes surveying the Rust ecosystem for your
 application type. Document: recommended libraries, project setup patterns, CI
 configuration, release workflow. This prevents rework from poor initial choices.
 
-See `tbd guidelines rust-project-setup` and
+See `tbd guidelines rust-project-setup` (`guidelines/rust-project-setup.md`) and
 [rust-cli-best-practices.md](rust-cli-best-practices.md) for CLI projects.
 
 ---
@@ -231,11 +232,12 @@ Based on the flowmark experience and general patterns:
 | Phase | % of Total Effort |
 | --- | --- |
 | Research + planning | 15-20% |
-| Implementation | 35-40% |
-| Bug-fixing + cross-validation | 40-50% |
+| Implementation | 30-40% |
+| Bug-fixing + cross-validation | 35-50% |
 
-The fix phase is not waste -- it's where the port achieves production quality. Plan for
-it explicitly rather than treating it as contingency.
+These ranges reflect worst-case budgeting; see the [effort allocation table](#quick-reference-effort-allocation) for typical actuals. The fix phase is not waste -- it's
+where the port achieves production quality. Plan for it explicitly rather than treating
+it as contingency.
 
 ---
 
@@ -279,8 +281,8 @@ must_use_candidate = "allow"
 unsafe_code = "forbid"
 ```
 
-See `tbd guidelines rust-project-setup` for complete configuration including release
-profile, deny.toml, release.toml, and justfile.
+See `tbd guidelines rust-project-setup` (`guidelines/rust-project-setup.md`) for complete
+configuration including release profile, deny.toml, release.toml, and justfile.
 
 ### 4.3 Include the Python source as a submodule
 
@@ -310,7 +312,8 @@ done
 ### 4.5 Set up CI
 
 Create GitHub Actions with 7 parallel jobs: format, clippy, test, MSRV, audit, deny,
-docs. See `tbd guidelines rust-project-setup` for the complete workflow.
+docs. See `tbd guidelines rust-project-setup` (`guidelines/rust-project-setup.md`) for
+the complete workflow.
 
 ### 4.6 Track version correspondence
 
@@ -326,7 +329,7 @@ version = "0.5.5"  # Python version this port is based on
 
 **Goal:** A working Rust implementation with all tests passing.
 
-**Time:** 2-4 hours for a ~1,000-line Python project.
+**Effort:** ~33% of total effort. The largest phase alongside library fixes.
 
 ### 5.1 Port tests first
 
@@ -381,6 +384,17 @@ where F: for<'a> FnOnce(&'a AstNode<'a>) -> Result<R>
 **Error types:** Map Python exceptions to a Rust error enum with `thiserror`. Don't use
 `unwrap()` in library code.
 
+**Dict ordering:** Python `dict` preserves insertion order (since 3.7); Rust `HashMap`
+does not. If iteration order matters, use `IndexMap` from the `indexmap` crate.
+
+**None handling:** Python uses `None` with runtime checks; Rust uses `Option<T>` enforced
+at compile time. Map `Optional[T]` to `Option<T>` and `if x is not None` to
+`if let Some(x) = value`.
+
+**Integer overflow:** Python integers have arbitrary precision; Rust integers overflow
+(wrapping in release, panicking in debug). Use `checked_*` or `saturating_*` methods
+when porting arithmetic from Python, especially for user-supplied values.
+
 **Unicode:** Use `\u{XXXX}` for Unicode escapes (not `\uXXXX`). Consider
 `unicode-segmentation` for grapheme-aware text processing.
 
@@ -391,7 +405,7 @@ where F: for<'a> FnOnce(&'a AstNode<'a>) -> Result<R>
 **Goal:** Systematic resolution of all behavioral differences between Python and Rust
 libraries.
 
-**Time:** 2-4 hours (often 40-50% of total effort).
+**Effort:** ~32% of total effort (often the single largest phase).
 
 ### 6.1 Run cross-validation and categorize failures
 
@@ -485,16 +499,17 @@ If porting a CLI tool, verify:
 
 For argument mapping from Python to Rust:
 - `argparse` / `click` / `typer` all map to `clap` with derive API
-- Enable `cargo` feature for automatic `--version` from Cargo.toml
+- Enable clap's `cargo` feature for automatic `--version` from Cargo.toml
 - Use `color-eyre` for rich error display
 
-See `tbd guidelines python-to-rust-cli-porting` for detailed argument mapping tables.
+See `tbd guidelines python-to-rust-cli-porting` (`guidelines/python-to-rust-cli-porting.md`)
+for detailed argument mapping tables.
 
 ### 7.3 CI verification
 
 All CI jobs must pass:
-- `cargo fmt --check`
-- `cargo clippy -- -D warnings`
+- `cargo fmt --all -- --check`
+- `cargo clippy --all-targets --all-features -- -D warnings`
 - `cargo test --all-features --locked`
 - `cargo test --no-default-features --locked`
 - `cargo audit`
@@ -512,13 +527,16 @@ All CI jobs must pass:
 ### 7.5 Release configuration
 
 Set up `release.toml` for cargo-release and a release CI workflow for cross-platform
-binary builds. See `tbd guidelines rust-project-setup` for templates.
+binary builds. See `tbd guidelines rust-project-setup` (`guidelines/rust-project-setup.md`)
+for templates.
 
 ---
 
 ## Phase 8: Ongoing Synchronization
 
 **Goal:** Keep the Rust port in sync as the Python version evolves.
+
+**Time:** Ongoing; each sync cycle takes 30-120 minutes depending on scope of Python changes.
 
 ### 8.1 When Python updates
 
@@ -552,18 +570,17 @@ Over time, intentional divergences accumulate. Track them:
 
 ## Quick Reference: Effort Allocation
 
-| Phase | Time (1K-line project) | % of Total |
+| Phase | % of Total | Notes |
 | --- | --- | --- |
-| 1. Assess | 15-30 min | 5% |
-| 2. Research | 30-60 min | 10% |
-| 3. Plan | 15-30 min | 5% |
-| 4. Set up | 15-30 min | 5% |
-| 5. Port | 2-4 hours | 33% |
-| 6. Library fixes | 2-4 hours | 32% |
-| 7. Finalize | 30-60 min | 10% |
-| **Total** | **5-8 hours** | **100%** |
+| 1. Assess | 5% | Quick if test coverage is already measured |
+| 2. Research | 10% | High-leverage: thorough research shrinks Phase 6 |
+| 3. Plan | 5% | |
+| 4. Set up | 5% | |
+| 5. Port | 33% | Tests first, module by module |
+| 6. Library fixes | 32% | Often the single largest phase |
+| 7. Finalize | 10% | CLI parity, docs, release config |
 
-Phase 6 (library fixes) is consistently the largest time sink. Budget for it explicitly.
+Phase 6 (library fixes) is consistently the largest effort sink. Budget for it explicitly.
 If your library evaluation in Phase 2 is thorough, Phase 6 shrinks significantly.
 
 ## Checklist Summary
@@ -587,7 +604,7 @@ PLAN
 ☐ Create feature parity matrix
 ☐ Plan module porting order (leaf-first)
 ☐ Define acceptance criteria
-☐ Budget 40-50% of time for workarounds
+☐ Budget 35-50% of time for workarounds
 
 SET UP
 ☐ Create project with Cargo.toml, lints, release profile
@@ -600,6 +617,7 @@ PORT
 ☐ Port tests first, then implementation
 ☐ Port modules in dependency order (leaf → integration → CLI)
 ☐ Maintain traceability (mapping comments, function name parity)
+☐ Watch for key pitfalls (regex anchoring, dict ordering, integer overflow, None→Option)
 ☐ Mark all workarounds with HACK:/FIXME: comments
 ☐ Run cross-validation continuously
 
@@ -616,4 +634,10 @@ FINALIZE
 ☐ All CI jobs passing
 ☐ Documentation complete (README, --version, CHANGELOG)
 ☐ Release workflow configured
+
+SYNC (ongoing)
+☐ Update git submodule to new Python version
+☐ Regenerate expected test fixtures
+☐ Run cross-validation, categorize differences
+☐ Port changes and update version correspondence
 ```

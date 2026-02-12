@@ -108,6 +108,22 @@ test-fixtures/
     └── error-handling.try
 ```
 
+### Fixture Management Best Practices
+
+- **Check fixtures into version control.** Fixtures are the specification -- they must
+  be versioned alongside the code so that changes are visible in diffs.
+- **Regenerate, do not hand-edit.** Always regenerate expected outputs from the Python
+  source of truth. Hand-editing fixtures drifts from actual behavior.
+- **Keep fixtures small and focused.** Each fixture should test one concern. Avoid
+  mega-fixtures that make failures hard to diagnose.
+- **Handle binary fixtures carefully.** If your tool produces binary output (images,
+  serialized data), store fixtures with Git LFS or a `.gitattributes` binary marker,
+  and compare via checksums rather than byte-for-byte diffs.
+- **Share fixtures between Python and Rust.** Place `test-fixtures/` at the repository
+  root so both the Python test suite and Rust integration tests reference the same
+  directory. This guarantees the same inputs and expected outputs are used by both
+  implementations.
+
 ### Fixture Generation Script
 
 ```bash
@@ -184,11 +200,23 @@ Add to `Cargo.toml`:
 ```toml
 [dev-dependencies]
 insta = "1"
+proptest = "1"
+# quickcheck = "1"  # Alternative to proptest
 ```
 
 ### Property-Based Tests
 
-Add `proptest` tests for algorithmic properties:
+Use property-based testing to verify algorithmic invariants that are hard to cover
+exhaustively with hand-written examples. The two main crates are:
+
+- [`proptest`](https://crates.io/crates/proptest) -- Hypothesis-inspired, with
+  per-value strategies and constraint-aware shrinking. Recommended for most porting
+  projects because its strategy model makes it easy to express input constraints.
+- [`quickcheck`](https://crates.io/crates/quickcheck) -- generates and shrinks
+  values based on type alone. Simpler to set up but less flexible for constrained
+  inputs.
+
+Example using `proptest`:
 
 ```rust
 use proptest::prelude::*;
@@ -210,18 +238,27 @@ proptest! {
 
 ## Coverage Tools for Rust
 
-### cargo-tarpaulin
+### cargo-llvm-cov (Recommended)
+
+`cargo-llvm-cov` is the preferred coverage tool for Rust. It uses LLVM source-based
+instrumentation, which provides more accurate results than alternatives and supports
+line, region, and branch coverage. It works across Linux, macOS, and Windows:
+
+```bash
+cargo install cargo-llvm-cov
+cargo llvm-cov --html --all-features          # Line coverage (HTML report)
+cargo llvm-cov --html --all-features --branch  # Branch coverage (HTML report)
+```
+
+### cargo-tarpaulin (Linux Alternative)
+
+`cargo-tarpaulin` is a Linux-focused alternative. Its default ptrace-based backend
+works only on x86_64 Linux, though it also supports an LLVM backend via
+`--engine llvm`. It is a reasonable choice if you are already using it in CI:
 
 ```bash
 cargo install cargo-tarpaulin
 cargo tarpaulin --out html --all-features
-```
-
-### cargo-llvm-cov (More Accurate)
-
-```bash
-cargo install cargo-llvm-cov
-cargo llvm-cov --html --all-features
 ```
 
 ### Coverage Targets
@@ -247,7 +284,7 @@ cross-validate:
       with:
         submodules: recursive
     - uses: dtolnay/rust-toolchain@stable
-    - uses: astral-sh/setup-uv@v4
+    - uses: astral-sh/setup-uv@v7
     - run: cargo build --release
     - run: cd python-repo && uv sync
     - run: ./scripts/cross-validate.sh
@@ -273,9 +310,9 @@ As you port each module:
 
 1. **Port existing tests** -- these are the specification
 2. **Add Rust-specific tests** -- for Rust edge cases (ownership, lifetimes)
-3. **Add property tests** -- for algorithmic invariants
+3. **Add property tests** -- use proptest (or quickcheck) for algorithmic invariants
 4. **Run cross-validation** -- catch differences unit tests miss
-5. **Measure coverage** -- fill gaps discovered by tarpaulin/llvm-cov
+5. **Measure coverage** -- fill gaps discovered by cargo-llvm-cov (preferred) or tarpaulin
 
 ## Related Guidelines
 

@@ -6,7 +6,7 @@ code examples for each mapping. Use this as a lookup reference during porting.
 **Related:** [Python-to-Rust Porting Guide](python-to-rust-porting-guide.md) |
 `tbd guidelines python-to-rust-porting-rules`
 
-**Last update:** 2026-02-07
+**Last update:** 2026-02-12
 
 ## Types
 
@@ -48,7 +48,7 @@ code examples for each mapping. Use this as a lookup reference during porting.
 | `Protocol` | `trait` | Rust traits are nominal -- must write explicit `impl Trait for Type` |
 | `TypedDict` | Struct with named fields | Add serde derives only if deserializing from data formats |
 | `Literal["a", "b"]` | `enum { A, B }` | |
-| `Callable[[A], B]` | `Fn(A) -> B` / `FnMut` / `FnOnce` | `Fn` -- no mutation of captures, callable repeatedly (most Python callbacks). `FnMut` -- mutates captures. `FnOnce` -- consumes captures, callable once |
+| `Callable[[A], B]` | `Fn(A) -> B` / `FnMut` / `FnOnce` | `Fn` -- no mutation, callable repeatedly. `FnMut` -- mutates captures. `FnOnce` -- consumes captures. Use `Box<dyn Fn(A) -> B>` to store callbacks in structs |
 
 ## Control Flow
 
@@ -145,7 +145,7 @@ let d: HashMap<_, _> = pairs.iter()
 | `raise` (re-raise) | `return Err(e)` or just `?` | |
 | `finally:` | `Drop` trait / scope guards | |
 | `with context_manager:` | Scope + `Drop` / closure patterns | |
-| `assert x == y` | `assert_eq!(x, y)` | `debug_assert_eq!` only for hot-path invariants |
+| `assert x == y` | `assert_eq!(x, y)` | **Not** `debug_assert_eq!` -- debug asserts are stripped in release builds. Use `debug_assert!` only for hot-path invariants you've verified via other means |
 
 ### Context Managers to RAII
 
@@ -234,6 +234,9 @@ fn process(path: &Path) -> Result<Data> {
 | `print(x)` | `println!("{x}")` | |
 | `print(x, file=sys.stderr)` | `eprintln!("{x}")` | |
 | `glob.glob("*.md")` | `glob::glob("*.md")?` (glob crate) | |
+| `logging.info(msg)` | `tracing::info!(msg)` or `log::info!(msg)` | `tracing` crate preferred; `log` crate for simple cases |
+| `json.dumps(obj)` | `serde_json::to_string(&obj)?` | Requires `#[derive(Serialize)]` |
+| `json.loads(s)` | `serde_json::from_str(s)?` | Requires `#[derive(Deserialize)]` |
 
 ## String Operations
 
@@ -259,10 +262,12 @@ fn process(path: &Path) -> Result<Data> {
 | Python | Rust | Notes |
 | --- | --- | --- |
 | `re.compile(pattern)` | `Regex::new(pattern)?` | Use `LazyLock` for statics |
-| `re.match(pattern, s)` | `regex.is_match(s)` / `regex.captures(s)` | **Add `^` anchor!** Use `captures()` when match groups are accessed |
-| `re.search(pattern, s)` | `regex.find(s)` | |
-| `re.sub(pattern, repl, s)` | `regex.replace_all(s, repl)` | |
+| `re.match(pattern, s)` | `Regex::new(&format!("^(?:{pattern})"))` | **Must add `^` anchor** -- Rust has no start-anchored match. Use `captures()` for groups, `is_match()` for bool |
+| `re.search(pattern, s)` | `regex.find(s)` | Direct equivalent; matches anywhere |
+| `re.fullmatch(pattern, s)` | `regex.is_match(s)` with `^...$` | Wrap pattern: `format!("^(?:{pattern})$")` |
+| `re.sub(pattern, repl, s)` | `regex.replace_all(s, repl)` | Use `regex.replace()` for `count=1` |
 | `re.findall(pattern, s)` | `regex.find_iter(s).map(\|m\| m.as_str()).collect::<Vec<_>>()` | `find_iter()` returns `Match` objects, not strings |
+| `re.split(pattern, s)` | `regex.split(s).collect::<Vec<_>>()` | |
 | `match.group(0)` | `m.as_str()` | |
 | `match.group(1)` | `caps.get(1).map(\|m\| m.as_str())` | |
 | Look-ahead/behind | Use `fancy-regex` crate | Not in standard `regex` |
@@ -343,15 +348,17 @@ impl Animal for Dog {
 | `__iter__()` + `__next__()` | `impl Iterator` | Must define `type Item` |
 | `__getitem__()` | `impl Index<Idx>` | Returns reference, not owned value |
 | `__add__()` etc. | `impl Add` from `std::ops` | One trait per operator |
-| `__enter__()`/`__exit__()` | `impl Drop` + RAII scope | See context managers below |
+| `__enter__()`/`__exit__()` | `impl Drop` + RAII scope | See Context Managers to RAII section above |
+| `__call__()` | `impl Fn`/`FnMut`/`FnOnce` | Or just a method; Rust closures implement `Fn` traits |
 | `__contains__()` | `.contains()` method | No standard trait; convention only |
 | `__bool__()` | No standard trait | Use explicit `.is_empty()` or method |
+| `__del__()` | `impl Drop` | Called when value is dropped; cannot fail |
 
 ### Generators to Iterators
 
 Python generators map to Rust iterators, but require explicit state management.
 
-**Simple generator (stateless):**
+**Simple generator (closure-based):**
 
 ```python
 # Python
@@ -362,8 +369,13 @@ def evens(n):
 ```
 
 ```rust
-// Rust: using std::iter::from_fn for simple one-off cases
+// Rust: idiomatic -- use iterator combinators when possible
 fn evens(n: usize) -> impl Iterator<Item = usize> {
+    (0..n).filter(|x| x % 2 == 0)
+}
+
+// Rust: using std::iter::from_fn for complex yield logic
+fn evens_from_fn(n: usize) -> impl Iterator<Item = usize> {
     let mut i = 0;
     std::iter::from_fn(move || {
         while i < n {
@@ -416,7 +428,7 @@ When stabilized, they will allow Python-like `yield` syntax in Rust.
 | --- | --- | --- |
 | `@dataclass` | `#[derive(Debug, Clone, PartialEq)]` | Closest equivalent derives |
 | `frozen=True` | No `&mut self` methods | Immutability enforced by API design, not annotation |
-| `order=True` | `#[derive(PartialOrd, Ord)]` | Requires `Eq` |
+| `order=True` | `#[derive(PartialOrd, Ord)]` | `Ord` requires `Eq`; use `PartialOrd` alone if fields contain floats |
 | `field(default=...)` | `impl Default` or `#[derive(Default)]` | |
 
 ```python
@@ -480,19 +492,33 @@ pub enum Color {
 }
 ```
 
-### Async Patterns
+### Common Python Patterns
+
+| Python | Rust | Notes |
+| --- | --- | --- |
+| `@decorator` | Procedural macros or wrapper functions | No direct equivalent; use `#[derive(...)]` for common cases |
+| `@property` | Method returning value / public field | No descriptor protocol; just use `pub fn name(&self) -> &T` |
+| `@staticmethod` | Associated function (no `self`) | `fn foo()` in `impl` block (no `self` parameter) |
+| `@classmethod` | Associated function taking no `self` | `fn new(...) -> Self` is the convention |
+| `*args` | Variadic: not supported | Use slice `&[T]` or macro for variable args |
+| `**kwargs` | No direct equivalent | Use a builder pattern or config struct |
+| `isinstance(x, T)` | Pattern matching or trait bounds | `if let Some(v) = x.downcast_ref::<T>()` for `dyn Any` |
+| `getattr(obj, name)` | No runtime reflection | Use enum dispatch or trait objects instead |
+| `lambda x: x + 1` | `\|x\| x + 1` | Closures; type inferred |
+
+## Async Patterns
 
 | Python | Rust | Notes |
 | --- | --- | --- |
 | `async def foo()` | `async fn foo()` | |
 | `await bar()` | `bar().await` | Postfix syntax in Rust |
 | `asyncio.run(main())` | `#[tokio::main]` on `async fn main()` | Requires `tokio` runtime |
-| `asyncio.gather(a, b)` | `tokio::join!(a, b)` | |
+| `asyncio.gather(a, b)` | `tokio::join!(a, b)` | For fixed count; use `futures::future::join_all` for dynamic list |
 | `asyncio.create_task(coro)` | `tokio::spawn(future)` | Returns `JoinHandle` |
 | `async for item in aiter:` | `while let Some(item) = stream.next().await {` | Requires `tokio-stream` or `futures` |
 | `async with resource:` | Scope + `.await` on cleanup | No async Drop |
 
-### Parallelism Patterns
+## Parallelism Patterns
 
 | Python | Rust | Notes |
 | --- | --- | --- |
@@ -500,7 +526,7 @@ pub enum Color {
 | `threading.Thread(target=f)` | `std::thread::spawn(f)` | OS-level threads |
 | `concurrent.futures.ThreadPoolExecutor` | `rayon::ThreadPool` or `tokio::spawn` | `rayon` for CPU, `tokio` for I/O |
 | `concurrent.futures.ProcessPoolExecutor` | `rayon::ThreadPool` | Rust threads share memory; no process isolation needed |
-| `queue.Queue` | `std::sync::mpsc::channel()` | Or `crossbeam::channel` for multi-producer |
+| `queue.Queue` | `std::sync::mpsc::channel()` | Or `crossbeam::channel` for multi-consumer (MPMC) |
 | `threading.Lock` | `std::sync::Mutex<T>` | Mutex wraps data in Rust, not code |
 
 ## Testing
@@ -563,9 +589,12 @@ the specific equivalences and pitfalls.
 | `==1.4.0` | `"=1.4.0"` | Exact pin (note single `=` in Cargo) |
 | No default | `"1.4"` means `^1.4` (>=1.4.0, <2.0.0) | Cargo's default is permissive semver-compatible |
 
-**Pitfall:** Python `~=1.4.2` means `>=1.4.2, <1.5.0`. Cargo `~1.4.2` means the same.
-But Cargo's default `^1.4.2` means `>=1.4.2, <2.0.0` -- much more permissive.
-When porting, `~=` maps to `~`, not to the bare version.
+**Pitfall:** The `~=` mapping depends on the number of version components:
+- Python `~=1.4` (2 parts) means `>=1.4, <2.0` -- maps to Cargo `^1.4` (or bare `"1.4"`).
+- Python `~=1.4.2` (3 parts) means `>=1.4.2, <1.5.0` -- maps to Cargo `~1.4.2`.
+
+Cargo's default `^1.4.2` means `>=1.4.2, <2.0.0` -- much more permissive than `~1.4.2`.
+When porting 3-component `~=`, use `~` in Cargo, not the bare version.
 
 ### Lock Files
 

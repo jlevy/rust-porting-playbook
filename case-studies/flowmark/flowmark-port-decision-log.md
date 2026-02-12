@@ -6,7 +6,11 @@ port. For library-specific decisions and workarounds, see
 
 **Related:**
 [Library Choices](flowmark-port-library-choices.md) |
-[Analysis](flowmark-port-analysis.md)
+[Analysis](flowmark-port-analysis.md) |
+[Migration Plan](flowmark-port-migration-plan.md) |
+[Cross-Validation](flowmark-port-cross-validation.md) |
+[Comrak Bug](flowmark-port-comrak-bug.md) |
+[Wrapping Solution](flowmark-port-wrapping-solution.md)
 
 **Last update:** 2026-02-08
 
@@ -449,10 +453,13 @@ Choosing between Rust editions 2021 and 2024 for the project.
 - Include a "known risks" section specifically calling out parser library behavioral
   differences as the #1 risk.
 
-### Phase 3: Initial Implementation (~2-3 hours)
+### Phase 3: Initial Implementation (~25% of effort)
 
 **What worked:**
-- Test-driven development. Progress was measurable: 2/45 → 45/45 → 87/87 → 111/111.
+- Test-driven development. Progress was measurable: 2/45 → 45/45 → 87/87 → 111/111
+  (111 tests at end of initial implementation; final count reached 141 after adding
+  integration tests and doctests -- see [Analysis](flowmark-port-analysis.md) for final
+  metrics).
 - Module-by-module porting order: core data types → leaf modules → integration modules
   → CLI last.
 - Maintaining function name parity with Python for traceability.
@@ -468,7 +475,7 @@ Choosing between Rust editions 2021 and 2024 for the project.
 - Start with a single package, not workspace. Single package is simpler for projects
   this size.
 
-### Phase 4: Bug-Fixing & Parity (~2-3 hours)
+### Phase 4: Bug-Fixing & Parity (~30% of effort)
 
 Most painful phase and source of the most important lessons. See
 [Library Choices](flowmark-port-library-choices.md) for the full workaround table.
@@ -494,10 +501,10 @@ Most painful phase and source of the most important lessons. See
 
 | Metric | Value |
 | --- | --- |
-| Total development time | ~5-6 hours |
-| Implementation time | ~2-3 hours |
-| Bug-fixing time | ~2-3 hours (50% of total!) |
-| Tests ported | 111 (100% passing) |
+| Implementation effort | ~25% of total |
+| Bug-fixing effort | ~30% of total (largest single phase) |
+| Tests (initial implementation) | 111 unit tests (100% passing) |
+| Tests (final) | 141 total (93 unit + 42 integration + 6 doctests) |
 | Parser workarounds | 17 total (14 fixable, 3 unfixable) |
 | Performance improvement | 20-40x over Python |
 | Binary size | ~2.5MB (stripped) |

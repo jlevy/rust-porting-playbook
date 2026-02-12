@@ -16,6 +16,7 @@ during Phase B of the meta-playbook process.
 | --- | --- |
 | Project name | |
 | Observations file | `case-studies/<project>/<project>-port-observations.md` |
+| Total observations | [number of OBS-N entries from the observations file] |
 | Date triaged | |
 | Triaged by | |
 
@@ -36,9 +37,10 @@ during Phase B of the meta-playbook process.
 
 ### FIX-1: [Short title]
 
+**Observation ID:** [OBS-N from observations file]
 **Source phase:** [Phase N from observations]
 **Severity:** [High / Medium / Low]
-**Impact:** [How many future ports affected]
+**Impact:** [How many future ports affected — All / Most / Some / Niche]
 
 **Target file:** `[e.g., reference/python-to-rust-playbook.md]`
 **Section:** [Section heading]
@@ -58,9 +60,10 @@ during Phase B of the meta-playbook process.
 
 ### ADD-1: [Short title]
 
+**Observation ID:** [OBS-N from observations file]
 **Source phase:** [Phase N from observations]
 **Severity:** [High / Medium / Low]
-**Impact:** [How many future ports affected]
+**Impact:** [How many future ports affected — All / Most / Some / Niche]
 
 **Target file:** `[e.g., guidelines/rust-general-rules.md]`
 **Section:** [Section heading, or "New section after X"]
@@ -77,9 +80,10 @@ during Phase B of the meta-playbook process.
 
 ### CLARIFY-1: [Short title]
 
+**Observation ID:** [OBS-N from observations file]
 **Source phase:** [Phase N from observations]
 **Severity:** [High / Medium / Low]
-**Impact:** [How many future ports affected]
+**Impact:** [How many future ports affected — All / Most / Some / Niche]
 
 **Target file:** `[e.g., reference/python-to-rust-mapping-reference.md]`
 **Section:** [Section heading]
@@ -99,9 +103,10 @@ during Phase B of the meta-playbook process.
 
 ### GENERALIZE-1: [Short title]
 
+**Observation ID:** [OBS-N from observations file]
 **Source phase:** [Phase N from observations]
 **Severity:** [High / Medium / Low]
-**Impact:** [How many future ports affected]
+**Impact:** [How many future ports affected — All / Most / Some / Niche]
 
 **Target file:** `[e.g., case-studies/flowmark/flowmark-port-analysis.md]`
 **Section:** [Section heading]
@@ -122,9 +127,26 @@ during Phase B of the meta-playbook process.
 List observations that confirmed the playbook was correct. These are valuable positive
 signals — they indicate which parts of the playbook are stable.
 
-| Phase | What was validated | Playbook doc + section |
-| --- | --- | --- |
-| | | |
+| Observation ID | Phase | What was validated | Playbook doc + section |
+| --- | --- | --- | --- |
+| | | | |
+
+---
+
+## Triage Totals
+
+| Category | Count |
+| --- | --- |
+| FIX | |
+| ADD | |
+| CLARIFY | |
+| GENERALIZE | |
+| VALIDATE | |
+| **Total triaged** | |
+| **Total observations (from observations file)** | |
+
+**Completeness check:** Total triaged should equal total observations. If not, identify
+which observations were not triaged and explain why.
 
 ---
 

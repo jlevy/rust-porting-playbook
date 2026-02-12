@@ -63,7 +63,7 @@ Ideal candidates by priority:
 #### A.2 Set up the case study
 
 1. Read all playbook guidelines (load the `guidelines/` directory into agent context)
-2. Set up the Rust project per `rust-project-setup.md`
+2. Set up the Rust project per `guidelines/rust-project-setup.md`
 3. Create the case study directory: `case-studies/<project-name>/`
 4. Create the observation file: `case-studies/<project-name>/<project>-port-observations.md`
    (copy from [`case-study-observations-template.md`](case-study-observations-template.md))
@@ -72,7 +72,13 @@ Ideal candidates by priority:
 
 Follow `python-to-rust-playbook.md` phases 1-8 (assess, research, plan, set up, port,
 fix, finalize, sync). For each phase, **before moving to the next phase**, record an
-observation entry in the observations file.
+observation entry in the observations file. Number each observation sequentially
+(OBS-1, OBS-2, etc.) for traceability into triage.
+
+**Note on Phase 8 (Ongoing Synchronization):** This phase is only exercisable if the
+Python project has been updated since the port began. If not, record the observation
+as "Not yet applicable" and note whether the playbook's sync guidance appears
+sufficient based on the project's structure.
 
 The observation captures:
 
@@ -108,7 +114,7 @@ Include in the decision log:
 | Dependency LOC | Third-party only, not stdlib |
 | Test count | Unit, integration, doctests — separately |
 | Time per phase | Wall clock, with agent vs. human breakdown |
-| Playbook issues found | Count by category: fix, add, clarify, generalize, validate |
+| Playbook issues found | Count by category: FIX, ADD, CLARIFY, GENERALIZE, VALIDATE |
 
 ### Phase B: Extract Playbook Improvements
 
@@ -143,7 +149,7 @@ For each `FIX`, `ADD`, `CLARIFY`, and `GENERALIZE` item, document:
 
 Rank by two dimensions:
 
-- **Impact:** How many future ports would benefit? (High = all ports, Low = niche domain)
+- **Impact:** How many future ports would benefit? (All / Most / Some / Niche)
 - **Severity:** How likely to cause a failed port if unfixed? (High = agent gets stuck,
   Low = minor inconvenience)
 

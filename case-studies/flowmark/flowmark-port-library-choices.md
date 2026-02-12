@@ -6,7 +6,11 @@ all workarounds implemented, and alternative parser options.
 
 **Related:**
 [Decision Log](flowmark-port-decision-log.md) |
-[Analysis](flowmark-port-analysis.md)
+[Analysis](flowmark-port-analysis.md) |
+[Migration Plan](flowmark-port-migration-plan.md) |
+[Cross-Validation](flowmark-port-cross-validation.md) |
+[Comrak Bug](flowmark-port-comrak-bug.md) |
+[Wrapping Solution](flowmark-port-wrapping-solution.md)
 
 **Last update:** 2026-02-08
 
@@ -85,6 +89,14 @@ limitations with workarounds, and fallback plan.
 ## Parser Selection Decision
 
 **Date:** 2025-11-02 | **Impact:** Critical
+
+> **Version note (2026-02-09):** This evaluation was performed against comrak 0.29
+> (November 2025). Comrak has since evolved significantly (0.30+ through 0.50+), with
+> changes to APIs, rendering behavior, and bug fixes. If starting a new project or
+> upgrading, re-evaluate against the current version and re-run cross-validation, as
+> workaround behavior may have changed. See also
+> [Decision Log D1](flowmark-port-decision-log.md#d1-parser-library-selection-comrak) for
+> cross-reference.
 
 ### Candidates Evaluated
 
@@ -220,16 +232,28 @@ fn fix_underscore_escaping(text: &str) -> String {
 
 ## Wrapping Algorithm: A Hybrid Solution
 
+> **Revision note (2026-02-09):** This section describes the initial hybrid approach
+> developed during the port. The approach later evolved into a simpler configuration-based
+> solution using comrak's built-in `render.width` with `hardbreaks = false` for basic line
+> wrapping, documented in [Wrapping Solution](flowmark-port-wrapping-solution.md). The
+> hybrid approach described here remains relevant for advanced sentence-aware semantic
+> wrapping. See also [Decision Log D7](flowmark-port-decision-log.md#d7-wrapping-algorithm-approach)
+> for the full decision record.
+
 The line wrapping problem required a hybrid library + custom approach:
 
-**Approach:** Use comrak's `render.width` for line joining (with a large width of 999999
-so comrak joins but does not wrap), then apply custom sentence-aware paragraph wrapping
-via `wrap_paragraphs()` in the AST, then render with `hardbreaks = true` to preserve
-the custom line breaks.
+**Initial approach (hybrid):** Use comrak's `render.width` for line joining (with a large
+width of 999999 so comrak joins but does not wrap), then apply custom sentence-aware
+paragraph wrapping via `wrap_paragraphs()` in the AST, then render with
+`hardbreaks = true` to preserve the custom line breaks.
 
-**Lesson:** Library features are building blocks, not complete solutions. The final
-solution is ~240 lines of custom wrapping code that uses comrak for the parts it handles
-well and implements custom logic for the rest.
+**Later refinement (simple):** Use comrak's `render.width` set to the target width with
+`hardbreaks = false`, letting comrak handle basic wrapping directly.
+
+**Lesson:** Library features are building blocks, not complete solutions. The initial
+solution was ~240 lines of custom wrapping code that uses comrak for the parts it handles
+well and implements custom logic for the rest. The simpler approach was discovered later
+and suffices for non-sentence-aware wrapping.
 
 ## Alternative Markdown Parsers
 
