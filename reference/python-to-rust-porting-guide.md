@@ -53,9 +53,9 @@ version = "0.5.5"
 ```rust
 use clap::Parser;
 
-// Reads env var set by build.rs at compile time
-const PYTHON_SOURCE_VERSION: &str = env!("PYTHON_SOURCE_VERSION");
-
+// concat!() only accepts literals and macro invocations (like env!()),
+// not const variables. env!() reads an environment variable at compile time.
+// CARGO_PKG_VERSION is set by Cargo; PYTHON_SOURCE_VERSION is set by build.rs.
 const VERSION_INFO: &str = concat!(
     env!("CARGO_PKG_VERSION"),
     " (port of python-project ",
@@ -70,9 +70,8 @@ struct Cli {
 }
 ```
 
-The `env!()` macro reads an environment variable at compile time.
-`concat!()` only accepts literals and other macros (like `env!()`), not `const`
-variables. Use a `build.rs` script to set custom env vars at compile time:
+Use a `build.rs` script to set the custom `PYTHON_SOURCE_VERSION` env var at
+compile time:
 
 **`build.rs`**:
 ```rust
@@ -170,31 +169,29 @@ fn main() {
 
 ### Automation in Sync Script
 
-Update `scripts/sync-from-python.sh` to automatically update version tracking:
+The sync script in [Phase 4](#phase-4-ongoing-synchronization-of-python-code-changes)
+includes version tracking updates. The key step is updating the
+`[package.metadata.python_source]` section in `Cargo.toml`. Since `sed` cannot
+reliably target fields within a specific TOML section, prefer a TOML-aware tool:
 
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
+# Using toml-cli (cargo install toml-cli):
+toml set Cargo.toml package.metadata.python_source.version "$PYTHON_VERSION"
+toml set Cargo.toml package.metadata.python_source.commit "${LATEST_COMMIT:0:7}"
+toml set Cargo.toml package.metadata.python_source.date "$(date +%Y-%m-%d)"
+```
 
-cd python-source
-git fetch origin
-LATEST_COMMIT=$(git rev-parse origin/main)
-PYTHON_VERSION=$(git describe --tags --always origin/main)
+If `toml-cli` is unavailable, use Python as a fallback:
 
-# Update Cargo.toml metadata
-cd ..
-# Use toml-cli or sed to update python_source metadata
-# Example with sed (adjust to your TOML structure):
-sed -i.bak "s/^commit = .*/commit = \"${LATEST_COMMIT:0:7}\"/" Cargo.toml
-sed -i.bak "s/^date = .*/date = \"$(date +%Y-%m-%d)\"/" Cargo.toml
-
-# If Python has a VERSION file, update that reference too
-if [ -f python-source/VERSION ]; then
-    PYTHON_VERSION=$(cat python-source/VERSION)
-    sed -i.bak "s/^version = .*/version = \"$PYTHON_VERSION\"/" Cargo.toml
-fi
-
-echo "Updated Cargo.toml with Python version: $PYTHON_VERSION @ ${LATEST_COMMIT:0:7}"
+```bash
+python3 -c "
+import toml, sys
+data = toml.load('Cargo.toml')
+data['package']['metadata']['python_source']['version'] = sys.argv[1]
+data['package']['metadata']['python_source']['commit'] = sys.argv[2]
+with open('Cargo.toml', 'w') as f:
+    toml.dump(data, f)
+" "$PYTHON_VERSION" "${LATEST_COMMIT:0:7}"
 ```
 
 ## Phase 1: Project Setup
@@ -336,7 +333,8 @@ The Rust CLI must **exactly** match Python’s interface:
 
 **Validation:**
 ```bash
-python-source/cli.py --help > python-help.txt
+# Adjust the Python command to match your project (module, entry point, etc.)
+uv run -q --project python-source python -m project_cli --help > python-help.txt
 cargo run -- --help > rust-help.txt
 diff python-help.txt rust-help.txt  # Must show zero diffs
 ```
@@ -381,11 +379,11 @@ for input_file in "$FIXTURES_DIR"/*.md; do
 
   if diff -q "$TEMP_DIR/python-$filename" "$TEMP_DIR/rust-$filename" >/dev/null; then
     echo "PASS"
-    ((PASSED++))
+    ((PASSED++)) || true  # ((0)) returns exit code 1; guard for set -e
   else
     echo "FAIL"
     diff -u "$TEMP_DIR/python-$filename" "$TEMP_DIR/rust-$filename" | head -20
-    ((FAILED++))
+    ((FAILED++)) || true
   fi
 done
 
@@ -433,15 +431,29 @@ rsync -av --delete python-source/tests/fixtures/input/ test-fixtures/input/
 rsync -av --delete python-source/tests/fixtures/expected/ test-fixtures/expected/
 
 # Regenerate expected outputs with Python
+# Note: --update-fixtures is project-specific; adjust to your test framework
 pushd python-source >/dev/null
 uv sync -q
 uv run -q python -m pytest tests/ --update-fixtures
 popd >/dev/null
 cp python-source/tests/fixtures/expected/* test-fixtures/expected/
 
+# Update version tracking in Cargo.toml (requires toml-cli: cargo install toml-cli)
+PYTHON_VERSION=$(cd python-source && git describe --tags --always)
+if command -v toml &>/dev/null; then
+    toml set Cargo.toml package.metadata.python_source.version "$PYTHON_VERSION" > Cargo.toml.tmp \
+        && mv Cargo.toml.tmp Cargo.toml
+    toml set Cargo.toml package.metadata.python_source.commit "${LATEST_COMMIT:0:7}" > Cargo.toml.tmp \
+        && mv Cargo.toml.tmp Cargo.toml
+    toml set Cargo.toml package.metadata.python_source.date "$(date +%Y-%m-%d)" > Cargo.toml.tmp \
+        && mv Cargo.toml.tmp Cargo.toml
+else
+    echo "WARNING: toml-cli not found; update [package.metadata.python_source] in Cargo.toml manually"
+fi
+
 CHANGE_SUMMARY=$(cd python-source && git log --oneline "$CURRENT_COMMIT".."$LATEST_COMMIT")
 
-git add python-source test-fixtures/
+git add python-source test-fixtures/ Cargo.toml
 git commit -m "Sync from Python repo @ ${LATEST_COMMIT:0:7}
 
 Python changes since last sync:
@@ -711,11 +723,14 @@ Only trim if trailing whitespace is explicitly non-semantic for your project.
 
 ### Integration Test Location
 
-**Problem:** Cargo only discovers tests in specific locations.
+**Problem:** Cargo only discovers integration tests inside a crate's `tests/`
+directory. A `tests/` directory at the workspace root is ignored unless the root
+`Cargo.toml` is also a `[package]` (not just a `[workspace]`).
 
 ```
-# WRONG - workspace root NOT discovered
+# WRONG - workspace-only root; tests/ NOT discovered by cargo test
 project-rs/
+├── Cargo.toml              # [workspace] only, no [package]
 ├── tests/
 │   └── test_cleanups.rs
 └── crates/project-core/src/
@@ -752,11 +767,13 @@ pub fn split_frontmatter(text: &str) -> (String, String) {
 
 ### Other Common Issues
 
-- **String slicing**: `text[start..end]` panics if not on char boundaries; use `chars()`
-  iterator
+- **String slicing**: `text[start..end]` panics if indices are not on UTF-8 char
+  boundaries; use `.char_indices()` to find safe boundaries, or `.chars()` to
+  iterate by character
 
-- **Library types**: `comrak` `NodeValue::Text` is not a `String` (version-dependent;
-  often `CowStr`/`Vec<u8>`). Check current docs and convert explicitly.
+- **Library types**: `comrak` inner types change between major versions (e.g.,
+  `NodeValue::Text` was `Vec<u8>` in 0.x, `String` in 0.30+). Check docs for
+  your pinned version and convert explicitly.
 
 - **Module system**: Rust requires explicit `mod` declarations
 
@@ -779,7 +796,7 @@ where
 
 **Use when:** Resource has internal borrows (like Arena + AST nodes)
 
-### Lazy Static Regex
+### Lazily Compiled Regex
 
 ```rust
 use std::sync::LazyLock;

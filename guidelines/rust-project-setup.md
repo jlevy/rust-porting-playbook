@@ -33,7 +33,7 @@ categories = ["command-line-utilities"]  # From crates.io fixed list
 readme = "README.md"
 ```
 
-**Edition 2024** is now standard. ripgrep, fd, and jj all use it.
+**Edition 2024** is now standard for new projects (stabilized in Rust 1.85).
 Always declare `rust-version` -- all major projects do this (bat, fd, jj, ripgrep).
 
 ### Library + Binary in One Crate (Recommended)
@@ -120,7 +120,7 @@ and use the full LTO profile only for distribution (`cargo build --profile relea
 
 ### Lint Configuration
 
-Two approaches are used in practice:
+Three approaches are used in practice:
 
 **Approach A: Blanket pedantic** (flowmark-rs). Enables all pedantic lints, allows
 the noisy ones individually. Catches more but requires more `allow` overrides:
@@ -150,12 +150,15 @@ explicit_iter_loop = "warn"
 flat_map_option = "warn"
 implicit_clone = "warn"
 manual_let_else = "warn"
+needless_pass_by_value = "warn"
+redundant_closure_for_method_calls = "warn"
 semicolon_if_nothing_returned = "warn"
 uninlined_format_args = "warn"
 use_self = "warn"
 
 [lints.rust]
 unsafe_code = "forbid"
+unused_qualifications = "warn"
 ```
 
 **Approach C: No lint config** (ripgrep, bat, fd). Just run `cargo clippy -- -D warnings`
@@ -178,8 +181,12 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 env:
   CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0           # Faster CI builds, better cache reuse
 
 jobs:
   fmt:
@@ -201,7 +208,7 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy --all-targets --all-features -- -D warnings
+      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
   test:
     name: Tests (${{ matrix.os }})
@@ -215,8 +222,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: "ci-${{ matrix.os }}"
-      - run: cargo test --all-features --locked
-      - run: cargo test --no-default-features --locked   # Verify library builds alone
+      - run: cargo test --workspace --all-features --locked
+      - run: cargo test --workspace --no-default-features --locked  # Verify library builds alone
 
   msrv:
     name: MSRV Check
@@ -225,7 +232,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@1.85   # Match rust-version in Cargo.toml
       - uses: Swatinem/rust-cache@v2
-      - run: cargo test --all-features --locked  # Full test, not just check
+      - run: cargo test --workspace --all-features --locked  # Full test, not just check
 
   audit:
     name: Security Audit
@@ -285,9 +292,11 @@ Checks for known vulnerabilities in dependencies via the RustSec advisory databa
 ```bash
 cargo install cargo-audit
 cargo audit
+cargo audit fix   # Automatically update vulnerable dependencies when possible
 ```
 
 In CI, use the `rustsec/audit-check@v2` action (faster, no install step).
+Alternative: `actions-rust-lang/audit` supports ignoring specific advisories via config.
 
 ### cargo-deny
 
@@ -297,8 +306,7 @@ Comprehensive dependency policy: licenses, advisories, bans, source restrictions
 ```toml
 [advisories]
 version = 2                         # Use v2 schema (required for current cargo-deny)
-db-path = "~/.cargo/advisory-db"
-db-urls = ["https://github.com/rustsec/advisory-db"]
+# db-path and db-urls use sensible defaults; override only if needed
 
 [licenses]
 version = 2
@@ -313,11 +321,20 @@ allow = [
     "Unicode-3.0",
 ]
 
-# ring uses a non-standard license file; clarify it
+# ring uses a non-standard license file; clarify it.
+# ring does not set a `license` field in Cargo.toml, only `license-file`,
+# so cargo-deny cannot determine the license automatically.
 [[licenses.clarify]]
 name = "ring"
 expression = "MIT AND ISC AND OpenSSL"
-license-files = [{ path = "LICENSE", hash = 0xbd0eed23 }]  # IMPORTANT: hash is version-specific; update after cargo update
+license-files = [{ path = "LICENSE", hash = 0xbd0eed23 }]
+# IMPORTANT: hash is version-specific; if ring updates its LICENSE file,
+# run `cargo deny check licenses` to get the new hash from the error output.
+
+# ring's clarified license includes OpenSSL, which must be explicitly allowed
+[[licenses.exceptions]]
+allow = ["OpenSSL"]
+name = "ring"
 
 [bans]
 multiple-versions = "warn"          # Warn on duplicate deps in tree
@@ -361,14 +378,20 @@ pre-release-hook = ["just", "check"]    # Run all checks before release
 
 **Key decision:** `publish = false` locally, let GitHub Actions handle `cargo publish`
 after the tag push. This ensures binaries are built and uploaded alongside the
-crates.io publish.
+crates.io publish. In workspaces, set `publish = false` in `Cargo.toml` for crates
+that should not be published (internal crates, test utilities, etc.).
 
 ### Release CI Workflow
 
 All major Rust CLI projects (ripgrep, bat, fd, jj) hand-roll their release workflows.
-For simpler release needs, `cargo-dist` has matured significantly and can handle
-cross-compilation and installer generation with minimal configuration. For full control,
-the standard hand-rolled pattern:
+
+**Alternative: `cargo-dist`** (by axodotdev) can generate complete release CI workflows
+with `cargo dist init`. It handles cross-compilation, installer generation (shell scripts,
+Homebrew, MSI), and GitHub Release uploads with minimal configuration. It has matured
+significantly (v0.30+) and is a good choice when you don't need full control over the
+release pipeline. See https://opensource.axo.dev/cargo-dist/ for details.
+
+For full control, the standard hand-rolled pattern:
 
 1. **cargo-release** bumps version, commits, tags, pushes
 2. **Tag push** triggers release workflow
@@ -428,10 +451,19 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 ```
 
-**For Linux ARM64**, use `cross` (cross-compilation tool):
+**For Linux ARM64**, add a matrix entry that uses `cross` (cross-compilation tool):
 ```yaml
-      - run: cargo install cross --git https://github.com/cross-rs/cross
-      - run: cross build --release --locked --target aarch64-unknown-linux-gnu
+          - { os: ubuntu-latest, target: aarch64-unknown-linux-gnu, name: linux-aarch64, use-cross: true }
+```
+Then conditionally use `cross` instead of `cargo`:
+```yaml
+      - name: Install cross
+        if: matrix.use-cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
+      - name: Build
+        run: |
+          BUILD_CMD=${{ matrix.use-cross && 'cross' || 'cargo' }}
+          $BUILD_CMD build --release --locked --target ${{ matrix.target }}
 ```
 
 ## Development Tooling
@@ -521,6 +553,7 @@ cargo install bacon             # Background code checker (continuous clippy/tes
 cargo install cargo-expand      # Expand macros for debugging
 cargo install cargo-bloat       # Analyze binary size
 cargo install cargo-udeps       # Find unused dependencies (requires nightly)
+cargo install cargo-machete     # Find unused dependencies (fast, no nightly needed)
 cargo install cargo-outdated    # Check for dependency updates
 ```
 
@@ -586,7 +619,7 @@ definitions.
 
 ## Dependency Management
 
-- **Pin major versions:** Use `"4.5"` not `"4"` or `"*"` in Cargo.toml
+- **Specify minimum minor versions:** Use `"4.5"` not `"4"` or `"*"` in Cargo.toml
 - **Commit `Cargo.lock`** for binary projects (ensures reproducible builds)
 - **Don't commit `Cargo.lock`** for library-only crates (let downstream resolve)
 - **Review dependency diffs** before updating with `cargo update`

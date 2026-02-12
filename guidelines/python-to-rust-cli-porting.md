@@ -4,13 +4,12 @@ description: CLI-specific patterns for porting Python CLI applications to Rust, 
 ---
 # Python-to-Rust CLI Porting
 
-CLI-specific rules and patterns for porting Python command-line applications to Rust.
-Covers argument parsing migration, cross-validation methodology, and acceptance criteria
-for CLI parity.
+CLI-specific patterns for porting Python CLI applications to Rust: argument parsing
+migration, output handling, cross-validation, and acceptance criteria.
 
-For general porting rules, see `tbd guidelines python-to-rust-porting-rules` (guidelines/python-to-rust-porting-rules.md).
-For Rust CLI patterns, see `tbd guidelines rust-cli-app-patterns` (guidelines/rust-cli-app-patterns.md).
-For Python CLI patterns, see `tbd guidelines python-cli-patterns` (guidelines/python-cli-patterns.md).
+For general porting rules, see `python-to-rust-porting-rules.md`.
+For Rust CLI patterns, see `rust-cli-app-patterns.md`.
+For Python CLI patterns, see `python-cli-patterns.md`.
 
 ## CLI Argument Mapping
 
@@ -18,23 +17,29 @@ For Python CLI patterns, see `tbd guidelines python-cli-patterns` (guidelines/py
 
 | Python argparse | Rust clap (derive) | Notes |
 | --- | --- | --- |
-| `add_argument("file")` | `#[arg(value_name = "FILE")] file: Option<PathBuf>` | Positional arg |
-| `add_argument("-w", "--width")` | `#[arg(short = 'w', long)]` | Short + long flag |
+| `add_argument("file")` | `file: PathBuf` | Required positional arg |
+| `add_argument("file", nargs="?")` | `file: Option<PathBuf>` | Optional positional arg |
+| `add_argument("-w", "--width")` | `#[arg(short = 'w', long)] width: Option<String>` | Short + long flag |
 | `add_argument("--flag", action="store_true")` | `#[arg(long)] flag: bool` | Boolean flag |
+| `add_argument("--count", required=True)` | `#[arg(long)] count: String` | Required named option (no `Option`) |
 | `default=80` | `#[arg(default_value_t = 80)]` | Default value |
-| `type=int` | `width: usize` | Type validation |
-| `choices=["a","b"]` | `#[arg(value_enum)]` with enum | Enum validation |
-| `nargs="+"` | `files: Vec<PathBuf>` | Multiple values |
+| `type=int` | `width: usize` | Type validation (clap parses automatically) |
+| `choices=["a","b"]` | `#[arg(value_enum)]` with `#[derive(ValueEnum)]` enum | Enum validation |
+| `nargs="+"` | `files: Vec<PathBuf>` | One or more values |
+| `nargs="*"` | `#[arg(num_args = 0..)] files: Vec<PathBuf>` | Zero or more values |
 | `help="description"` | `/// description` (doc comment) | Help text |
+| `metavar="FILE"` | `#[arg(value_name = "FILE")]` | Placeholder in help output |
 
 ### typer/click to clap
 
 | Python typer/click | Rust clap (derive) | Notes |
 | --- | --- | --- |
 | `@app.command()` | `#[derive(Parser)]` | Command definition |
-| `typer.Argument()` | `#[arg()]` on positional | Positional |
-| `typer.Option()` | `#[arg(long)]` | Named option |
-| `callback=...` | Implement in `main()` | |
+| `@app.command()` + multiple | `#[derive(Subcommand)]` enum | Subcommands |
+| `typer.Argument()` | Positional field (no `long`/`short`) | Positional |
+| `typer.Option("--width", "-w")` | `#[arg(short = 'w', long)]` | Named option |
+| `typer.Option(help="...")` | `/// ...` (doc comment) | Help text |
+| `callback=...` | Implement in `main()` after parsing | |
 
 ### Exact Flag Parity Requirements
 
@@ -71,6 +76,27 @@ project input.md -o output.md
 diff <(cat output_py.md) <(cat output_rs.md)  # Zero diffs
 ```
 
+### Buffered Stdout
+
+Python's `print()` buffers efficiently when writing to a pipe. In Rust,
+`println!` acquires and releases the stdout lock on every call, which adds
+overhead for high-volume output. Lock stdout once and use `BufWriter`:
+
+```rust
+use std::io::{self, BufWriter, Write};
+
+fn run() -> io::Result<()> {
+    let stdout = io::stdout().lock();
+    let mut out = BufWriter::new(stdout);
+    for line in results {
+        writeln!(out, "{line}")?;
+    }
+    Ok(())
+}
+```
+
+This can make a 10--100x difference for tools that emit thousands of lines.
+
 ### Error Message Parity
 
 Error messages should match Python's format or be clearly improved:
@@ -87,39 +113,122 @@ All error messages go to stderr. All program output goes to stdout.
 | --- | --- | --- | --- |
 | Success | 0 | 0 | |
 | General error | 1 | 1 | |
-| Usage error | 2 | 2 | clap returns 2 automatically |
-| SIGINT | 130 | 130 | Register ctrlc handler |
+| Usage error | 2 | 2 | clap returns 2 by default |
+| SIGINT | 130 | 130 | Register `ctrlc` handler |
+
+Prefer `std::process::ExitCode` over `std::process::exit()` -- it lets destructors
+run and avoids abrupt termination:
+
+```rust
+use std::process::ExitCode;
+
+fn main() -> ExitCode {
+    match run() {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("error: {e}");
+            ExitCode::from(1)
+        }
+    }
+}
+```
+
+Use `process::exit()` only in signal handlers (e.g., the `ctrlc` handler) where
+you need immediate termination with a specific code.
 
 ### SIGPIPE Handling
 
-Rust ignores SIGPIPE by default, which causes "broken pipe" errors when output is
+Rust ignores SIGPIPE by default, which causes "broken pipe" panics when output is
 piped to tools like `head`, `less`, or any process that closes the read end early.
-Python handles SIGPIPE transparently, so this is a common gotcha when porting CLI tools.
+Python handles SIGPIPE transparently, so this is a **common gotcha** when porting
+CLI tools. Users will see `Error: Broken pipe (os error 32)` where Python worked fine.
 
-**Fix:** Reset SIGPIPE to the default behavior at the start of `main()`:
+**Option 1 (recommended):** Reset SIGPIPE to the default behavior at the start of `main()`.
+Requires the `libc` crate:
 ```rust
 // Reset SIGPIPE signal handling to default (terminate silently).
 // Without this, piping to `head` etc. causes "broken pipe" errors.
 #[cfg(unix)]
 {
+    // SAFETY: We are restoring default SIGPIPE behavior before any I/O.
+    // This is standard practice for CLI tools and has no unsafe side effects.
     unsafe {
         libc::signal(libc::SIGPIPE, libc::SIG_DFL);
     }
 }
 ```
 
-Alternatively, handle `BrokenPipe` errors gracefully in your write calls:
+**Option 2:** Handle `BrokenPipe` errors gracefully in your error handler:
 ```rust
-use std::io::{self, Write};
+use std::io;
+use std::process::ExitCode;
 
-fn main() {
-    if let Err(e) = run() {
-        if e.kind() != io::ErrorKind::BrokenPipe {
+fn main() -> ExitCode {
+    match run() {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(e) if e.kind() == io::ErrorKind::BrokenPipe => ExitCode::SUCCESS,
+        Err(e) => {
             eprintln!("error: {e}");
-            std::process::exit(1);
+            ExitCode::from(1)
         }
     }
 }
+```
+
+Option 1 is preferred because it matches Python's behavior exactly and handles
+SIGPIPE in all code paths, including third-party libraries. Option 2 only catches
+errors that propagate through your own write calls.
+
+### Colored Output and Piping
+
+Python CLIs often use `colorama` or `rich` for colored output and automatically
+disable color when piped. Rust equivalents must replicate this behavior:
+
+- Use a color-aware crate such as `anstream` (from the clap ecosystem) or `console`.
+- Detect whether stdout/stderr is a terminal and suppress color/formatting when piped
+  or redirected:
+  ```rust
+  use std::io::IsTerminal;
+
+  let use_color = std::io::stdout().is_terminal();
+  ```
+- Respect the `NO_COLOR` environment variable (see <https://no-color.org/>).
+  `anstream` handles this automatically. If using `console`, check with
+  `console::colors_enabled()`.
+- Respect `--color=auto|always|never` flags when the Python CLI supports them:
+  ```rust
+  #[arg(long, default_value = "auto")]
+  color: clap::ColorChoice,
+  ```
+
+**Porting pitfall:** If the Python CLI's output includes ANSI escape codes that end
+up in cross-validation diffs, strip them before diffing or ensure both sides use
+the same color mode (`--color=never`).
+
+### Shell Completions
+
+Python CLIs using `argcomplete` or click's built-in completion should have equivalent
+Rust completions generated via `clap_complete`:
+
+```rust
+use clap::CommandFactory;
+use clap_complete::{generate, Shell};
+
+// Typically behind a hidden `--completions <SHELL>` flag or a subcommand
+fn print_completions(shell: Shell) {
+    let mut cmd = Args::command();
+    generate(shell, &mut cmd, "project", &mut std::io::stdout());
+}
+```
+
+Add `clap_complete` as an optional dependency so it does not bloat the binary for
+users who do not need completions:
+```toml
+[dependencies]
+clap_complete = { version = "4", optional = true }
+
+[features]
+completions = ["clap_complete"]
 ```
 
 ## Cross-Validation Methodology
@@ -210,6 +319,9 @@ When cross-validation finds diffs:
 Use `build.rs` to extract the Python version from the submodule:
 ```rust
 fn main() {
+    // Re-run only when the submodule HEAD changes
+    println!("cargo:rerun-if-changed=python-repo/.git/HEAD");
+
     // Try git describe on the submodule
     let version = std::process::Command::new("git")
         .args(["describe", "--tags", "--always"])
@@ -265,21 +377,26 @@ When the Python repo gets updates:
 
 **All of these must pass before the port is considered complete:**
 
+Behavioral parity:
 - [ ] `--help` output matches Python (format may differ slightly due to clap)
-- [ ] `--version` shows both Rust and Python versions
+- [ ] `--version` shows both Rust and Python source versions
 - [ ] All Python CLI flags have Rust equivalents with same names and defaults
-- [ ] Stdin/stdout behavior is identical
+- [ ] Stdin/stdout/file-output behavior is identical
 - [ ] Exit codes match for all error conditions
-- [ ] Cross-validation passes with zero diffs on all test fixtures
-- [ ] Error messages go to stderr, output to stdout
-- [ ] Performance is at least 10x faster than Python (typical for Rust CLI)
-- [ ] Binary size < 10MB (stripped release build)
-- [ ] Startup time < 50ms
+- [ ] Cross-validation passes with zero meaningful diffs on all test fixtures
+- [ ] Error messages go to stderr, program output to stdout
+- [ ] Piping to `head`/`less` works without errors (SIGPIPE handled)
+- [ ] Color output is suppressed when piped or when `NO_COLOR` is set
+
+Non-functional (adjust thresholds per project):
+- [ ] Performance meets or exceeds Python (typically 5--50x for Rust CLI tools)
+- [ ] Binary size is reasonable for distribution (check with `cargo bloat` if large)
+- [ ] Startup time is acceptable (measure with `hyperfine`)
 
 ## Related Guidelines
 
-- For general porting rules, see `tbd guidelines python-to-rust-porting-rules` (guidelines/python-to-rust-porting-rules.md)
-- For Rust CLI patterns, see `tbd guidelines rust-cli-app-patterns` (guidelines/rust-cli-app-patterns.md)
-- For Python CLI patterns, see `tbd guidelines python-cli-patterns` (guidelines/python-cli-patterns.md)
-- For test coverage, see `tbd guidelines test-coverage-for-porting` (guidelines/test-coverage-for-porting.md)
-- For golden testing, see `tbd guidelines golden-testing-guidelines` (guidelines/golden-testing-guidelines.md)
+- General porting rules: `python-to-rust-porting-rules.md`
+- Rust CLI patterns: `rust-cli-app-patterns.md`
+- Python CLI patterns: `python-cli-patterns.md`
+- Test coverage for porting: `test-coverage-for-porting.md`
+- Golden testing: `golden-testing-guidelines.md`

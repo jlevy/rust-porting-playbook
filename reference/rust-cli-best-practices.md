@@ -6,7 +6,7 @@
 [Initial Port Checklist](port-checklist-initial-template.md) |
 [Update Checklist](port-checklist-update-template.md)
 
-Version: 1.1 | Last Updated: 2026-02-07
+Version: 1.2 | Last Updated: 2026-02-12
 
 Cross-referenced against real-world projects: flowmark-rs, ripgrep, bat, fd, jj.
 
@@ -49,6 +49,27 @@ project-rs/
 │   ├── project-core/           # Library crate
 │   └── project-cli/            # Binary crate
 ```
+
+**Workspace Cargo.toml** (Edition 2024 requires `resolver = "3"`):
+```toml
+[workspace]
+members = ["crates/*"]
+resolver = "3"                  # Required for Edition 2024 (was "2" for Edition 2021)
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+
+[workspace.dependencies]
+clap = { version = "4.5", features = ["derive"] }
+```
+Virtual workspaces (no root `[package]`) must set `resolver` explicitly since there is
+no `package.edition` to infer it from. Non-virtual workspaces with `edition = "2024"`
+get `resolver = "3"` automatically.
 
 Start with the single-crate pattern and split into a workspace only when you have
 concrete reasons (independent versioning, very different dependency sets, 3+ crates).
@@ -208,6 +229,54 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 - `tempfile` - Temporary files and directories
 
+### 2.3 Process Exit and Signal Handling
+
+**Exit Codes**: Use `std::process::ExitCode` instead of `std::process::exit()`:
+```rust
+use std::process::ExitCode;
+
+fn main() -> ExitCode {
+    match run() {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("error: {e}");
+            ExitCode::from(1)
+        }
+    }
+}
+```
+
+- **Prefer returning `ExitCode`** from `main` over calling `process::exit()` --
+  `process::exit()` skips destructors, which can cause resource leaks and data loss
+
+- If you only need success/failure, `fn main() -> Result<(), Error>` with `color-eyre`
+  or `anyhow` is simpler and gives you the `?` operator
+
+- Use `ExitCode::from(n)` when you need specific numeric exit codes
+
+**SIGPIPE Handling**: Rust ignores SIGPIPE by default, which causes CLI tools piped to
+`head` or similar to panic with "Broken pipe" errors. Fix this for Unix CLI tools:
+```rust
+fn main() -> ExitCode {
+    // Reset SIGPIPE to default behavior (terminate silently on broken pipe).
+    // Without this, `mytool | head` produces spurious "Broken pipe" errors.
+    sigpipe::reset();
+
+    // ... rest of main
+}
+```
+
+```toml
+sigpipe = "0.1"    # Stable workaround for Rust's SIGPIPE default
+```
+
+- The `sigpipe` crate calls `libc::signal(SIGPIPE, SIG_DFL)` at program start
+
+- An unstable `#[unix_sigpipe = "sig_dfl"]` attribute exists on nightly but is not yet
+  stabilized
+
+- This is essential for any CLI tool whose output may be piped
+
 ## 3. Code Quality & Linting
 
 ### 3.1 Formatting (Mandatory)
@@ -252,6 +321,16 @@ must_use_candidate = "allow"      # Too aggressive
 
 [lints.rust]
 unsafe_code = "forbid"            # No unsafe without explicit allow
+unused_qualifications = "warn"    # Catch unnecessary path qualifications
+```
+
+**Additional useful restriction lints** (cherry-pick, never enable `restriction` as a group):
+```toml
+[lints.clippy]
+# From the restriction group -- opt-in individually
+print_stderr = "warn"             # Use tracing/logging instead of eprintln!
+print_stdout = "warn"             # Use tracing/logging instead of println! (libraries)
+dbg_macro = "warn"                # Catch leftover dbg!() calls
 ```
 
 **Important:** `priority = -1` is required on group lints so that individual overrides
@@ -378,7 +457,10 @@ allow = [
     "BSD-2-Clause",
     "BSD-3-Clause",
     "ISC",
+    "MPL-2.0",
     "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "Zlib",
 ]
 
 # ring uses a non-standard license file; clarify it
@@ -421,7 +503,23 @@ cargo +nightly udeps --all-targets
 **Note**: Requires **nightly** toolchain.
 Use in CI or locally for cleanup.
 
-### 4.4 Unsafe Code Tracking (Optional)
+### 4.4 Binary Auditing (Recommended)
+
+**cargo-auditable** - Embed dependency metadata in compiled binaries:
+```bash
+cargo install cargo-auditable
+cargo auditable build --release   # Embeds dependency list in the binary
+```
+
+This embeds a compressed list of dependencies into the compiled binary, allowing
+post-build vulnerability scanning without access to the source or `Cargo.lock`. Anyone
+with the binary can run `cargo audit bin ./myproject` to check for known
+vulnerabilities. Negligible size and performance overhead (~4KB).
+
+**Policy**: Use `cargo auditable build` in release CI so distributed binaries are
+scannable.
+
+### 4.5 Unsafe Code Tracking (Optional)
 
 **cargo geiger** - Audit unsafe code usage
 ```bash
@@ -477,6 +575,38 @@ clap_complete = "4.5"
 Generate completions for bash, zsh, fish, elvish, and PowerShell at build time or via
 a hidden CLI subcommand. This gives users tab-completion for all commands, flags, and
 arguments with no manual maintenance.
+
+**Build-time generation** (in `build.rs`):
+```rust
+use clap::CommandFactory;
+use clap_complete::{generate_to, shells::Shell};
+use std::env;
+
+fn main() {
+    let outdir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let mut cmd = Cli::command();
+    for shell in [Shell::Bash, Shell::Zsh, Shell::Fish, Shell::PowerShell] {
+        generate_to(shell, &mut cmd, "myproject", &outdir).unwrap();
+    }
+}
+```
+
+**Runtime subcommand** (alternative approach):
+```rust
+#[derive(Subcommand)]
+enum Commands {
+    /// Generate shell completions
+    Completions {
+        #[arg(value_enum)]
+        shell: clap_complete::Shell,
+    },
+}
+
+// In match arm:
+Commands::Completions { shell } => {
+    clap_complete::generate(shell, &mut Cli::command(), "myproject", &mut std::io::stdout());
+}
+```
 
 ## 6. Build & Release
 
@@ -544,7 +674,104 @@ pre-release-hook = ["just", "check"]            # Run all checks before release
 3. Release CI creates GitHub Release, builds cross-platform binaries, publishes to
    crates.io
 
-No major Rust CLI project uses `cargo-dist`. All hand-roll their release workflows.
+**Alternative: `cargo-dist`** (now branded as `dist`): Generates complete CI release
+workflows automatically. Run `dist init` to scaffold a `release.yml` that handles
+planning, cross-compilation, artifact upload, and installer generation (shell scripts,
+Homebrew, MSI). Actively maintained by axo.dev (v0.30+). Good for projects that want
+turnkey releases without hand-rolling CI. Major projects like ripgrep, bat, and fd
+hand-roll their release workflows, but cargo-dist is a solid choice for smaller
+projects or teams that prefer convention over configuration.
+
+### 6.4 Release CI Workflow
+
+A tag-triggered workflow that builds cross-platform binaries and creates a GitHub
+Release. Uses `softprops/action-gh-release@v2` (the standard action for GitHub
+Releases; `actions/create-release@v1` is archived and should not be used):
+
+```yaml
+name: Release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: Install cross (Linux cross-compilation)
+        if: matrix.target == 'aarch64-unknown-linux-gnu' || matrix.target == 'x86_64-unknown-linux-musl'
+        run: cargo install cross --locked
+      - name: Build
+        run: |
+          if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]] || \
+             [[ "${{ matrix.target }}" == "x86_64-unknown-linux-musl" ]]; then
+            cross build --release --locked --target ${{ matrix.target }}
+          else
+            cargo build --release --locked --target ${{ matrix.target }}
+          fi
+        shell: bash
+      - name: Package
+        run: |
+          cd target/${{ matrix.target }}/release
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            7z a ../../../myproject-${{ matrix.target }}.zip myproject.exe
+          else
+            tar czf ../../../myproject-${{ matrix.target }}.tar.gz myproject
+          fi
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        with:
+          name: myproject-${{ matrix.target }}
+          path: myproject-${{ matrix.target }}.*
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: myproject-*
+```
+
+**Key points:**
+- Use `softprops/action-gh-release@v2` for creating GitHub Releases (not the archived
+  `actions/create-release@v1`)
+- Use `cross` for Linux targets that need cross-compilation (musl, aarch64)
+- Use `actions/upload-artifact@v4` and `actions/download-artifact@v4` (current versions)
+- Set `permissions: contents: write` for release creation
+- The `generate_release_notes: true` option auto-generates notes from commits
 
 **Versioning**: Follow [Semantic Versioning](https://semver.org/) (semver)
 
@@ -556,7 +783,7 @@ No major Rust CLI project uses `cargo-dist`. All hand-roll their release workflo
 ```yaml
 - cargo fmt --all -- --check
 - cargo clippy --all-targets --all-features -- -D warnings
-- cargo test --all
+- cargo test --workspace
 - cargo audit
 ```
 
@@ -704,6 +931,12 @@ See `tbd guidelines rust-project-setup` for a complete justfile template.
 
 - `cargo-binstall` - Install pre-built binaries (10-100x faster than compiling)
 
+- `cargo-auditable` - Embed dependency metadata in release binaries
+
+**Release:**
+
+- `cargo-dist` (dist) - Automated release CI generation and binary packaging
+
 **Testing:**
 
 - `cargo-nextest` - Faster parallel test runner (used by jj)
@@ -759,6 +992,7 @@ Rust CLI vs interpreted languages:
 **Before First Release**:
 
 - [ ] `Cargo.toml` fully configured (edition 2024, MSRV, metadata, license)
+- [ ] Workspace uses `resolver = "3"` (Edition 2024; virtual workspaces must set explicitly)
 - [ ] Library + binary feature-gate pattern (if applicable)
 - [ ] `rustfmt.toml` configured; `cargo fmt` passing
 - [ ] Lint configuration chosen (pedantic with `priority = -1`, curated list, or defaults)
@@ -766,13 +1000,16 @@ Rust CLI vs interpreted languages:
 - [ ] `cargo audit` passing (no vulnerabilities)
 - [ ] `deny.toml` configured with v2 schema for license/dependency checks
 - [ ] Documentation complete (README, API docs, CHANGELOG)
+- [ ] Shell completions via `clap_complete` (build-time or runtime subcommand)
 - [ ] CI/CD pipeline: 7 parallel jobs (fmt, clippy, test, msrv, audit, deny, docs)
 - [ ] Cross-platform test matrix (Linux, macOS, Windows)
 - [ ] Release profile optimized (LTO, strip, panic=abort)
 - [ ] `release.toml` configured for cargo-release
-- [ ] Release CI workflow for cross-platform binary builds
+- [ ] Release CI workflow for cross-platform binary builds (softprops/action-gh-release@v2)
 - [ ] `justfile` with check/fix/precommit targets
 - [ ] `Cargo.lock` committed (for binary projects)
+- [ ] SIGPIPE handling: `sigpipe::reset()` at start of main (Unix CLI tools)
+- [ ] Exit codes: return `ExitCode` from main instead of calling `process::exit()`
 
 **Maintenance**:
 
@@ -780,6 +1017,7 @@ Rust CLI vs interpreted languages:
 - [ ] Update dependencies regularly (`cargo update`)
 - [ ] Test MSRV compliance on bumps
 - [ ] Keep CHANGELOG updated
+- [ ] Use `cargo auditable build` in release CI for scannable binaries
 
 ## References
 
@@ -826,7 +1064,22 @@ Rust CLI vs interpreted languages:
 [^rust-edition]: [The Rust Edition Guide](https://doc.rust-lang.org/edition-guide/) -
     Rust editions explained
 
+[^cargo-dist]: [cargo-dist (dist)](https://opensource.axo.dev/cargo-dist/) - Automated
+    release packaging and distribution by axo.dev
+
+[^sigpipe]: [SIGPIPE in Rust](https://github.com/rust-lang/rust/issues/62569) -
+    Tracking issue for Rust's SIGPIPE default behavior
+
+[^exitcode]: [ExitCode](https://doc.rust-lang.org/stable/std/process/struct.ExitCode.html) -
+    std::process::ExitCode documentation
+
+[^cargo-auditable]: [cargo-auditable](https://github.com/rust-secure-code/cargo-auditable) -
+    Embed dependency info in binaries for post-build auditing
+
+[^clap-complete]: [clap_complete](https://docs.rs/clap_complete/latest/clap_complete/) -
+    Shell completion generation for clap
+
 * * *
 
 **This document is a living reference.**
-Cross-referenced against flowmark-rs, ripgrep, bat, fd, and jj as of 2026-02-07.
+Cross-referenced against flowmark-rs, ripgrep, bat, fd, and jj as of 2026-02-12.

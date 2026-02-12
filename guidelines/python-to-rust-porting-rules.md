@@ -49,7 +49,7 @@ For test coverage strategy, see `tbd guidelines test-coverage-for-porting (guide
 | Python | Rust | Notes |
 | --- | --- | --- |
 | `list[T]` | `Vec<T>` | |
-| `dict[K, V]` | `HashMap<K, V>` | **No insertion order!** Use IndexMap if order matters |
+| `dict[K, V]` | `HashMap<K, V>` | Python dict preserves insertion order since 3.7; `HashMap` does **not**. Use `IndexMap` if order matters |
 | `set[T]` | `HashSet<T>` | Or `BTreeSet` for sorted |
 | `tuple[A, B]` | `(A, B)` | Named struct if >3 elements |
 | `deque` | `VecDeque<T>` | |
@@ -149,6 +149,7 @@ pub fn fill_markdown(text: &str, config: &Config) -> Result<String> {
 | typing | Rust type system | Built-in | |
 | dataclasses | struct + derive macros | Built-in | Minimum: `#[derive(Debug, Clone, PartialEq)]`; add `Eq`, `Hash`, `Serialize`, `Deserialize` as needed |
 | abc (ABCs) | traits | Built-in | |
+| Exception hierarchy | thiserror (library) / anyhow (binary) | Excellent | thiserror for typed errors; anyhow for ad-hoc |
 | marko (Markdown) | comrak / pulldown-cmark | Varies | See parser selection guide |
 | logging | tracing / log | Excellent | tracing is preferred for new code |
 | asyncio | tokio | Excellent | De facto async runtime |
@@ -323,7 +324,8 @@ Mark all workarounds with structured comment prefixes:
 - `HACK:` or `WORKAROUND:` for library workarounds that are intentional and stable.
 - `FIXME:` for items needing future resolution.
 - `XXX:` for anything that is incorrect or problematic but cannot be addressed now
-  (note: `XXX:` signals "dangerous/requires attention" in this project).
+  (note: `XXX:` is a non-standard convention not recognized by most linters; it signals
+  "dangerous/requires attention" in this project).
 
 ```rust
 /// WORKAROUND: comrak normalizes list markers to `-`, but Python preserves `*`.
@@ -342,13 +344,14 @@ working around one library's bugs accumulates rapidly. Research alternatives ear
 
 **Zero-tolerance completion gate:**
 - [ ] 100% of Python tests pass in Rust
-- [ ] Byte-for-byte output match on all test fixtures
-- [ ] Cross-validation with zero diffs on representative documents
+- [ ] Byte-for-byte output match on all test fixtures (goal; document deviations with `WORKAROUND:` if a library difference makes exact match impossible)
+- [ ] Cross-validation with zero diffs on representative documents (or all diffs explained by documented workarounds)
 - [ ] All known differences documented with `WORKAROUND:`/`HACK:`/`FIXME:`/`XXX:` comments
 - [ ] All `#[ignore]` tests have documented reasons
 - [ ] CLI help text matches Python exactly
 - [ ] Exit codes match Python behavior
 - [ ] cargo clippy -- -D warnings passes with zero warnings
+- [ ] cargo fmt -- --check passes (consistent formatting)
 
 ## Related Guidelines
 

@@ -24,18 +24,19 @@ For general coding rules (language-agnostic), see `tbd guidelines general-coding
   rust-version = "1.85"
   ```
 
-- MSRV bumps are NOT semver-breaking. Use minor version bump (1.1.0 -> 1.2.0).
+- MSRV bumps are NOT semver-breaking. Use minor version bump (1.1.0 → 1.2.0).
 
 - Test MSRV compliance in CI with an explicit toolchain install.
 
 ### Edition 2024 Key Changes (Rust 1.85+)
 
 - **`gen` is a reserved keyword** — rename any variables named `gen` (common in Python ports)
-- **`unsafe_op_in_unsafe_fn` is deny-by-default** — unsafe operations inside `unsafe fn` must be wrapped in `unsafe {}` blocks
+- **`unsafe_op_in_unsafe_fn` is warn-by-default** — unsafe operations inside `unsafe fn` should be wrapped in `unsafe {}` blocks (previously allowed silently)
 - **RPIT lifetime captures** — return-position `impl Trait` captures all in-scope lifetimes by default (may need `+ use<'a>` to restrict)
 - **`static mut` is soft-deprecated** — use `std::sync::Mutex`, `AtomicT`, or `LazyLock` instead
-- **Let chains** — `if let Some(x) = a && x > 0 { ... }` is now stable
-- **Resolver v3** — MSRV-aware dependency resolution; use `resolver = "3"` in workspace `Cargo.toml`
+- **Let chains** — `if let Some(x) = a && let Ok(y) = b { ... }` is stable (chain `let` and bool expressions freely)
+- **Tail expression temporary scope** — temporaries in tail expressions are dropped before the local variables (changed from Edition 2021)
+- **Resolver v3** — MSRV-aware dependency resolution is the default; Edition 2024 implies `resolver = "3"` automatically in workspace `Cargo.toml`
 
 ## Ownership and Borrowing
 
@@ -85,12 +86,20 @@ For general coding rules (language-agnostic), see `tbd guidelines general-coding
   }
   ```
 
-- **Use `color-eyre` or `anyhow`** in binary crates for ergonomic error propagation.
-  Note: `color-eyre` 0.6 is in maintenance mode (no active feature development). Still
-  functional and widely used, but consider `anyhow` for simpler needs.
+- **Use `anyhow` in binary crates** for ergonomic error propagation with context:
+  ```rust
+  use anyhow::{Context, Result};
+  let content = std::fs::read_to_string(path)
+      .with_context(|| format!("failed to read {}", path.display()))?;
+  ```
+  `color-eyre` 0.6 is an alternative with colored backtraces but is in maintenance-only
+  mode (no active feature development). Use `anyhow` for new projects.
+
+- **Decision guide:** `thiserror` for libraries (callers match on variants), `anyhow` for
+  binaries (callers just display or log). Never mix — a library should not depend on `anyhow`.
 
 - **Only use `Result` when the Python equivalent can raise.** When porting, if the
-  Python function never raises, don't wrap in Result -- match the behavior exactly.
+  Python function never raises, don't wrap in Result — match the behavior exactly.
 
 - **Don't `unwrap()` in library code.** Use `expect()` only for truly impossible states
   with an explanatory message. In application code, prefer `?` propagation.
@@ -101,11 +110,9 @@ For more on error handling, see `tbd guidelines error-handling-rules`.
 
 ## String Handling
 
-- **Prefer `&str` for function parameters**, `String` for struct fields and return values.
-
 - **Use `format!()` for string building**, not repeated push/concatenation.
 
-- **Be careful with string slicing** -- `text[start..end]` panics if not on char
+- **Be careful with string slicing** — `text[start..end]` panics if not on char
   boundaries. Use `text.chars()`, `text.char_indices()`, or the `unicode-segmentation`
   crate for Unicode-safe operations.
 
@@ -119,7 +126,7 @@ For more on error handling, see `tbd guidelines error-handling-rules`.
 
 ## Regex
 
-- **Use `LazyLock` (stable since Rust 1.80)** for compiled regex. Remove the `once_cell` dependency if present — `LazyLock` fully replaces `once_cell::sync::Lazy` and is part of `std`:
+- **Use `LazyLock` (stable since Rust 1.80)** for compiled regex. Remove the `once_cell` dependency — `std::sync::LazyLock` replaces `once_cell::sync::Lazy` and `std::sync::OnceLock` (stable since 1.70) replaces `once_cell::sync::OnceCell`:
   ```rust
   use std::sync::LazyLock;
   use regex::Regex;
@@ -230,9 +237,8 @@ For more on error handling, see `tbd guidelines error-handling-rules`.
 
 ## Anti-Patterns to Avoid
 
-- **Don't clone to satisfy the borrow checker.** Redesign data flow instead.
-
 - **Don't use `Box<dyn Error>`** in libraries. Use concrete error types with `thiserror`.
+  In binaries, use `anyhow::Error` instead of `Box<dyn Error>`.
 
 - **Don't use `String` everywhere.** Accept `&str`, return `String`.
 
@@ -258,7 +264,23 @@ For more on error handling, see `tbd guidelines error-handling-rules`.
   const EXPECTED: &str = include_str!("../fixtures/expected.md");
   ```
 
+- **Use `insta` for snapshot testing** — ideal for porting since you can verify rendered
+  output matches Python exactly:
+  ```rust
+  insta::assert_snapshot!(render(&input), @"expected output here");
+  ```
+
 - **Use `proptest` for property-based testing** of algorithmic code.
+
+- **Use `rstest` for parameterized tests** when porting many Python test cases:
+  ```rust
+  #[rstest]
+  #[case("hello world", 5, "hello\nworld")]
+  #[case("ab cd", 10, "ab cd")]
+  fn test_wrap(#[case] input: &str, #[case] width: usize, #[case] expected: &str) {
+      assert_eq!(wrap(input, width), expected);
+  }
+  ```
 
 - **Name tests descriptively:** `test_wrap_preserves_code_blocks`, not `test_wrap_1`.
 

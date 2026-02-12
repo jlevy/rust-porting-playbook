@@ -1,5 +1,10 @@
 # Comrak Bug Report: Code Fence Parsing with Indented Lists
 
+**Related:**
+[Library Choices](flowmark-port-library-choices.md) |
+[Decision Log D6](flowmark-port-decision-log.md#d6-comrak-fence-parsing-bug) |
+[Cross-Validation](flowmark-port-cross-validation.md)
+
 **Bug Summary:** Fenced code blocks containing YAML-style indented lists with blank
 lines are incorrectly parsed, causing the fence to close prematurely and content to leak
 out.
@@ -15,6 +20,12 @@ out.
 - **Platform:** All platforms
 
 - **Extensions enabled:** GFM (GitHub Flavored Markdown)
+
+> **Version note (2026-02-09):** This bug was identified and tested against comrak 0.29.0
+> (November 2025). Comrak has since evolved to 0.30+ through 0.50+. This bug may have been
+> fixed in a later release -- re-test against the current version before filing upstream.
+> If fixed, the pre-processing workaround in flowmark-rs (`escape_fence_list_markers()`)
+> can be removed.
 
 ## Minimal Reproduction
 

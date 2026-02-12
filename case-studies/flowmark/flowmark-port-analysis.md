@@ -6,6 +6,10 @@ for automation, and future research directions.
 **Related:**
 [Library Choices](flowmark-port-library-choices.md) |
 [Decision Log](flowmark-port-decision-log.md) |
+[Migration Plan](flowmark-port-migration-plan.md) |
+[Cross-Validation](flowmark-port-cross-validation.md) |
+[Comrak Bug](flowmark-port-comrak-bug.md) |
+[Wrapping Solution](flowmark-port-wrapping-solution.md) |
 [Python-to-Rust Porting Guide](../../reference/python-to-rust-porting-guide.md) |
 [Improving This Playbook](../../reference/meta-improving-this-playbook.md)
 
@@ -49,10 +53,10 @@ for automation, and future research directions.
 ### 1. Research-Plan-Implement-Fix Pattern
 
 Every successful port follows this pattern:
-1. **Research** (30-60 min): Ecosystem survey, library evaluation
-2. **Plan** (30-60 min): Feature matrix, architecture, risk assessment
-3. **Implement** (2-4 hours): TDD, module-by-module, leaf-first
-4. **Fix** (2-4 hours): Cross-validation, workarounds, documentation
+1. **Research** (~10% of effort): Ecosystem survey, library evaluation
+2. **Plan** (~5% of effort): Feature matrix, architecture, risk assessment
+3. **Implement** (~33% of effort): TDD, module-by-module, leaf-first
+4. **Fix** (~32% of effort): Cross-validation, workarounds, documentation
 
 The fix phase consistently takes 30-50% of total effort. This is not waste -- it's
 where the port achieves production quality.
@@ -127,14 +131,13 @@ functionality in library code that Python delegates to C extensions or the runti
 
 From the author's account (source: [flowmark-rs README](https://github.com/jlevy/flowmark-rs)):
 
-| Phase | Time | Notes |
+| Phase | Observed effort | Notes |
 | --- | --- | --- |
-| Background research | ~1 hour | Ecosystem survey, CLI best practices doc |
-| Porting plan | ~1 hour | Migration plan, library evaluation |
-| Additional plans | ~1 hour (parallel) | CI/CD plan, port checklist template |
-| Initial implementation | 2-3 hours | TDD, module-by-module, 8-9 encouragement prompts needed |
-| Bug-fixing | 2-3 hours | "The most painful part" — 50% of total effort |
-| **Total** | **~6 hours** | |
+| Background research | ~15% | Ecosystem survey, CLI best practices doc |
+| Porting plan | ~15% | Migration plan, library evaluation |
+| Additional plans | ~15% (parallel) | CI/CD plan, port checklist template |
+| Initial implementation | ~25% | TDD, module-by-module, 8-9 encouragement prompts needed |
+| Bug-fixing | ~30% | "The most painful part" — largest single phase |
 
 ### Key Operational Insights
 

@@ -8,16 +8,18 @@ precise specification to match against.
 `tbd guidelines test-coverage-for-porting` |
 `tbd guidelines golden-testing-guidelines`
 
-**Last update:** 2026-02-07
+**Last update:** 2026-02-12
 
 ## Overview
 
-This playbook covers four phases of test coverage work:
+This playbook covers six phases of test coverage work:
 
 1. **Measure** -- Understand current coverage
 2. **Expand** -- Write tests for uncovered code
 3. **Golden** -- Create golden/snapshot tests for CLI behavior
 4. **Document** -- Record what can't be automated
+5. **Property Test** -- Add property-based tests for invariants
+6. **Rust Coverage & CI** -- Set up Rust-side coverage and enforce in CI
 
 Each phase builds on the previous one. Complete them in order.
 
@@ -228,6 +230,23 @@ run it captures output; on subsequent runs it compares against the stored snapsh
 `cargo insta review` to interactively accept or reject changes. This is particularly useful
 for output-heavy CLI tools and is used by cargo itself.
 
+```rust
+use insta::assert_snapshot;
+
+#[test]
+fn test_format_basic_snapshot() {
+    let input = include_str!("../../test-fixtures/input/basic.md");
+    let result = format_document(input, &Config::default()).unwrap();
+    assert_snapshot!(result);
+}
+```
+
+Add to `Cargo.toml`:
+```toml
+[dev-dependencies]
+insta = "1"
+```
+
 ## Phase 4: Document Manual Test Procedures
 
 ### 4.1 Template for Manual Tests
@@ -277,6 +296,141 @@ for output-heavy CLI tools and is used by cargo itself.
 3. Compare output and processing time
 ```
 
+## Phase 5: Property-Based Testing
+
+Property-based testing generates random inputs to verify invariants, catching edge
+cases that hand-written tests miss. Add property tests on both the Python and Rust
+sides.
+
+### 5.1 Python Side: Hypothesis
+
+[Hypothesis](https://hypothesis.readthedocs.io/) generates arbitrary inputs to test
+properties of your functions:
+
+```python
+from hypothesis import given, strategies as st
+
+@given(st.text())
+def test_format_never_crashes(text):
+    """Formatting should never raise, regardless of input."""
+    result = format_document(text)
+    assert isinstance(result, str)
+
+@given(st.text(), st.integers(min_value=10, max_value=200))
+def test_wrap_respects_width(text, width):
+    """No output line should exceed the requested width (unless a single word is longer)."""
+    result = wrap(text, width=width)
+    for line in result.splitlines():
+        assert len(line) <= width or " " not in line
+
+@given(st.text())
+def test_format_idempotent(text):
+    """Formatting twice should produce the same result as formatting once."""
+    first = format_document(text)
+    second = format_document(first)
+    assert first == second
+```
+
+Install: `pip install hypothesis`
+
+### 5.2 Rust Side: proptest
+
+[`proptest`](https://crates.io/crates/proptest) is the standard property-based
+testing crate for Rust. [`quickcheck`](https://crates.io/crates/quickcheck) is a
+lighter alternative but `proptest` offers more control over input generation.
+
+```rust
+use proptest::prelude::*;
+
+proptest! {
+    #[test]
+    fn format_never_panics(s in "\\PC{0,500}") {
+        // Should never panic, regardless of input
+        let _ = format_document(&s, &Config::default());
+    }
+
+    #[test]
+    fn wrap_respects_width(s in "\\PC{1,200}", width in 10..200usize) {
+        let wrapped = wrap(&s, width);
+        for line in wrapped.lines() {
+            prop_assert!(
+                line.len() <= width || !line.contains(' '),
+                "Line too long: {} chars (width: {})", line.len(), width
+            );
+        }
+    }
+
+    #[test]
+    fn format_is_idempotent(s in "\\PC{0,500}") {
+        let first = format_document(&s, &Config::default()).unwrap_or_default();
+        let second = format_document(&first, &Config::default()).unwrap_or_default();
+        prop_assert_eq!(&first, &second);
+    }
+}
+```
+
+Add to `Cargo.toml`:
+```toml
+[dev-dependencies]
+proptest = "1"
+```
+
+## Phase 6: Rust Coverage Tools and CI Integration
+
+### 6.1 Rust Coverage with cargo-tarpaulin
+
+[`cargo-tarpaulin`](https://crates.io/crates/cargo-tarpaulin) provides line and
+branch coverage for Rust. It is easy to set up but less accurate than LLVM-based
+coverage on complex codebases:
+
+```bash
+cargo install cargo-tarpaulin
+cargo tarpaulin --out html --all-features
+# Open tarpaulin-report.html
+```
+
+### 6.2 Rust Coverage with cargo-llvm-cov (Recommended)
+
+[`cargo-llvm-cov`](https://crates.io/crates/cargo-llvm-cov) uses LLVM's source-based
+instrumentation for more accurate results. This is the recommended tool for
+production-quality coverage measurement:
+
+```bash
+cargo install cargo-llvm-cov
+cargo llvm-cov --html --all-features
+# Open target/llvm-cov/html/index.html
+```
+
+### 6.3 CI Integration
+
+Add coverage enforcement to GitHub Actions:
+
+```yaml
+# .github/workflows/coverage.yml
+name: Coverage
+on: [push, pull_request]
+jobs:
+  python-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v4
+      - run: |
+          cd python-repo
+          uv run pytest --cov=myproject --cov-branch \
+            --cov-report=term-missing --cov-fail-under=90
+
+  rust-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+      - uses: taiki-e/install-action@cargo-llvm-cov
+      - run: cargo llvm-cov --all-features --fail-under-lines 90
+```
+
 ## Coverage Targets
 
 ### Before Porting
@@ -287,15 +441,17 @@ for output-heavy CLI tools and is used by cargo itself.
 | CLI interface | ≥80% | Clap handles validation |
 | Error paths | ≥70% | Test main error scenarios |
 | Golden tests | 10+ fixtures | Cover feature matrix |
+| Property tests | Key invariants | Catch edge cases humans miss |
 | Integration tests | Full CLI pipeline | End-to-end verification |
 
 ### After Porting (Rust)
 
 | Component | Target | Tool |
 | --- | --- | --- |
-| Core library | ≥90% | cargo-llvm-cov |
-| Public API | 100% | cargo-llvm-cov |
+| Core library | ≥90% | cargo-llvm-cov (or cargo-tarpaulin) |
+| Public API | 100% | cargo-llvm-cov (or cargo-tarpaulin) |
 | CLI wrapper | ≥80% | assert_cmd integration tests |
+| Property tests | Key invariants | proptest |
 | Cross-validation | 0 diffs | cross-validate.sh |
 
 ## Checklist
@@ -305,8 +461,10 @@ for output-heavy CLI tools and is used by cargo itself.
 - [ ] Created golden test fixtures covering all features
 - [ ] Set up tryscript CLI tests (if applicable)
 - [ ] Verified idempotency
+- [ ] Added property-based tests (Hypothesis for Python, proptest for Rust)
 - [ ] Documented manual test procedures
 - [ ] Generated expected output files
 - [ ] Committed all fixtures to the repo (not just submodule)
+- [ ] Set up CI coverage enforcement (fail-under thresholds)
 - [ ] Achieved ≥90% coverage on core library
-- [ ] All tests pass: `pytest --tb=short`
+- [ ] All tests pass: `uv run pytest --cov=myproject --cov-branch --tb=short`
