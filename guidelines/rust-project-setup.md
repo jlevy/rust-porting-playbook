@@ -10,8 +10,8 @@ development tooling.
 
 Cross-referenced against real-world projects: flowmark-rs, ripgrep, bat, fd, jj.
 
-For general Rust rules, see `tbd guidelines rust-general-rules`.
-For CLI-specific patterns, see `tbd guidelines rust-cli-app-patterns`.
+See also: [Rust General Rules](guidelines/rust-general-rules.md),
+[Rust CLI App Patterns](guidelines/rust-cli-app-patterns.md).
 For commit conventions, see `tbd guidelines commit-conventions`.
 
 ## Cargo.toml Configuration
@@ -33,8 +33,8 @@ categories = ["command-line-utilities"]  # From crates.io fixed list
 readme = "README.md"
 ```
 
-**Edition 2024** is now standard for new projects (stabilized in Rust 1.85).
-Always declare `rust-version` -- all major projects do this (bat, fd, jj, ripgrep).
+**Edition 2024** is now standard for new projects (stabilized in Rust 1.85). Always
+declare `rust-version` -- all major projects do this (bat, fd, jj, ripgrep).
 
 ### Library + Binary in One Crate (Recommended)
 
@@ -82,9 +82,10 @@ resolver = "3"                     # Edition 2024 uses resolver v3 (MSRV-aware)
 pedantic = { level = "warn", priority = -1 }
 ```
 
-Use workspaces when: independent versioning needed, very different dependency sets,
-or project has 3+ crates. jj uses a workspace (~30 crates). Start with single package
-and split only when you have a concrete reason.
+Use workspaces when: independent versioning needed, very different dependency sets, or
+project has 3+ crates.
+jj uses a workspace (~30 crates).
+Start with single package and split only when you have a concrete reason.
 
 ### Release Profile
 
@@ -116,14 +117,16 @@ codegen-units = 1
 ```
 
 This lets you build quick release builds during development (`cargo build --release`)
-and use the full LTO profile only for distribution (`cargo build --profile release-lto`).
+and use the full LTO profile only for distribution
+(`cargo build --profile release-lto`).
 
 ### Lint Configuration
 
 Three approaches are used in practice:
 
-**Approach A: Blanket pedantic** (flowmark-rs). Enables all pedantic lints, allows
-the noisy ones individually. Catches more but requires more `allow` overrides:
+**Approach A: Blanket pedantic** (flowmark-rs).
+Enables all pedantic lints, allows the noisy ones individually.
+Catches more but requires more `allow` overrides:
 
 ```toml
 [lints.clippy]
@@ -138,10 +141,12 @@ must_use_candidate = "allow"
 unsafe_code = "forbid"
 ```
 
-Note: `priority = -1` is required on group lints so individual overrides take precedence.
+Note: `priority = -1` is required on group lints so individual overrides take
+precedence.
 
-**Approach B: Curated lint list** (jj). Cherry-picks specific useful lints. More
-maintainable, avoids churn when new pedantic lints are added:
+**Approach B: Curated lint list** (jj).
+Cherry-picks specific useful lints.
+More maintainable, avoids churn when new pedantic lints are added:
 
 ```toml
 [lints.clippy]
@@ -161,17 +166,20 @@ unsafe_code = "forbid"
 unused_qualifications = "warn"
 ```
 
-**Approach C: No lint config** (ripgrep, bat, fd). Just run `cargo clippy -- -D warnings`
-in CI with defaults. Simplest, but catches fewer issues.
+**Approach C: No lint config** (ripgrep, bat, fd).
+Just run `cargo clippy -- -D warnings` in CI with defaults.
+Simplest, but catches fewer issues.
 
-All approaches are valid. Choose based on project size and team preference.
+All approaches are valid.
+Choose based on project size and team preference.
 
 ## CI/CD with GitHub Actions
 
 ### Recommended: Separate Jobs (Modern Pattern)
 
-Split CI into independent parallel jobs for fast feedback. This is what flowmark-rs,
-jj, and delta do. Format and clippy fail fast; test and audit run in parallel.
+Split CI into independent parallel jobs for fast feedback.
+This is what flowmark-rs, jj, and delta do.
+Format and clippy fail fast; test and audit run in parallel.
 
 ```yaml
 name: CI
@@ -274,7 +282,8 @@ jobs:
 
 ### Cross-Platform Test Matrix
 
-For CLI tools, test on all three major platforms. The test job above already does this.
+For CLI tools, test on all three major platforms.
+The test job above already does this.
 For builds, add target-specific builds in the release workflow (see below).
 
 ### MSRV Policy
@@ -345,8 +354,8 @@ unknown-registry = "deny"           # Only allow crates.io
 unknown-git = "deny"                # No git dependencies
 ```
 
-**Important:** Use `version = 2` for `[advisories]` and `[licenses]`. The v1 schema
-is deprecated and will cause warnings or errors with current cargo-deny.
+**Important:** Use `version = 2` for `[advisories]` and `[licenses]`. The v1 schema is
+deprecated and will cause warnings or errors with current cargo-deny.
 
 ## Release Workflow
 
@@ -377,25 +386,27 @@ pre-release-hook = ["just", "check"]    # Run all checks before release
 ```
 
 **Key decision:** `publish = false` locally, let GitHub Actions handle `cargo publish`
-after the tag push. This ensures binaries are built and uploaded alongside the
-crates.io publish. In workspaces, set `publish = false` in `Cargo.toml` for crates
-that should not be published (internal crates, test utilities, etc.).
+after the tag push. This ensures binaries are built and uploaded alongside the crates.io
+publish. In workspaces, set `publish = false` in `Cargo.toml` for crates that should not
+be published (internal crates, test utilities, etc.).
 
 ### Release CI Workflow
 
 All major Rust CLI projects (ripgrep, bat, fd, jj) hand-roll their release workflows.
 
 **Alternative: `cargo-dist`** (by axodotdev) can generate complete release CI workflows
-with `cargo dist init`. It handles cross-compilation, installer generation (shell scripts,
-Homebrew, MSI), and GitHub Release uploads with minimal configuration. It has matured
-significantly (v0.30+) and is a good choice when you don't need full control over the
-release pipeline. See https://opensource.axo.dev/cargo-dist/ for details.
+with `cargo dist init`. It handles cross-compilation, installer generation (shell
+scripts, Homebrew, MSI), and GitHub Release uploads with minimal configuration.
+It has matured significantly (v0.30+) and is a good choice when you don’t need full
+control over the release pipeline.
+See https://opensource.axo.dev/cargo-dist/ for details.
 
 For full control, the standard hand-rolled pattern:
 
 1. **cargo-release** bumps version, commits, tags, pushes
 2. **Tag push** triggers release workflow
-3. **Release workflow** creates GitHub Release, builds cross-platform binaries, publishes to crates.io
+3. **Release workflow** creates GitHub Release, builds cross-platform binaries,
+   publishes to crates.io
 
 ```yaml
 name: Release
@@ -560,10 +571,10 @@ cargo install cargo-outdated    # Check for dependency updates
 **`cargo-binstall`** is highly recommended: it downloads pre-built binaries instead of
 compiling from source, making tool installation 10-100x faster.
 
-**`cargo-nextest`** is used by jj and many large projects. It runs tests in parallel
-processes (not just threads), provides better output, and is significantly faster on
-multi-core machines. It's a drop-in replacement: `cargo nextest run` instead of
-`cargo test`.
+**`cargo-nextest`** is used by jj and many large projects.
+It runs tests in parallel processes (not just threads), provides better output, and is
+significantly faster on multi-core machines.
+It’s a drop-in replacement: `cargo nextest run` instead of `cargo test`.
 
 ### Editor Configuration
 
@@ -574,10 +585,11 @@ max_width = 100
 use_small_heuristics = "Max"
 ```
 
-These three settings are the most common customizations. Most projects use the defaults
-for everything else. `use_small_heuristics = "Max"` tells rustfmt to use the full
-`max_width` for all constructs (structs, function args, etc.) rather than applying
-shorter limits.
+These three settings are the most common customizations.
+Most projects use the defaults for everything else.
+`use_small_heuristics = "Max"` tells rustfmt to use the full `max_width` for all
+constructs (structs, function args, etc.)
+rather than applying shorter limits.
 
 ## Documentation
 
@@ -604,8 +616,8 @@ shorter limits.
 cargo doc --open --no-deps  # Build and open docs locally
 ```
 
-Add doc build to CI with `-D warnings` to catch broken links and missing docs
-(already included in the CI workflow above).
+Add doc build to CI with `-D warnings` to catch broken links and missing docs (already
+included in the CI workflow above).
 
 ### User Documentation
 
@@ -621,14 +633,14 @@ definitions.
 
 - **Specify minimum minor versions:** Use `"4.5"` not `"4"` or `"*"` in Cargo.toml
 - **Commit `Cargo.lock`** for binary projects (ensures reproducible builds)
-- **Don't commit `Cargo.lock`** for library-only crates (let downstream resolve)
+- **Don’t commit `Cargo.lock`** for library-only crates (let downstream resolve)
 - **Review dependency diffs** before updating with `cargo update`
 - **Minimize dependency count.** Each dependency is a supply chain risk and compile time
   cost. flowmark-rs has ~14 runtime deps; ripgrep has ~30+ but most are internal crates
 - **Use `--locked` in CI** to enforce that `Cargo.lock` is up to date and builds are
   reproducible
 - **Feature-gate heavy deps:** Put CLI-only deps behind a feature flag (see lib+bin
-  pattern above) so library users don't pay for them
+  pattern above) so library users don’t pay for them
 
 ## Git Configuration
 
@@ -652,8 +664,8 @@ This lets agents read the Python source directly and provides an exact commit re
 
 ## Related Guidelines
 
-- For general Rust rules, see `tbd guidelines rust-general-rules`
-- For CLI patterns, see `tbd guidelines rust-cli-app-patterns`
+- [Rust General Rules](guidelines/rust-general-rules.md)
+- [Rust CLI App Patterns](guidelines/rust-cli-app-patterns.md)
+- [Python-to-Rust Porting Rules](guidelines/python-to-rust-porting-rules.md)
 - For commit conventions, see `tbd guidelines commit-conventions`
-- For Python-to-Rust porting, see `tbd guidelines python-to-rust-porting-rules`
 - For release notes, see `tbd guidelines release-notes-guidelines`

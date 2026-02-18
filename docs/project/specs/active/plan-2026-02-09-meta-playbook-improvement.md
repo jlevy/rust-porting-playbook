@@ -8,11 +8,12 @@
 
 ## Overview
 
-Create a "meta-playbook" — a systematic process for improving the Rust Porting Playbook
-itself by conducting real-world case studies. An agent follows the playbook end-to-end
-with a new Python codebase, documents what worked and what didn't, and then those
-learnings are integrated back into the playbook. This creates a feedback loop where
-each case study makes the playbook more accurate and complete.
+Create a “meta-playbook” — a systematic process for improving the Rust Porting Playbook
+itself by conducting real-world case studies.
+An agent follows the playbook end-to-end with a new Python codebase, documents what
+worked and what didn’t, and then those learnings are integrated back into the playbook.
+This creates a feedback loop where each case study makes the playbook more accurate and
+complete.
 
 ## Goals
 
@@ -20,7 +21,7 @@ each case study makes the playbook more accurate and complete.
 - Define how to capture structured learnings during the port
 - Define how to integrate those learnings back into the playbook
 - Make the whole process agent-drivable with minimal human intervention
-- Add a "Improving This Playbook" section to the main README
+- Add a “Improving This Playbook” section to the main README
 
 ## Non-Goals
 
@@ -30,9 +31,10 @@ each case study makes the playbook more accurate and complete.
 
 ## Background
 
-The playbook was built primarily from the flowmark case study. While flowmark is a good
-test case (text-processing CLI, ~2,000 lines, marko→comrak), it represents a single data
-point. The playbook will improve significantly with additional case studies covering:
+The playbook was built primarily from the flowmark case study.
+While flowmark is a good test case (text-processing CLI, ~2,000 lines, marko→comrak), it
+represents a single data point.
+The playbook will improve significantly with additional case studies covering:
 
 - Different domains (web services, data processing, ML tooling, DevOps)
 - Different sizes (100-line scripts to 10,000+ line applications)
@@ -41,9 +43,9 @@ point. The playbook will improve significantly with additional case studies cove
 
 Each case study is an opportunity to discover:
 - Guidelines that are wrong or misleading in practice
-- Missing guidance that agents need but the playbook doesn't provide
+- Missing guidance that agents need but the playbook doesn’t provide
 - Patterns that generalize beyond flowmark
-- Patterns that were flowmark-specific and shouldn't be presented as universal
+- Patterns that were flowmark-specific and shouldn’t be presented as universal
 
 ## Design
 
@@ -60,11 +62,11 @@ An agent follows the playbook to port a real Python project to Rust:
    `rust-project-setup.md`, and creates a case study directory
    `case-studies/<project-name>/`.
 
-2. **Execute the 8-phase methodology** from `python-to-rust-playbook.md`:
-   research, plan, setup, map, port, fix, document, validate.
+2. **Execute the 8-phase methodology** from `python-to-rust-playbook.md`: research,
+   plan, setup, map, port, fix, document, validate.
 
-3. **Record structured observations** as the port proceeds. For each phase, the agent
-   captures in a `<project>-port-observations.md` file:
+3. **Record structured observations** as the port proceeds.
+   For each phase, the agent captures in a `<project>-port-observations.md` file:
    - What the playbook said to do
    - What actually happened
    - Where the playbook was helpful (with specific doc + section)
@@ -73,7 +75,7 @@ An agent follows the playbook to port a real Python project to Rust:
    - Where the playbook was silent but guidance was needed (what to add and where)
    - Time spent and difficulty level for this phase
 
-4. **Produce standard case study artifacts** (mirroring flowmark's structure):
+4. **Produce standard case study artifacts** (mirroring flowmark’s structure):
    - `<project>-port-analysis.md` — what could be automated, what required judgment
    - `<project>-port-library-choices.md` — library evaluation and selection
    - `<project>-port-decision-log.md` — all decisions with rationale and alternatives
@@ -114,14 +116,14 @@ After the case study is complete, a second pass extracts actionable improvements
 
 Apply the changes to the playbook:
 
-1. **Human reviews** the proposed changes (5-15 minutes for a typical case study's worth
+1. **Human reviews** the proposed changes (5-15 minutes for a typical case study’s worth
    of improvements).
 
 2. **Agent implements** approved changes, using beads for tracking.
 
 3. **Update the case study index** in the README and any cross-references.
 
-4. **Update the "validated by N case studies" count** as the playbook matures.
+4. **Update the “validated by N case studies” count** as the playbook matures.
 
 ### Observation Template
 
@@ -182,9 +184,9 @@ for the full process.
 - [ ] Create `reference/meta-improving-this-playbook.md` with the full three-phase
   process (Phase A: Conduct, Phase B: Extract, Phase C: Integrate)
 - [ ] Include the observation template
-- [ ] Include a checklist for "minimum viable case study" (what must be captured)
+- [ ] Include a checklist for “minimum viable case study” (what must be captured)
 - [ ] Include guidance on selecting good candidate projects for case studies
-- [ ] Add "Improving This Playbook" section to `README.md` with case study table
+- [ ] Add “Improving This Playbook” section to `README.md` with case study table
 - [ ] Add cross-references from the playbook overview and analysis docs
 
 ### Phase 2: Create supporting templates
@@ -207,17 +209,18 @@ The meta-playbook is validated by using it:
 
 ## Open Questions
 
-- What is the minimum project size that produces useful case study data? (Likely 500+
-  lines Python with tests)
+- What is the minimum project size that produces useful case study data?
+  (Likely 500+ lines Python with tests)
 - Should case study observations be stored as tbd beads, or as markdown files?
   (Recommendation: markdown files in the case study directory, with a summary bead)
-- How many case studies are needed before the playbook stabilizes? (Hypothesis: 3-5
-  covering different domains)
-- Should the meta-playbook include a "quick mode" for small projects (<500 lines) that
+- How many case studies are needed before the playbook stabilizes?
+  (Hypothesis: 3-5 covering different domains)
+- Should the meta-playbook include a “quick mode” for small projects (<500 lines) that
   skips some documentation steps?
 
 ## References
 
 - Current playbook: `reference/python-to-rust-playbook.md`
 - Existing case study: `case-studies/flowmark/`
-- Playbook review spec: `docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md`
+- Playbook review spec:
+  `docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md`

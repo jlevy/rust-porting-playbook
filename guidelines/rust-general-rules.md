@@ -4,18 +4,18 @@ description: General Rust coding rules and best practices for modern projects (E
 ---
 # Rust General Rules
 
-General coding rules for Rust projects. Use these as a baseline for any new Rust
-codebase or when reviewing Rust code quality. Focuses on Edition 2024+ (Rust 1.85+)
-patterns and modern idioms.
+General coding rules for Rust projects.
+Use these as a baseline for any new Rust codebase or when reviewing Rust code quality.
+Focuses on Edition 2024+ (Rust 1.85+) patterns and modern idioms.
 
-For CLI-specific patterns, see `tbd guidelines rust-cli-app-patterns`.
-For project setup and tooling, see `tbd guidelines rust-project-setup`.
+See also: [Rust CLI App Patterns](guidelines/rust-cli-app-patterns.md),
+[Rust Project Setup](guidelines/rust-project-setup.md).
 For general coding rules (language-agnostic), see `tbd guidelines general-coding-rules`.
 
 ## Edition and MSRV
 
-- **Use Edition 2024** for new projects (requires Rust 1.85+). Edition 2021 is acceptable
-  for maximum ecosystem compatibility.
+- **Use Edition 2024** for new projects (requires Rust 1.85+). Edition 2021 is
+  acceptable for maximum ecosystem compatibility.
 
 - **Declare `rust-version`** in Cargo.toml to enforce MSRV:
   ```toml
@@ -24,19 +24,27 @@ For general coding rules (language-agnostic), see `tbd guidelines general-coding
   rust-version = "1.85"
   ```
 
-- MSRV bumps are NOT semver-breaking. Use minor version bump (1.1.0 → 1.2.0).
+- MSRV bumps are NOT semver-breaking.
+  Use minor version bump (1.1.0 → 1.2.0).
 
 - Test MSRV compliance in CI with an explicit toolchain install.
 
 ### Edition 2024 Key Changes (Rust 1.85+)
 
-- **`gen` is a reserved keyword** — rename any variables named `gen` (common in Python ports)
-- **`unsafe_op_in_unsafe_fn` is warn-by-default** — unsafe operations inside `unsafe fn` should be wrapped in `unsafe {}` blocks (previously allowed silently)
-- **RPIT lifetime captures** — return-position `impl Trait` captures all in-scope lifetimes by default (may need `+ use<'a>` to restrict)
-- **`static mut` is soft-deprecated** — use `std::sync::Mutex`, `AtomicT`, or `LazyLock` instead
-- **Let chains** — `if let Some(x) = a && let Ok(y) = b { ... }` is stable (chain `let` and bool expressions freely)
-- **Tail expression temporary scope** — temporaries in tail expressions are dropped before the local variables (changed from Edition 2021)
-- **Resolver v3** — MSRV-aware dependency resolution is the default; Edition 2024 implies `resolver = "3"` automatically in workspace `Cargo.toml`
+- **`gen` is a reserved keyword** — rename any variables named `gen` (common in Python
+  ports)
+- **`unsafe_op_in_unsafe_fn` is warn-by-default** — unsafe operations inside `unsafe fn`
+  should be wrapped in `unsafe {}` blocks (previously allowed silently)
+- **RPIT lifetime captures** — return-position `impl Trait` captures all in-scope
+  lifetimes by default (may need `+ use<'a>` to restrict)
+- **`static mut` is soft-deprecated** — use `std::sync::Mutex`, `AtomicT`, or `LazyLock`
+  instead
+- **Let chains** — `if let Some(x) = a && let Ok(y) = b { ... }` is stable (chain `let`
+  and bool expressions freely)
+- **Tail expression temporary scope** — temporaries in tail expressions are dropped
+  before the local variables (changed from Edition 2021)
+- **Resolver v3** — MSRV-aware dependency resolution is the default; Edition 2024
+  implies `resolver = "3"` automatically in workspace `Cargo.toml`
 
 ## Ownership and Borrowing
 
@@ -46,7 +54,7 @@ For general coding rules (language-agnostic), see `tbd guidelines general-coding
 - **Prefer borrowing over cloning.** Only clone when ownership transfer is necessary or
   the cost is negligible.
 
-- **Don't fight the borrow checker by copying state.** If you find yourself cloning
+- **Don’t fight the borrow checker by copying state.** If you find yourself cloning
   everything to satisfy lifetimes, redesign the data flow.
 
 - **Use `Cow<'_, str>`** when a function sometimes borrows, sometimes owns:
@@ -75,7 +83,8 @@ For general coding rules (language-agnostic), see `tbd guidelines general-coding
 
 ## Error Handling
 
-- **Use `thiserror`** for library error types. Define specific error variants:
+- **Use `thiserror`** for library error types.
+  Define specific error variants:
   ```rust
   #[derive(Debug, thiserror::Error)]
   pub enum Error {
@@ -93,18 +102,22 @@ For general coding rules (language-agnostic), see `tbd guidelines general-coding
       .with_context(|| format!("failed to read {}", path.display()))?;
   ```
   `color-eyre` 0.6 is an alternative with colored backtraces but is in maintenance-only
-  mode (no active feature development). Use `anyhow` for new projects.
+  mode (no active feature development).
+  Use `anyhow` for new projects.
 
-- **Decision guide:** `thiserror` for libraries (callers match on variants), `anyhow` for
-  binaries (callers just display or log). Never mix — a library should not depend on `anyhow`.
+- **Decision guide:** `thiserror` for libraries (callers match on variants), `anyhow`
+  for binaries (callers just display or log).
+  Never mix — a library should not depend on `anyhow`.
 
 - **Only use `Result` when the Python equivalent can raise.** When porting, if the
-  Python function never raises, don't wrap in Result — match the behavior exactly.
+  Python function never raises, don’t wrap in Result — match the behavior exactly.
 
-- **Don't `unwrap()` in library code.** Use `expect()` only for truly impossible states
-  with an explanatory message. In application code, prefer `?` propagation.
+- **Don’t `unwrap()` in library code.** Use `expect()` only for truly impossible states
+  with an explanatory message.
+  In application code, prefer `?` propagation.
 
-- **Never panic in library code** unless a contract violation makes continuing dangerous.
+- **Never panic in library code** unless a contract violation makes continuing
+  dangerous.
 
 For more on error handling, see `tbd guidelines error-handling-rules`.
 
@@ -121,12 +134,16 @@ For more on error handling, see `tbd guidelines error-handling-rules`.
   assert_eq!(result, "I\u{2019}m there"); // \u{2019} = right single quote '
   ```
 
-- **String preservation**: Don't "helpfully" modify input. If a Python function returns
-  its input unchanged (including whitespace), the Rust version must do the same.
+- **String preservation**: Don’t “helpfully” modify input.
+  If a Python function returns its input unchanged (including whitespace), the Rust
+  version must do the same.
 
 ## Regex
 
-- **Use `LazyLock` (stable since Rust 1.80)** for compiled regex. Remove the `once_cell` dependency — `std::sync::LazyLock` replaces `once_cell::sync::Lazy` and `std::sync::OnceLock` (stable since 1.70) replaces `once_cell::sync::OnceCell`:
+- **Use `LazyLock` (stable since Rust 1.80)** for compiled regex.
+  Remove the `once_cell` dependency — `std::sync::LazyLock` replaces
+  `once_cell::sync::Lazy` and `std::sync::OnceLock` (stable since 1.70) replaces
+  `once_cell::sync::OnceCell`:
   ```rust
   use std::sync::LazyLock;
   use regex::Regex;
@@ -135,11 +152,12 @@ For more on error handling, see `tbd guidelines error-handling-rules`.
       LazyLock::new(|| Regex::new(r"^\d+\.").unwrap());
   ```
 
-- **Anchor patterns explicitly.** Python's `re.match()` implicitly anchors to start;
-  Rust's `is_match()` matches anywhere. Add `^` for start-anchored matching.
+- **Anchor patterns explicitly.** Python’s `re.match()` implicitly anchors to start;
+  Rust’s `is_match()` matches anywhere.
+  Add `^` for start-anchored matching.
 
-- **Use `fancy-regex`** only when you need look-around or backreferences. Keep hot paths
-  on the standard `regex` crate for performance.
+- **Use `fancy-regex`** only when you need look-around or backreferences.
+  Keep hot paths on the standard `regex` crate for performance.
 
 ## Type System
 
@@ -156,27 +174,27 @@ For more on error handling, see `tbd guidelines error-handling-rules`.
   // NOT: fn format(text: &str, sentence_breaks: bool, width_breaks: bool)
   ```
 
-- **Use `Option<T>`** instead of sentinel values. Never use `-1` or empty string as
-  "no value".
+- **Use `Option<T>`** instead of sentinel values.
+  Never use `-1` or empty string as “no value”.
 
-- **Derive liberally:** `Debug`, `Clone`, `PartialEq` on most types. Add `Eq`, `Hash`,
-  `Serialize`, `Deserialize` when needed.
+- **Derive liberally:** `Debug`, `Clone`, `PartialEq` on most types.
+  Add `Eq`, `Hash`, `Serialize`, `Deserialize` when needed.
 
 ## Code Organization
 
-- **One module per file** as the default. Use `mod.rs` directories only for modules with
-  3+ submodules.
+- **One module per file** as the default.
+  Use `mod.rs` directories only for modules with 3+ submodules.
 
 - **Put tests in the same file** as the code they test (`#[cfg(test)] mod tests`). Use
   `tests/` directory only for integration tests.
 
 - **Keep modules focused.** If a file exceeds ~500 lines, consider splitting.
 
-- **Use `pub(crate)` over `pub`** for internal APIs. Only `pub` what's part of the
-  library's external contract.
+- **Use `pub(crate)` over `pub`** for internal APIs.
+  Only `pub` what’s part of the library’s external contract.
 
-- **Maintain clear Python-to-Rust module mapping** when porting. Add a comment at the
-  top of each module:
+- **Maintain clear Python-to-Rust module mapping** when porting.
+  Add a comment at the top of each module:
   ```rust
   //! Rust port of Python `flowmark/formatter/filling.py`
   ```
@@ -237,16 +255,18 @@ For more on error handling, see `tbd guidelines error-handling-rules`.
 
 ## Anti-Patterns to Avoid
 
-- **Don't use `Box<dyn Error>`** in libraries. Use concrete error types with `thiserror`.
-  In binaries, use `anyhow::Error` instead of `Box<dyn Error>`.
+- **Don’t use `Box<dyn Error>`** in libraries.
+  Use concrete error types with `thiserror`. In binaries, use `anyhow::Error` instead of
+  `Box<dyn Error>`.
 
-- **Don't use `String` everywhere.** Accept `&str`, return `String`.
+- **Don’t use `String` everywhere.** Accept `&str`, return `String`.
 
-- **Don't ignore warnings.** Fix them or explicitly `#[allow]` with a comment explaining why.
+- **Don’t ignore warnings.** Fix them or explicitly `#[allow]` with a comment explaining
+  why.
 
-- **Don't use `unsafe` without a safety comment** explaining the invariant being upheld.
+- **Don’t use `unsafe` without a safety comment** explaining the invariant being upheld.
 
-- **Don't suppress test output.** Let `cargo test` show assertion details on failure.
+- **Don’t suppress test output.** Let `cargo test` show assertion details on failure.
 
 ## Testing
 
@@ -291,18 +311,19 @@ For comprehensive testing guidelines, see `tbd guidelines general-testing-rules`
 
 - **Profile before optimizing.** Use `cargo flamegraph` or `perf` to find hot spots.
 
-- **Allocation-aware hot paths:** Avoid allocating in tight loops. Reuse buffers.
+- **Allocation-aware hot paths:** Avoid allocating in tight loops.
+  Reuse buffers.
 
-- **Use `&str` slicing over `String` creation** when you're extracting substrings that
-  don't outlive the source.
+- **Use `&str` slicing over `String` creation** when you’re extracting substrings that
+  don’t outlive the source.
 
 - **Benchmark with `criterion`** for performance-critical code.
 
 ## Related Guidelines
 
-- For CLI application patterns, see `tbd guidelines rust-cli-app-patterns`
-- For project setup and CI/CD, see `tbd guidelines rust-project-setup`
-- For Python-to-Rust porting, see `tbd guidelines python-to-rust-porting-rules`
+- [Rust CLI App Patterns](guidelines/rust-cli-app-patterns.md)
+- [Rust Project Setup](guidelines/rust-project-setup.md)
+- [Python-to-Rust Porting Rules](guidelines/python-to-rust-porting-rules.md)
 - For general coding rules, see `tbd guidelines general-coding-rules`
 - For error handling, see `tbd guidelines error-handling-rules`
 - For testing, see `tbd guidelines general-testing-rules`

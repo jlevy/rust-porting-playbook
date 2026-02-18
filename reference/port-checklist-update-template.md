@@ -1,16 +1,17 @@
 # Python→Rust Subsequent Update Checklist
 
-**Reference:** This checklist implements the update process described in [Python to Rust
-CLI Porting Guide](python-to-rust-porting-guide.md) (see Phase 4: Ongoing
-Synchronization of Python Code Changes). See that guide for detailed explanations and
-handling strategies.
+**Reference:** This checklist implements the update process described in
+[Python to Rust CLI Porting Guide](python-to-rust-porting-guide.md) (see Phase 4:
+Ongoing Synchronization of Python Code Changes).
+See that guide for detailed explanations and handling strategies.
 
 **Instructions:** Copy this document to `port-checklist-update-YYYY-MM-DD.md` (filling
-in the date of the sync). Then fill in the copy, so that this template can be reused
-for each subsequent sync cycle.
+in the date of the sync).
+Then fill in the copy, so that this template can be reused for each subsequent sync
+cycle.
 
-**Related:** [Initial Port Checklist](port-checklist-initial-template.md) | [Rust CLI Best
-Practices](rust-cli-best-practices.md)
+**Related:** [Initial Port Checklist](port-checklist-initial-template.md) |
+[Rust CLI Best Practices](rust-cli-best-practices.md)
 
 * * *
 
@@ -18,7 +19,7 @@ Practices](rust-cli-best-practices.md)
 > parity with every original Python test, and byte-for-byte matching with documented
 > exceptions on all comparisons (zero unexplained diffs).
 > This includes:
->
+> 
 > - Test output and processing results
 >
 > - CLI command output (help, errors, warnings, status messages)
@@ -32,12 +33,12 @@ Practices](rust-cli-best-practices.md)
 Consider setting up automated detection of upstream Python changes to avoid manual
 polling:
 
-- **GitHub Actions scheduled workflow**: Run `scripts/sync-from-python.sh` on a
-  schedule (e.g., weekly via `cron: '0 0 * * 1'`). If changes are detected, open a PR
-  or issue automatically.
+- **GitHub Actions scheduled workflow**: Run `scripts/sync-from-python.sh` on a schedule
+  (e.g., weekly via `cron: '0 0 * * 1'`). If changes are detected, open a PR or issue
+  automatically.
 
-- **Dependabot-style submodule updates**: Use a CI job that checks whether the
-  submodule pointer is behind `origin/main` and notifies if so.
+- **Dependabot-style submodule updates**: Use a CI job that checks whether the submodule
+  pointer is behind `origin/main` and notifies if so.
 
 - **CI parity gate**: Add `scripts/validate-parity.sh` as a CI step so that any
   submodule update that breaks parity is caught automatically.
@@ -86,7 +87,7 @@ These are optional but strongly recommended for projects with active Python upst
 
   - [ ] List Rust updates required
 
-  - [ ] Mark status as "In progress"
+  - [ ] Mark status as “In progress”
 
 ## Phase 2: Port Changes to Rust
 
@@ -276,7 +277,7 @@ These are optional but strongly recommended for projects with active Python upst
   - [ ] Update `docs/version-history.md` with final version correspondence entry
 
   - [ ] Update `docs/python-sync-log.md`: mark all items completed, change status to
-    "Completed", note any intentional divergences or deferred features
+    “Completed”, note any intentional divergences or deferred features
 
 ## Phase 7: Final Acceptance Criteria
 
@@ -369,8 +370,8 @@ These are optional but strongly recommended for projects with active Python upst
 
 - [ ] **Code Quality** *(Zero warnings/errors required)*
 
-  - [ ] Zero clippy warnings (`cargo clippy --all-targets --all-features -- -D
-    warnings`)
+  - [ ] Zero clippy warnings
+    (`cargo clippy --all-targets --all-features -- -D warnings`)
 
   - [ ] Zero format diffs (`cargo fmt --all -- --check`)
 

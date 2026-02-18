@@ -2,24 +2,24 @@
 
 **Related:**
 [Decision Log D7](flowmark-port-decision-log.md#d7-wrapping-algorithm-approach) |
-[Library Choices](flowmark-port-library-choices.md#wrapping-algorithm-a-hybrid-solution) |
-[Cross-Validation](flowmark-port-cross-validation.md)
+[Library Choices](flowmark-port-library-choices.md#wrapping-algorithm-a-hybrid-solution)
+| [Cross-Validation](flowmark-port-cross-validation.md)
 
 **Status**: COMPLETE - Systematic wrapping fully implemented
 
 > **Note (2026-02-09):** This document describes the final refined wrapping approach
-> using comrak's built-in `render.width` option with `hardbreaks = false`. An earlier,
+> using comrak’s built-in `render.width` option with `hardbreaks = false`. An earlier,
 > more complex hybrid approach (using `render.width = 999999` for line joining + custom
 > `wrap_paragraphs()` for sentence-aware wrapping + `hardbreaks = true` to preserve
 > custom line breaks, totaling ~240 lines of custom code) is documented in
 > [Decision Log D7](flowmark-port-decision-log.md#d7-wrapping-algorithm-approach).
 > The approach described here supersedes D7 for basic line wrapping by letting comrak
-> handle wrapping directly, while the D7 hybrid approach remains relevant for
-> advanced sentence-aware semantic wrapping.
+> handle wrapping directly, while the D7 hybrid approach remains relevant for advanced
+> sentence-aware semantic wrapping.
 
 ## Problem Statement
 
-The Rust port needed to match Python's line wrapping behavior:
+The Rust port needed to match Python’s line wrapping behavior:
 - Join consecutive lines within paragraphs
 - Re-wrap to specified width
 - Preserve structure (quotes, lists, code blocks)
@@ -28,7 +28,7 @@ Initial approach using AST transformations was complex and incomplete.
 
 ## Solution
 
-**Simple configuration change**: Enable comrak's built-in `render.width` option.
+**Simple configuration change**: Enable comrak’s built-in `render.width` option.
 
 ### Implementation
 
@@ -54,7 +54,7 @@ When `render.hardbreaks = false` and `render.width > 0`, comrak automatically:
 3. **Re-wraps at width** - Text broken at word boundaries
 4. **Preserves structure** - Quotes, lists, code blocks stay intact
 
-This matches Python's marko behavior exactly for the core wrapping algorithm.
+This matches Python’s marko behavior exactly for the core wrapping algorithm.
 
 ## Test Coverage
 
@@ -106,8 +106,8 @@ Paragraph text
 Paragraph text
 ```
 
-**Rationale**: 
-- Comrak's behavior follows Markdown best practices
+**Rationale**:
+- Comrak’s behavior follows Markdown best practices
 - Improves readability
 - Consistent with standard formatters
 
@@ -129,16 +129,16 @@ Paragraph text
 ```
 
 **Rationale**:
-- Comrak's behavior is semantically meaningful
+- Comrak’s behavior is semantically meaningful
 - Blank lines indicate nesting/grouping changes
 - More compact for simple lists
 
 ## Decision
 
-**Keep Rust's systematic behavior as default.**
+**Keep Rust’s systematic behavior as default.**
 
-Python's spacing appears inconsistent and may be bugs in marko. Rust's
-behavior is:
+Python’s spacing appears inconsistent and may be bugs in marko.
+Rust’s behavior is:
 - More systematic and predictable
 - Follows Markdown formatting conventions
 - More readable (especially for headings)

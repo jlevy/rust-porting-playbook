@@ -1,10 +1,11 @@
 # Python-to-Rust Mapping Reference
 
-Exhaustive mapping table for Python-to-Rust constructs. Organized by category with
-code examples for each mapping. Use this as a lookup reference during porting.
+Exhaustive mapping table for Python-to-Rust constructs.
+Organized by category with code examples for each mapping.
+Use this as a lookup reference during porting.
 
 **Related:** [Python-to-Rust Porting Guide](python-to-rust-porting-guide.md) |
-`tbd guidelines python-to-rust-porting-rules`
+[Python-to-Rust Porting Rules](guidelines/python-to-rust-porting-rules.md)
 
 **Last update:** 2026-02-12
 
@@ -19,35 +20,35 @@ code examples for each mapping. Use this as a lookup reference during porting.
 | `float` | `f64` / `f32` | `f64` for double precision |
 | `bool` | `bool` | Same |
 | `None` | `Option::None` | Use `Option<T>` |
-| `bytes` | `&[u8]` / `Vec<u8>` | |
+| `bytes` | `&[u8]` / `Vec<u8>` |  |
 | `complex` | (no built-in) | Use `num-complex` crate |
 
 ### Collections
 
 | Python | Rust | Notes |
 | --- | --- | --- |
-| `list[T]` | `Vec<T>` | |
+| `list[T]` | `Vec<T>` |  |
 | `tuple[A, B, C]` | `(A, B, C)` | Named struct if >3 fields |
 | `dict[K, V]` | `HashMap<K, V>` | **No insertion order!** Use `indexmap::IndexMap` if order matters |
 | `set[T]` | `HashSet<T>` | `BTreeSet` for sorted |
 | `frozenset` | `HashSet<T>` | Immutability via `let` binding, not the type. For use as hash key, need newtype implementing Hash |
-| `deque` | `VecDeque<T>` | |
-| `defaultdict(list)` | `HashMap<K, Vec<V>>` + `.entry().or_default()` | |
-| `Counter` | `HashMap<T, usize>` | |
-| `OrderedDict` | `IndexMap<K, V>` (indexmap crate) | |
-| `namedtuple` | Struct with named fields | |
+| `deque` | `VecDeque<T>` |  |
+| `defaultdict(list)` | `HashMap<K, Vec<V>>` + `.entry().or_default()` |  |
+| `Counter` | `HashMap<T, usize>` |  |
+| `OrderedDict` | `IndexMap<K, V>` (indexmap crate) |  |
+| `namedtuple` | Struct with named fields |  |
 
 ### Type Hints to Rust Types
 
 | Python | Rust | Notes |
 | --- | --- | --- |
-| `Optional[T]` | `Option<T>` | |
-| `Union[A, B]` | `enum { A(A), B(B) }` | |
+| `Optional[T]` | `Option<T>` |  |
+| `Union[A, B]` | `enum { A(A), B(B) }` |  |
 | `Any` | Generics or `Box<dyn Trait>` | Avoid if possible |
-| `TypeVar('T')` | `<T>` generics | |
+| `TypeVar('T')` | `<T>` generics |  |
 | `Protocol` | `trait` | Rust traits are nominal -- must write explicit `impl Trait for Type` |
 | `TypedDict` | Struct with named fields | Add serde derives only if deserializing from data formats |
-| `Literal["a", "b"]` | `enum { A, B }` | |
+| `Literal["a", "b"]` | `enum { A, B }` |  |
 | `Callable[[A], B]` | `Fn(A) -> B` / `FnMut` / `FnOnce` | `Fn` -- no mutation, callable repeatedly. `FnMut` -- mutates captures. `FnOnce` -- consumes captures. Use `Box<dyn Fn(A) -> B>` to store callbacks in structs |
 
 ## Control Flow
@@ -141,16 +142,16 @@ let d: HashMap<_, _> = pairs.iter()
 | Python | Rust | Notes |
 | --- | --- | --- |
 | `try: / except:` | `match result { Ok(v) => ..., Err(e) => ... }` | Or use `?` |
-| `raise ValueError(msg)` | `return Err(Error::Validation(msg))` | |
-| `raise` (re-raise) | `return Err(e)` or just `?` | |
-| `finally:` | `Drop` trait / scope guards | |
-| `with context_manager:` | Scope + `Drop` / closure patterns | |
-| `assert x == y` | `assert_eq!(x, y)` | **Not** `debug_assert_eq!` -- debug asserts are stripped in release builds. Use `debug_assert!` only for hot-path invariants you've verified via other means |
+| `raise ValueError(msg)` | `return Err(Error::Validation(msg))` |  |
+| `raise` (re-raise) | `return Err(e)` or just `?` |  |
+| `finally:` | `Drop` trait / scope guards |  |
+| `with context_manager:` | Scope + `Drop` / closure patterns |  |
+| `assert x == y` | `assert_eq!(x, y)` | **Not** `debug_assert_eq!` -- debug asserts are stripped in release builds. Use `debug_assert!` only for hot-path invariants you’ve verified via other means |
 
 ### Context Managers to RAII
 
-Python's `with` statement maps to Rust's RAII (Resource Acquisition Is Initialization) pattern,
-where resources are cleaned up when they go out of scope via the `Drop` trait.
+Python’s `with` statement maps to Rust’s RAII (Resource Acquisition Is Initialization)
+pattern, where resources are cleaned up when they go out of scope via the `Drop` trait.
 
 | Python | Rust | Notes |
 | --- | --- | --- |
@@ -225,15 +226,15 @@ fn process(path: &Path) -> Result<Data> {
 
 | Python | Rust | Notes |
 | --- | --- | --- |
-| `open(path).read()` | `std::fs::read_to_string(path)?` | |
-| `open(path, 'w').write(data)` | `std::fs::write(path, data)?` | |
-| `Path(path).exists()` | `Path::new(path).exists()` | |
+| `open(path).read()` | `std::fs::read_to_string(path)?` |  |
+| `open(path, 'w').write(data)` | `std::fs::write(path, data)?` |  |
+| `Path(path).exists()` | `Path::new(path).exists()` |  |
 | `Path(path).parent` | `path.parent()` | Returns `Option<&Path>` |
-| `os.path.join(a, b)` | `path.join(b)` | |
-| `sys.stdin.read()` | `std::io::stdin().read_to_string(&mut buf)?` | |
-| `print(x)` | `println!("{x}")` | |
-| `print(x, file=sys.stderr)` | `eprintln!("{x}")` | |
-| `glob.glob("*.md")` | `glob::glob("*.md")?` (glob crate) | |
+| `os.path.join(a, b)` | `path.join(b)` |  |
+| `sys.stdin.read()` | `std::io::stdin().read_to_string(&mut buf)?` |  |
+| `print(x)` | `println!("{x}")` |  |
+| `print(x, file=sys.stderr)` | `eprintln!("{x}")` |  |
+| `glob.glob("*.md")` | `glob::glob("*.md")?` (glob crate) |  |
 | `logging.info(msg)` | `tracing::info!(msg)` or `log::info!(msg)` | `tracing` crate preferred; `log` crate for simple cases |
 | `json.dumps(obj)` | `serde_json::to_string(&obj)?` | Requires `#[derive(Serialize)]` |
 | `json.loads(s)` | `serde_json::from_str(s)?` | Requires `#[derive(Deserialize)]` |
@@ -242,19 +243,19 @@ fn process(path: &Path) -> Result<Data> {
 
 | Python | Rust | Notes |
 | --- | --- | --- |
-| `s.strip()` | `s.trim()` | |
-| `s.lstrip()` / `s.rstrip()` | `s.trim_start()` / `s.trim_end()` | |
+| `s.strip()` | `s.trim()` |  |
+| `s.lstrip()` / `s.rstrip()` | `s.trim_start()` / `s.trim_end()` |  |
 | `s.split(sep)` | `s.split(sep)` | Returns iterator |
-| `s.splitlines()` | `s.lines()` | |
+| `s.splitlines()` | `s.lines()` |  |
 | `sep.join(items)` | `items.join(sep)` | On slices |
 | `s.replace(old, new)` | `s.replace(old, new)` | Returns new String |
-| `s.startswith(p)` | `s.starts_with(p)` | |
-| `s.endswith(p)` | `s.ends_with(p)` | |
-| `s.upper()` / `s.lower()` | `s.to_uppercase()` / `s.to_lowercase()` | |
+| `s.startswith(p)` | `s.starts_with(p)` |  |
+| `s.endswith(p)` | `s.ends_with(p)` |  |
+| `s.upper()` / `s.lower()` | `s.to_uppercase()` / `s.to_lowercase()` |  |
 | `s.find(sub)` | `s.find(sub)` | Returns `Option<usize>`. **Returns byte offset, not char index!** Different for non-ASCII |
 | `s[start:end]` | `&s[start..end]` | **Panics if not char boundary!** |
 | `len(s)` | `s.len()` (bytes) / `s.chars().count()` (chars) | Different! |
-| `f"hello {name}"` | `format!("hello {name}")` | |
+| `f"hello {name}"` | `format!("hello {name}")` |  |
 | `s.encode('utf-8')` | `s.as_bytes()` | Rust strings are always UTF-8 |
 
 ## Regex
@@ -267,13 +268,14 @@ fn process(path: &Path) -> Result<Data> {
 | `re.fullmatch(pattern, s)` | `regex.is_match(s)` with `^...$` | Wrap pattern: `format!("^(?:{pattern})$")` |
 | `re.sub(pattern, repl, s)` | `regex.replace_all(s, repl)` | Use `regex.replace()` for `count=1` |
 | `re.findall(pattern, s)` | `regex.find_iter(s).map(\|m\| m.as_str()).collect::<Vec<_>>()` | `find_iter()` returns `Match` objects, not strings |
-| `re.split(pattern, s)` | `regex.split(s).collect::<Vec<_>>()` | |
-| `match.group(0)` | `m.as_str()` | |
-| `match.group(1)` | `caps.get(1).map(\|m\| m.as_str())` | |
+| `re.split(pattern, s)` | `regex.split(s).collect::<Vec<_>>()` |  |
+| `match.group(0)` | `m.as_str()` |  |
+| `match.group(1)` | `caps.get(1).map(\|m\| m.as_str())` |  |
 | Look-ahead/behind | Use `fancy-regex` crate | Not in standard `regex` |
 
-**Critical difference:** Python `re.match()` anchors to string start. Rust `is_match()`
-matches anywhere. Always add `^` for patterns that were used with `re.match()`.
+**Critical difference:** Python `re.match()` anchors to string start.
+Rust `is_match()` matches anywhere.
+Always add `^` for patterns that were used with `re.match()`.
 
 ## Classes to Structs
 
@@ -419,8 +421,8 @@ impl Iterator for Fibonacci {
 }
 ```
 
-**Note:** `gen` blocks are a reserved keyword in Edition 2024 and an experimental feature.
-When stabilized, they will allow Python-like `yield` syntax in Rust.
+**Note:** `gen` blocks are a reserved keyword in Edition 2024 and an experimental
+feature. When stabilized, they will allow Python-like `yield` syntax in Rust.
 
 ### Dataclasses to Structs with Derives
 
@@ -429,7 +431,7 @@ When stabilized, they will allow Python-like `yield` syntax in Rust.
 | `@dataclass` | `#[derive(Debug, Clone, PartialEq)]` | Closest equivalent derives |
 | `frozen=True` | No `&mut self` methods | Immutability enforced by API design, not annotation |
 | `order=True` | `#[derive(PartialOrd, Ord)]` | `Ord` requires `Eq`; use `PartialOrd` alone if fields contain floats |
-| `field(default=...)` | `impl Default` or `#[derive(Default)]` | |
+| `field(default=...)` | `impl Default` or `#[derive(Default)]` |  |
 
 ```python
 # Python
@@ -460,7 +462,7 @@ impl Default for Point {
 
 | Python | Rust | Notes |
 | --- | --- | --- |
-| `class Color(Enum):` | `enum Color { ... }` | |
+| `class Color(Enum):` | `enum Color { ... }` |  |
 | `Color.RED` | `Color::Red` | Rust uses CamelCase variants |
 | `Color(1)` (by value) | Custom `from_value()` method | No built-in value lookup |
 | `color.name` | Use `strum` crate `Display` derive | `#[derive(strum::Display)]` |
@@ -510,7 +512,7 @@ pub enum Color {
 
 | Python | Rust | Notes |
 | --- | --- | --- |
-| `async def foo()` | `async fn foo()` | |
+| `async def foo()` | `async fn foo()` |  |
 | `await bar()` | `bar().await` | Postfix syntax in Rust |
 | `asyncio.run(main())` | `#[tokio::main]` on `async fn main()` | Requires `tokio` runtime |
 | `asyncio.gather(a, b)` | `tokio::join!(a, b)` | For fixed count; use `futures::future::join_all` for dynamic list |
@@ -533,35 +535,35 @@ pub enum Color {
 
 | Python | Rust | Notes |
 | --- | --- | --- |
-| `def test_foo():` | `#[test] fn test_foo() {` | |
-| `assert x == y` | `assert_eq!(x, y)` | |
-| `assert x != y` | `assert_ne!(x, y)` | |
-| `assert x` | `assert!(x)` | |
-| `with pytest.raises(E):` | `#[should_panic]` or `assert!(result.is_err())` | |
-| `@pytest.mark.skip` | `#[ignore]` | |
-| `@pytest.fixture` | Setup in test function or `std::sync::LazyLock` | |
-| `@pytest.mark.parametrize` | `rstest` crate or macro-generated tests | |
+| `def test_foo():` | `#[test] fn test_foo() {` |  |
+| `assert x == y` | `assert_eq!(x, y)` |  |
+| `assert x != y` | `assert_ne!(x, y)` |  |
+| `assert x` | `assert!(x)` |  |
+| `with pytest.raises(E):` | `#[should_panic]` or `assert!(result.is_err())` |  |
+| `@pytest.mark.skip` | `#[ignore]` |  |
+| `@pytest.fixture` | Setup in test function or `std::sync::LazyLock` |  |
+| `@pytest.mark.parametrize` | `rstest` crate or macro-generated tests |  |
 | `pytest.approx(x)` | `(x - y).abs() < epsilon` | Or use `approx` crate: `assert_relative_eq!`, `assert_abs_diff_eq!` |
 
 ## Packaging
 
 | Python | Rust | Notes |
 | --- | --- | --- |
-| `pyproject.toml` | `Cargo.toml` | |
-| `pip install` | `cargo install` / `cargo add` | |
-| `requirements.txt` | `Cargo.toml [dependencies]` | |
-| `setup.py` | `Cargo.toml` | |
-| `__init__.py` | `lib.rs` | |
-| `__main__.py` | `main.rs` | |
-| PyPI | crates.io | |
-| `pip install -e .` | `cargo build` (automatic) | |
-| Virtual environments | Cargo handles isolation via `target/` dir | |
+| `pyproject.toml` | `Cargo.toml` |  |
+| `pip install` | `cargo install` / `cargo add` |  |
+| `requirements.txt` | `Cargo.toml [dependencies]` |  |
+| `setup.py` | `Cargo.toml` |  |
+| `__init__.py` | `lib.rs` |  |
+| `__main__.py` | `main.rs` |  |
+| PyPI | crates.io |  |
+| `pip install -e .` | `cargo build` (automatic) |  |
+| Virtual environments | Cargo handles isolation via `target/` dir |  |
 
 ## Project Setup Mapping
 
 This section maps the full Python project infrastructure to Rust equivalents.
-Not for education -- for agents and engineers who know both languages but need
-the specific equivalences and pitfalls.
+Not for education -- for agents and engineers who know both languages but need the
+specific equivalences and pitfalls.
 
 ### Manifest Structure: pyproject.toml vs Cargo.toml
 
@@ -587,13 +589,14 @@ the specific equivalences and pitfalls.
 | `==1.4.*` | `"~1.4"` | Exact minor (>=1.4, <1.5); tilde in Cargo |
 | `>=1.4` | `">=1.4"` | Minimum version (same) |
 | `==1.4.0` | `"=1.4.0"` | Exact pin (note single `=` in Cargo) |
-| No default | `"1.4"` means `^1.4` (>=1.4.0, <2.0.0) | Cargo's default is permissive semver-compatible |
+| No default | `"1.4"` means `^1.4` (>=1.4.0, <2.0.0) | Cargo’s default is permissive semver-compatible |
 
 **Pitfall:** The `~=` mapping depends on the number of version components:
-- Python `~=1.4` (2 parts) means `>=1.4, <2.0` -- maps to Cargo `^1.4` (or bare `"1.4"`).
+- Python `~=1.4` (2 parts) means `>=1.4, <2.0` -- maps to Cargo `^1.4` (or bare
+  `"1.4"`).
 - Python `~=1.4.2` (3 parts) means `>=1.4.2, <1.5.0` -- maps to Cargo `~1.4.2`.
 
-Cargo's default `^1.4.2` means `>=1.4.2, <2.0.0` -- much more permissive than `~1.4.2`.
+Cargo’s default `^1.4.2` means `>=1.4.2, <2.0.0` -- much more permissive than `~1.4.2`.
 When porting 3-component `~=`, use `~` in Cargo, not the bare version.
 
 ### Lock Files
@@ -601,8 +604,8 @@ When porting 3-component `~=`, use `~` in Cargo, not the bare version.
 | Python | Rust | Notes |
 | --- | --- | --- |
 | `uv.lock` / `poetry.lock` | `Cargo.lock` | Same purpose: reproducible builds |
-| Commit lock for apps | Commit `Cargo.lock` for binaries | Same rule: commit for apps, don't for libraries |
-| Don't commit for libraries | Don't commit for libraries | Cargo docs say the same as Python community convention |
+| Commit lock for apps | Commit `Cargo.lock` for binaries | Same rule: commit for apps, don’t for libraries |
+| Don’t commit for libraries | Don’t commit for libraries | Cargo docs say the same as Python community convention |
 | `pip freeze > requirements.txt` | `Cargo.lock` (automatic) | No manual freeze step in Rust |
 | `uv pip compile` (lock without install) | `cargo generate-lockfile` | Rarely needed; cargo auto-generates |
 
@@ -611,13 +614,13 @@ When porting 3-component `~=`, use `~` in Cargo, not the bare version.
 | Python | Rust | Notes |
 | --- | --- | --- |
 | `uv add requests` | `cargo add reqwest` | Adds to manifest |
-| `uv remove requests` | `cargo remove reqwest` | |
+| `uv remove requests` | `cargo remove reqwest` |  |
 | `uv sync` / `pip install -r` | `cargo build` (fetches automatically) | No separate install step |
 | `uv lock` / `pip compile` | `cargo update` | Regenerate lock file |
 | `uv tree` / `pipdeptree` | `cargo tree` | Dependency tree |
 | `pip install -e .` | `cargo build` (always editable) | No concept of editable install |
-| `uv run script.py` | `cargo run` | |
-| `uv run pytest` | `cargo test` | |
+| `uv run script.py` | `cargo run` |  |
+| `uv run pytest` | `cargo test` |  |
 
 ### Environment and Toolchain Management
 
@@ -631,10 +634,10 @@ When porting 3-component `~=`, use `~` in Cargo, not the bare version.
 | `uv tool install ruff` | `cargo install ripgrep` | Install CLI tools globally |
 | `pipx` | `cargo install` / `cargo binstall` | Install binaries from registry |
 
-**Key difference:** Python requires creating and activating virtual environments per project.
-Rust has no equivalent -- `cargo` builds into a project-local `target/` directory and
-resolves dependencies per-project from the lock file. There is no global dependency state
-to isolate from.
+**Key difference:** Python requires creating and activating virtual environments per
+project. Rust has no equivalent -- `cargo` builds into a project-local `target/`
+directory and resolves dependencies per-project from the lock file.
+There is no global dependency state to isolate from.
 
 ### Linting and Formatting
 
@@ -642,18 +645,19 @@ to isolate from.
 | --- | --- | --- |
 | `ruff check` | `cargo clippy` | Linter |
 | `ruff format` / `black` | `cargo fmt` | Formatter |
-| `mypy` / `pyright` | (compiler) | Rust's type checker is the compiler itself |
+| `mypy` / `pyright` | (compiler) | Rust’s type checker is the compiler itself |
 | `isort` | (rustfmt) | Import ordering is handled by rustfmt |
 | `# noqa: E501` | `#[allow(clippy::too_many_lines)]` | Suppress specific lint |
 | `# type: ignore` | N/A | No equivalent needed; compiler errors are real errors |
 | `[tool.ruff]` in pyproject.toml | `[lints.clippy]` in Cargo.toml | Lint config location |
 | `[tool.ruff.format]` in pyproject.toml | `rustfmt.toml` | Format config location |
-| `ruff.toml` / `.flake8` | `clippy.toml` (rare; most use Cargo.toml) | |
+| `ruff.toml` / `.flake8` | `clippy.toml` (rare; most use Cargo.toml) |  |
 | `.pre-commit-config.yaml` | `justfile` precommit recipe or git hooks | No standard pre-commit framework |
 
 **Key difference:** Python needs 3+ tools (ruff/black + mypy + isort) to achieve what
-Rust gets from 2 (rustfmt + clippy) plus the compiler. The compiler subsumes the role
-of Python type checkers entirely. There is no "gradually typed" -- it's all checked.
+Rust gets from 2 (rustfmt + clippy) plus the compiler.
+The compiler subsumes the role of Python type checkers entirely.
+There is no “gradually typed” -- it’s all checked.
 
 ### Testing
 
@@ -664,11 +668,11 @@ of Python type checkers entirely. There is no "gradually typed" -- it's all chec
 | `tests/` directory | `tests/` (integration) + `#[cfg(test)]` (unit) | Rust has two test locations |
 | `pytest.ini` / `[tool.pytest]` | `.config/nextest.toml` (if using nextest) | Minimal test config in Rust |
 | `pytest-xdist` (parallel) | `cargo nextest run` | nextest for parallel execution |
-| `pytest-cov` / `coverage.py` | `cargo-tarpaulin` / `cargo-llvm-cov` | |
+| `pytest-cov` / `coverage.py` | `cargo-tarpaulin` / `cargo-llvm-cov` |  |
 | `pytest --cov --branch` | `cargo tarpaulin --branch` / `cargo llvm-cov --branch` | Branch coverage |
 | `pytest.fixture` (function-scoped) | Setup code in test function | No fixture injection |
-| `pytest.fixture` (module/session-scoped) | `std::sync::LazyLock` for shared state | |
-| `@pytest.mark.parametrize` | `rstest` crate | |
+| `pytest.fixture` (module/session-scoped) | `std::sync::LazyLock` for shared state |  |
+| `@pytest.mark.parametrize` | `rstest` crate |  |
 | `@pytest.mark.skip` / `@pytest.mark.skipif` | `#[ignore]` | No conditional skip; use `#[cfg]` |
 | `@pytest.mark.xfail` | No direct equivalent | Test expected failures manually |
 | `doctest` module | `/// ``` ... ```` (doc-tests) | Rust doc-tests run via `cargo test` |
@@ -684,7 +688,7 @@ of Python type checkers entirely. There is no "gradually typed" -- it's all chec
 | Sphinx (RST-based) | `cargo doc` / docs.rs | Auto-generated API docs |
 | MkDocs (Markdown-based) | `mdbook` | Book-style documentation |
 | ReadTheDocs hosting | docs.rs (automatic for crates.io) | Hosting is free for published crates |
-| `help()` / `pydoc` | `cargo doc --open` | |
+| `help()` / `pydoc` | `cargo doc --open` |  |
 | `autodoc` extracts from source | `cargo doc` extracts from `///` comments | Same concept |
 | `__doc__` attribute | `#[doc = "..."]` attribute | Rarely used directly |
 
@@ -693,10 +697,10 @@ of Python type checkers entirely. There is no "gradually typed" -- it's all chec
 | Python | Rust | Notes |
 | --- | --- | --- |
 | `pip-audit` | `cargo audit` | Vulnerability scanning |
-| `safety` (legacy) | `cargo audit` | |
+| `safety` (legacy) | `cargo audit` |  |
 | `bandit` (SAST) | `cargo-deny` + `cargo-geiger` | Static security analysis |
 | `pip-licenses` / `liccheck` | `cargo deny check licenses` | License compliance |
-| PyPI advisory database (OSV) | RustSec advisory database | |
+| PyPI advisory database (OSV) | RustSec advisory database |  |
 | Dependabot / Renovate | Dependabot / Renovate (same tools) | Both ecosystems supported |
 
 ### Task Runners
@@ -705,9 +709,9 @@ of Python type checkers entirely. There is no "gradually typed" -- it's all chec
 | --- | --- | --- |
 | `Makefile` | `justfile` (recommended) or `Makefile` | `just` is the modern Rust convention |
 | `tox` | N/A (CI matrix) | No Rust equivalent |
-| `nox` | `just` / `cargo-xtask` | |
-| `hatch scripts` / `pdm scripts` | `just` recipes | |
-| `invoke` / `fabric` | `just` / `cargo-make` | |
+| `nox` | `just` / `cargo-xtask` |  |
+| `hatch scripts` / `pdm scripts` | `just` recipes |  |
+| `invoke` / `fabric` | `just` / `cargo-make` |  |
 | `pre-commit` framework | Git hooks + `just precommit` | No standard framework; `just` is common |
 
 ### CI/CD Patterns
@@ -720,17 +724,18 @@ of Python type checkers entirely. There is no "gradually typed" -- it's all chec
 | `uv sync` / `pip install -r requirements.txt` | (automatic on first `cargo` command) | No explicit install step |
 | `ruff check .` | `cargo clippy --all-targets --all-features -- -D warnings` | Lint step |
 | `ruff format --check .` | `cargo fmt --all -- --check` | Format check step |
-| `mypy .` | N/A (compiler checks types) | |
+| `mypy .` | N/A (compiler checks types) |  |
 | `pytest` | `cargo test --all-features --locked` | `--locked` ensures Cargo.lock is used |
-| `pytest -n auto` (parallel) | `cargo nextest run` | |
+| `pytest -n auto` (parallel) | `cargo nextest run` |  |
 | Matrix across Python versions (3.11, 3.12) | Matrix across OS (ubuntu, macos, windows) | Different matrix axes |
-| MSRV: test with oldest Python | MSRV: `dtolnay/rust-toolchain@1.85` (pin to MSRV) | |
-| `pip-audit` | `rustsec/audit-check@v2` | |
-| | `EmbarkStudios/cargo-deny-action@v2` | No Python equivalent |
+| MSRV: test with oldest Python | MSRV: `dtolnay/rust-toolchain@1.85` (pin to MSRV) |  |
+| `pip-audit` | `rustsec/audit-check@v2` |  |
+|  | `EmbarkStudios/cargo-deny-action@v2` | No Python equivalent |
 
-**Pitfall: CI build time.** Python CI is fast (no compilation). Rust CI is slow (compilation
-from scratch takes minutes). Mitigate with `Swatinem/rust-cache@v2`, separate CI jobs
-(fmt and clippy are fast, test is slow), and `cargo check` before `cargo test` where possible.
+**Pitfall: CI build time.** Python CI is fast (no compilation).
+Rust CI is slow (compilation from scratch takes minutes).
+Mitigate with `Swatinem/rust-cache@v2`, separate CI jobs (fmt and clippy are fast, test
+is slow), and `cargo check` before `cargo test` where possible.
 
 ### Feature Flags vs Optional Dependencies
 
@@ -753,23 +758,24 @@ cli = ["clap", "color-eyre", "tracing", "tempfile", "indicatif", "ctrlc"]
 clap = { version = "4.5", features = ["derive"], optional = true }
 ```
 
-**Key difference:** Python optional dependencies exist at runtime -- you check if they're
-importable. Rust features are compile-time -- code behind `#[cfg(feature = "...")]` is
-not compiled at all. This means Rust features affect binary size and compilation time,
-not just runtime behavior.
+**Key difference:** Python optional dependencies exist at runtime -- you check if
+they’re importable. Rust features are compile-time -- code behind
+`#[cfg(feature = "...")]` is not compiled at all.
+This means Rust features affect binary size and compilation time, not just runtime
+behavior.
 
 ### Build and Release
 
 | Python | Rust | Notes |
 | --- | --- | --- |
 | `python -m build` / `hatch build` | `cargo build --release` | Build step |
-| `sdist` / `wheel` formats | `.crate` format (for crates.io) | |
+| `sdist` / `wheel` formats | `.crate` format (for crates.io) |  |
 | `twine upload` / `uv publish` | `cargo publish` | Publish to registry |
 | `setuptools` / `hatch` / `flit` | `cargo` (only one build system) | No build backend fragmentation |
 | `setup.py` (build-time code) | `build.rs` (build script) | Arbitrary build-time logic |
 | `MANIFEST.in` / `include`/`exclude` | `include`/`exclude` in Cargo.toml `[package]` | Control what goes in the package |
 | `__version__` / `importlib.metadata` | `env!("CARGO_PKG_VERSION")` | Version at compile time |
-| `setuptools-scm` (git-based versioning) | `cargo-release` (version bumping + tagging) | |
+| `setuptools-scm` (git-based versioning) | `cargo-release` (version bumping + tagging) |  |
 
 ### Config File Locations
 
@@ -791,8 +797,9 @@ not just runtime behavior.
 | Git ignores | `.gitignore` (add `.venv/`, `__pycache__/`) | `.gitignore` (add `target/`) |
 | Environment vars | `PYTHONPATH`, `VIRTUAL_ENV` | `CARGO_HOME`, `RUSTFLAGS`, `RUST_LOG` |
 
-**Key insight:** Python consolidates most tool config into `pyproject.toml` via `[tool.*]`
-sections. Rust distributes config across separate files (`rustfmt.toml`, `deny.toml`,
+**Key insight:** Python consolidates most tool config into `pyproject.toml` via
+`[tool.*]` sections.
+Rust distributes config across separate files (`rustfmt.toml`, `deny.toml`,
 `release.toml`, `.cargo/config.toml`). When setting up a Rust project, expect to create
 4-6 config files where Python would have one.
 
@@ -805,9 +812,9 @@ sections. Rust distributes config across separate files (`rustfmt.toml`, `deny.t
 | PyYAML | serde_yaml_ng 0.10+ | Good | serde_yaml is archived |
 | re (regex) | regex 1.10 | Excellent | Different anchoring! |
 | textwrap | textwrap (crate) | Good | Also rolled custom for special cases |
-| pytest | cargo test (built-in) | Excellent | |
-| (dataclasses) | serde Serialize/Deserialize | Excellent | |
-| (type hints) | Rust type system | Built-in | |
+| pytest | cargo test (built-in) | Excellent |  |
+| (dataclasses) | serde Serialize/Deserialize | Excellent |  |
+| (type hints) | Rust type system | Built-in |  |
 | (none) | thiserror 2.0 | Excellent | Library error types |
 | (none) | color-eyre 0.6 | Excellent | CLI error display |
 | (none) | tracing 0.1 | Excellent | Structured logging |

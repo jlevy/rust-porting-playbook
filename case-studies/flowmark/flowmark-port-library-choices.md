@@ -1,11 +1,11 @@
 # Flowmark Port: Library Choices
 
 Case study of library evaluation, selection, and workarounds from the flowmark
-Python-to-Rust port. Covers the evaluation methodology used, the comrak experience,
-all workarounds implemented, and alternative parser options.
+Python-to-Rust port.
+Covers the evaluation methodology used, the comrak experience, all workarounds
+implemented, and alternative parser options.
 
-**Related:**
-[Decision Log](flowmark-port-decision-log.md) |
+**Related:** [Decision Log](flowmark-port-decision-log.md) |
 [Analysis](flowmark-port-analysis.md) |
 [Migration Plan](flowmark-port-migration-plan.md) |
 [Cross-Validation](flowmark-port-cross-validation.md) |
@@ -16,13 +16,13 @@ all workarounds implemented, and alternative parser options.
 
 ## Why Library Choice Matters
 
-Library choice is the **#1 risk factor** in a Python-to-Rust port. The flowmark port
-spent ~50% of total effort working around differences between the Python Markdown parser
-(marko) and the Rust parser (comrak). A better library choice could have reduced this to
-near zero.
+Library choice is the **#1 risk factor** in a Python-to-Rust port.
+The flowmark port spent ~50% of total effort working around differences between the
+Python Markdown parser (marko) and the Rust parser (comrak).
+A better library choice could have reduced this to near zero.
 
 **Key insight:** The cost of working around a bad library choice grows super-linearly.
-The first workaround is cheap, but the 12th workaround means you're maintaining a
+The first workaround is cheap, but the 12th workaround means you’re maintaining a
 fragile layer of fixes that interact in unexpected ways.
 
 ## Evaluation Methodology
@@ -59,8 +59,8 @@ fragile layer of fixes that interact in unexpected ways.
 
 ### Evaluation Process
 
-**Step 1: Identify candidates.** Search crates.io and lib.rs. For critical
-dependencies, identify at least 2-3 candidates.
+**Step 1: Identify candidates.** Search crates.io and lib.rs.
+For critical dependencies, identify at least 2-3 candidates.
 
 **Step 2: Feature matrix.** Create a comparison table:
 
@@ -73,12 +73,13 @@ dependencies, identify at least 2-3 candidates.
 | Custom rendering | Y | Plugin | N | N |
 
 **Step 3: Proof-of-concept testing.** Before committing, write a minimal test that
-processes 5-10 representative inputs and compare output against Python's output.
-Document any differences found. This step saved the flowmark port from choosing
-pulldown-cmark.
+processes 5-10 representative inputs and compare output against Python’s output.
+Document any differences found.
+This step saved the flowmark port from choosing pulldown-cmark.
 
 **Step 4: Cross-validation.** Run full cross-validation against the Python
-implementation on all test fixtures. Count and categorize differences:
+implementation on all test fixtures.
+Count and categorize differences:
 - **Zero diffs:** Ideal -- proceed
 - **1-5 cosmetic diffs:** Acceptable if workaround-able
 - **6+ diffs or structural diffs:** Consider alternatives
@@ -92,11 +93,12 @@ limitations with workarounds, and fallback plan.
 
 > **Version note (2026-02-09):** This evaluation was performed against comrak 0.29
 > (November 2025). Comrak has since evolved significantly (0.30+ through 0.50+), with
-> changes to APIs, rendering behavior, and bug fixes. If starting a new project or
-> upgrading, re-evaluate against the current version and re-run cross-validation, as
-> workaround behavior may have changed. See also
-> [Decision Log D1](flowmark-port-decision-log.md#d1-parser-library-selection-comrak) for
-> cross-reference.
+> changes to APIs, rendering behavior, and bug fixes.
+> If starting a new project or upgrading, re-evaluate against the current version and
+> re-run cross-validation, as workaround behavior may have changed.
+> See also
+> [Decision Log D1](flowmark-port-decision-log.md#d1-parser-library-selection-comrak)
+> for cross-reference.
 
 ### Candidates Evaluated
 
@@ -115,9 +117,10 @@ Based on:
 
 ### Consequences
 
-- **Good:** Full feature coverage from day one. No missing features blocked development.
-- **Bad:** 17 behavioral differences with Python's marko discovered during testing. 50%
-  of total effort spent on workarounds.
+- **Good:** Full feature coverage from day one.
+  No missing features blocked development.
+- **Bad:** 17 behavioral differences with Python’s marko discovered during testing.
+  50% of total effort spent on workarounds.
 - **Unfixable:** 3 issues due to hardcoded behavior (footnote positioning, list marker
   normalization, hyphen escape removal).
 
@@ -126,10 +129,10 @@ Based on:
 - **Spec compliance does not guarantee behavioral equivalence.** Two parsers can both
   pass 100% of the CommonMark spec and still produce different output on real-world
   content.
-- **Test with actual project inputs during evaluation, not just feature checkboxes.**
-  A 30-minute cross-validation test would have revealed these differences before
+- **Test with actual project inputs during evaluation, not just feature checkboxes.** A
+  30-minute cross-validation test would have revealed these differences before
   committing to comrak.
-- **Have a fallback plan.** Know what you'll do if the library proves problematic.
+- **Have a fallback plan.** Know what you’ll do if the library proves problematic.
 
 ## Handling Library Problems
 
@@ -165,8 +168,8 @@ fn postprocess(output: &str) -> String {
 }
 ```
 
-Post-processing is more common and generally safer because you're working with the
-rendered text rather than modifying the parser's input.
+Post-processing is more common and generally safer because you’re working with the
+rendered text rather than modifying the parser’s input.
 
 ### When to Vendor/Fork/Switch
 
@@ -181,7 +184,7 @@ rendered text rather than modifying the parser's input.
 - You need to add features, not just fix bugs
 
 **Switch libraries** when:
-- >3 unfixable behavioral differences
+- > 3 unfixable behavioral differences
 - Core feature is broken or missing
 - The cost of workarounds exceeds the cost of switching
 - Early enough in the project to absorb the cost
@@ -233,27 +236,29 @@ fn fix_underscore_escaping(text: &str) -> String {
 ## Wrapping Algorithm: A Hybrid Solution
 
 > **Revision note (2026-02-09):** This section describes the initial hybrid approach
-> developed during the port. The approach later evolved into a simpler configuration-based
-> solution using comrak's built-in `render.width` with `hardbreaks = false` for basic line
-> wrapping, documented in [Wrapping Solution](flowmark-port-wrapping-solution.md). The
-> hybrid approach described here remains relevant for advanced sentence-aware semantic
-> wrapping. See also [Decision Log D7](flowmark-port-decision-log.md#d7-wrapping-algorithm-approach)
-> for the full decision record.
+> developed during the port.
+> The approach later evolved into a simpler configuration-based solution using comrak’s
+> built-in `render.width` with `hardbreaks = false` for basic line wrapping, documented
+> in [Wrapping Solution](flowmark-port-wrapping-solution.md).
+> The hybrid approach described here remains relevant for advanced sentence-aware
+> semantic wrapping. See also
+> [Decision Log D7](flowmark-port-decision-log.md#d7-wrapping-algorithm-approach) for
+> the full decision record.
 
 The line wrapping problem required a hybrid library + custom approach:
 
-**Initial approach (hybrid):** Use comrak's `render.width` for line joining (with a large
-width of 999999 so comrak joins but does not wrap), then apply custom sentence-aware
-paragraph wrapping via `wrap_paragraphs()` in the AST, then render with
+**Initial approach (hybrid):** Use comrak’s `render.width` for line joining (with a
+large width of 999999 so comrak joins but does not wrap), then apply custom
+sentence-aware paragraph wrapping via `wrap_paragraphs()` in the AST, then render with
 `hardbreaks = true` to preserve the custom line breaks.
 
-**Later refinement (simple):** Use comrak's `render.width` set to the target width with
+**Later refinement (simple):** Use comrak’s `render.width` set to the target width with
 `hardbreaks = false`, letting comrak handle basic wrapping directly.
 
-**Lesson:** Library features are building blocks, not complete solutions. The initial
-solution was ~240 lines of custom wrapping code that uses comrak for the parts it handles
-well and implements custom logic for the rest. The simpler approach was discovered later
-and suffices for non-sentence-aware wrapping.
+**Lesson:** Library features are building blocks, not complete solutions.
+The initial solution was ~240 lines of custom wrapping code that uses comrak for the
+parts it handles well and implements custom logic for the rest.
+The simpler approach was discovered later and suffices for non-sentence-aware wrapping.
 
 ## Alternative Markdown Parsers
 
@@ -265,9 +270,9 @@ For future ports or library switches:
 | **pulldown-cmark** | Fast, event-based, widely used | Footnotes optional/non-GFM, event-based (no tree AST) | Simple Markdown tools |
 | **markdown-rs** | By unified/micromark author, good spec compliance, AST support | Younger ecosystem, fewer users than comrak | New projects, ports from JS/unified ecosystem |
 
-**markdown-rs** deserves thorough evaluation for future work. It shares lineage with
-remark/rehype and may provide better behavioral equivalence with web-ecosystem Markdown
-tools.
+**markdown-rs** deserves thorough evaluation for future work.
+It shares lineage with remark/rehype and may provide better behavioral equivalence with
+web-ecosystem Markdown tools.
 
 ## Checklist for Library Evaluation
 

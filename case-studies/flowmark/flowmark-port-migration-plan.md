@@ -1,9 +1,7 @@
 # Flowmark Rust CLI Migration Plan
 
-**Related:**
-[Library Choices](flowmark-port-library-choices.md) |
-[Decision Log](flowmark-port-decision-log.md) |
-[Analysis](flowmark-port-analysis.md) |
+**Related:** [Library Choices](flowmark-port-library-choices.md) |
+[Decision Log](flowmark-port-decision-log.md) | [Analysis](flowmark-port-analysis.md) |
 [Cross-Validation](flowmark-port-cross-validation.md) |
 [Comrak Bug](flowmark-port-comrak-bug.md) |
 [Wrapping Solution](flowmark-port-wrapping-solution.md)
@@ -164,9 +162,9 @@ semi-automatically track the Python repository, with:
 
 > **Version note (2026-02-09):** This evaluation was performed against comrak 0.29
 > (November 2025). Comrak has evolved significantly since then (0.30+ through 0.50+),
-> with changes to APIs, rendering behavior, and bug fixes. If starting a new project
-> or upgrading, re-evaluate against the current version and re-run cross-validation,
-> as workaround behavior may have changed.
+> with changes to APIs, rendering behavior, and bug fixes.
+> If starting a new project or upgrading, re-evaluate against the current version and
+> re-run cross-validation, as workaround behavior may have changed.
 
 **Justification:**
 
@@ -246,10 +244,12 @@ semi-automatically track the Python repository, with:
 ### 2.1 Project Structure
 
 > **Implementation note (2026-02-09):** This section describes the originally planned
-> workspace structure. During implementation, the project was consolidated to a single
-> package with feature flags (see [Decision Log D2](flowmark-port-decision-log.md#d2-workspace-vs-single-package)).
-> The structure below is retained for reference but the actual implementation uses a
-> simpler single-package layout.
+> workspace structure.
+> During implementation, the project was consolidated to a single package with feature
+> flags (see
+> [Decision Log D2](flowmark-port-decision-log.md#d2-workspace-vs-single-package)). The
+> structure below is retained for reference but the actual implementation uses a simpler
+> single-package layout.
 
 ```
 flowmark-rs/                        # Repository name (clear it's Rust implementation)
@@ -334,7 +334,7 @@ flowmark-rs/                        # Repository name (clear it's Rust implement
 
 | Component | Name | Rationale |
 | --- | --- | --- |
-| **Repository** | `flowmark-rs` | Clear it's Rust implementation (GitHub organization) |
+| **Repository** | `flowmark-rs` | Clear it’s Rust implementation (GitHub organization) |
 | **Main package** | `flowmark` | Same as PyPI package (cargo install name) |
 | **Binary name** | `flowmark` | Command users type |
 | **Library crate** | `flowmark-core` | Implementation details, users import this |
@@ -649,8 +649,9 @@ Following recommendations from the [Rust CLI Book](https://rust-cli.github.io/bo
 Rust CLI tooling (2025):
 
 <!-- Version note (2026-02-09): Dependencies below reflect versions at time of planning
-     (November 2025). comrak 0.29 has since evolved to 0.30+ through 0.50+. Re-evaluate
-     versions when starting implementation. -->
+(November 2025). comrak 0.29 has since evolved to 0.30+ through 0.50+. Re-evaluate
+versions when starting implementation.
+-->
 
 ```toml
 [dependencies]
@@ -2383,7 +2384,8 @@ The strategy:
 
 ### 10.2 Optimization Strategies
 
-1. **Regex Compilation**: Use `std::sync::LazyLock` (Edition 2024) for all compiled patterns
+1. **Regex Compilation**: Use `std::sync::LazyLock` (Edition 2024) for all compiled
+   patterns
 
 2. **String Allocation**: Pre-allocate with `String::with_capacity()`
 
@@ -2562,7 +2564,7 @@ fn wrap_paragraph(text: &str, width: usize) -> String {
 | **Cross-compilation** | Manual | Included | ✅ Adopt from template |
 | **Customization** | Full | Limited | ✅ Full (our needs) |
 | **Git submodule** | ✅ Easy | ❌ Not supported | ✅ Required |
-| **Test structure** | Custom | Template's | ✅ Custom (Python parity) |
+| **Test structure** | Custom | Template’s | ✅ Custom (Python parity) |
 
 **Decision: Hybrid approach**
 
@@ -2712,7 +2714,8 @@ clap_complete = "4.5"  # Shell completions
 ### B. Dependency Comparison
 
 > **Version note (2026-02-09):** Versions below were current at time of planning
-> (November 2025). comrak 0.29 has since evolved to 0.50+. Re-evaluate when implementing.
+> (November 2025). comrak 0.29 has since evolved to 0.50+. Re-evaluate when
+> implementing.
 
 | Feature | Python | Rust |
 | --- | --- | --- |
@@ -2805,7 +2808,8 @@ static PARAGRAPH_BREAK_PATTERN: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\n\s*\n").unwrap());
 ```
 
-**Lesson**: Regex patterns compile once using `std::sync::LazyLock` (Edition 2024) for performance.
+**Lesson**: Regex patterns compile once using `std::sync::LazyLock` (Edition 2024) for
+performance.
 
 #### 4. Frontmatter Preservation
 
@@ -3088,7 +3092,8 @@ a **single unified process** while maintaining **exact feature parity** through
 
   - Source: Best practices for cross-language validation
 
-  - Rationale: Simpler for contributors than submodules, CI validates against live Python
+  - Rationale: Simpler for contributors than submodules, CI validates against live
+    Python
 
 - ✅ **Cross-validation script** ensures byte-for-byte identical output
 
@@ -3130,7 +3135,8 @@ Following the [Rust CLI Book](https://rust-cli.github.io/book/) tutorial structu
 
 3. **First implementation** of core formatting
 
-4. **Nicer error reporting** with color-eyre/anyhow + context (see [Section 13](#13-tooling-decisions-modern-vs-traditional) for final choice)
+4. **Nicer error reporting** with color-eyre/anyhow + context (see
+   [Section 13](#13-tooling-decisions-modern-vs-traditional) for final choice)
 
 5. **Output for humans and machines** (colors, JSON)
 
@@ -3156,8 +3162,7 @@ This plan incorporates best practices from:
 
    - Packaging and distribution
 
-2. **[Rain’s Rust CLI
-   Recommendations](https://rust-cli-recommendations.sunshowers.io/)**
+2. **[Rain’s Rust CLI Recommendations](https://rust-cli-recommendations.sunshowers.io/)**
 
    - Project organization
 
@@ -3220,14 +3225,15 @@ These have different rendering behaviors that required post-processing workaroun
 - ✅ **14 Fixed** with pre/post-processing workarounds (12 post-processing, 2
   pre-processing)
 
-- ❌ **3 Cannot Fix**: Footnote positioning (comrak moves all footnotes to end),
-  list marker normalization (comrak hardcodes `-`), hyphen escape removal (comrak
-  removes `\-` during parsing)
+- ❌ **3 Cannot Fix**: Footnote positioning (comrak moves all footnotes to end), list
+  marker normalization (comrak hardcodes `-`), hyphen escape removal (comrak removes
+  `\-` during parsing)
 
 **Major Issue Categories:**
 
 1. **Escaping Differences** (9 issues): Thematic breaks, numbered headings, underscores,
-   less-than, hashes, URL parentheses, footnote references, dollar signs, square brackets
+   less-than, hashes, URL parentheses, footnote references, dollar signs, square
+   brackets
 
 2. **Footnote Handling** (3 issues): Reference escaping, definition format, unreferenced
    footnote removal

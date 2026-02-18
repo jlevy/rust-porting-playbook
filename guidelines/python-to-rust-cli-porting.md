@@ -7,9 +7,8 @@ description: CLI-specific patterns for porting Python CLI applications to Rust, 
 CLI-specific patterns for porting Python CLI applications to Rust: argument parsing
 migration, output handling, cross-validation, and acceptance criteria.
 
-For general porting rules, see `python-to-rust-porting-rules.md`.
-For Rust CLI patterns, see `rust-cli-app-patterns.md`.
-For Python CLI patterns, see `python-cli-patterns.md`.
+For general porting rules, see `python-to-rust-porting-rules.md`. For Rust CLI patterns,
+see `rust-cli-app-patterns.md`. For Python CLI patterns, see `python-cli-patterns.md`.
 
 ## CLI Argument Mapping
 
@@ -39,7 +38,7 @@ For Python CLI patterns, see `python-cli-patterns.md`.
 | `typer.Argument()` | Positional field (no `long`/`short`) | Positional |
 | `typer.Option("--width", "-w")` | `#[arg(short = 'w', long)]` | Named option |
 | `typer.Option(help="...")` | `/// ...` (doc comment) | Help text |
-| `callback=...` | Implement in `main()` after parsing | |
+| `callback=...` | Implement in `main()` after parsing |  |
 
 ### Exact Flag Parity Requirements
 
@@ -78,9 +77,10 @@ diff <(cat output_py.md) <(cat output_rs.md)  # Zero diffs
 
 ### Buffered Stdout
 
-Python's `print()` buffers efficiently when writing to a pipe. In Rust,
-`println!` acquires and releases the stdout lock on every call, which adds
-overhead for high-volume output. Lock stdout once and use `BufWriter`:
+Python’s `print()` buffers efficiently when writing to a pipe.
+In Rust, `println!` acquires and releases the stdout lock on every call, which adds
+overhead for high-volume output.
+Lock stdout once and use `BufWriter`:
 
 ```rust
 use std::io::{self, BufWriter, Write};
@@ -99,25 +99,26 @@ This can make a 10--100x difference for tools that emit thousands of lines.
 
 ### Error Message Parity
 
-Error messages should match Python's format or be clearly improved:
+Error messages should match Python’s format or be clearly improved:
 ```
 # Python: "error: file not found: missing.md"
 # Rust:   "error: file not found: missing.md"  (exact match preferred)
 ```
 
-All error messages go to stderr. All program output goes to stdout.
+All error messages go to stderr.
+All program output goes to stdout.
 
 ### Exit Code Parity
 
 | Condition | Python | Rust | Notes |
 | --- | --- | --- | --- |
-| Success | 0 | 0 | |
-| General error | 1 | 1 | |
+| Success | 0 | 0 |  |
+| General error | 1 | 1 |  |
 | Usage error | 2 | 2 | clap returns 2 by default |
 | SIGINT | 130 | 130 | Register `ctrlc` handler |
 
-Prefer `std::process::ExitCode` over `std::process::exit()` -- it lets destructors
-run and avoids abrupt termination:
+Prefer `std::process::ExitCode` over `std::process::exit()` -- it lets destructors run
+and avoids abrupt termination:
 
 ```rust
 use std::process::ExitCode;
@@ -133,18 +134,18 @@ fn main() -> ExitCode {
 }
 ```
 
-Use `process::exit()` only in signal handlers (e.g., the `ctrlc` handler) where
-you need immediate termination with a specific code.
+Use `process::exit()` only in signal handlers (e.g., the `ctrlc` handler) where you need
+immediate termination with a specific code.
 
 ### SIGPIPE Handling
 
-Rust ignores SIGPIPE by default, which causes "broken pipe" panics when output is
-piped to tools like `head`, `less`, or any process that closes the read end early.
-Python handles SIGPIPE transparently, so this is a **common gotcha** when porting
-CLI tools. Users will see `Error: Broken pipe (os error 32)` where Python worked fine.
+Rust ignores SIGPIPE by default, which causes “broken pipe” panics when output is piped
+to tools like `head`, `less`, or any process that closes the read end early.
+Python handles SIGPIPE transparently, so this is a **common gotcha** when porting CLI
+tools. Users will see `Error: Broken pipe (os error 32)` where Python worked fine.
 
-**Option 1 (recommended):** Reset SIGPIPE to the default behavior at the start of `main()`.
-Requires the `libc` crate:
+**Option 1 (recommended):** Reset SIGPIPE to the default behavior at the start of
+`main()`. Requires the `libc` crate:
 ```rust
 // Reset SIGPIPE signal handling to default (terminate silently).
 // Without this, piping to `head` etc. causes "broken pipe" errors.
@@ -175,39 +176,39 @@ fn main() -> ExitCode {
 }
 ```
 
-Option 1 is preferred because it matches Python's behavior exactly and handles
-SIGPIPE in all code paths, including third-party libraries. Option 2 only catches
-errors that propagate through your own write calls.
+Option 1 is preferred because it matches Python’s behavior exactly and handles SIGPIPE
+in all code paths, including third-party libraries.
+Option 2 only catches errors that propagate through your own write calls.
 
 ### Colored Output and Piping
 
-Python CLIs often use `colorama` or `rich` for colored output and automatically
-disable color when piped. Rust equivalents must replicate this behavior:
+Python CLIs often use `colorama` or `rich` for colored output and automatically disable
+color when piped. Rust equivalents must replicate this behavior:
 
 - Use a color-aware crate such as `anstream` (from the clap ecosystem) or `console`.
-- Detect whether stdout/stderr is a terminal and suppress color/formatting when piped
-  or redirected:
+- Detect whether stdout/stderr is a terminal and suppress color/formatting when piped or
+  redirected:
   ```rust
   use std::io::IsTerminal;
 
   let use_color = std::io::stdout().is_terminal();
   ```
-- Respect the `NO_COLOR` environment variable (see <https://no-color.org/>).
-  `anstream` handles this automatically. If using `console`, check with
-  `console::colors_enabled()`.
+- Respect the `NO_COLOR` environment variable (see <https://no-color.org/>). `anstream`
+  handles this automatically.
+  If using `console`, check with `console::colors_enabled()`.
 - Respect `--color=auto|always|never` flags when the Python CLI supports them:
   ```rust
   #[arg(long, default_value = "auto")]
   color: clap::ColorChoice,
   ```
 
-**Porting pitfall:** If the Python CLI's output includes ANSI escape codes that end
-up in cross-validation diffs, strip them before diffing or ensure both sides use
-the same color mode (`--color=never`).
+**Porting pitfall:** If the Python CLI’s output includes ANSI escape codes that end up
+in cross-validation diffs, strip them before diffing or ensure both sides use the same
+color mode (`--color=never`).
 
 ### Shell Completions
 
-Python CLIs using `argcomplete` or click's built-in completion should have equivalent
+Python CLIs using `argcomplete` or click’s built-in completion should have equivalent
 Rust completions generated via `clap_complete`:
 
 ```rust
@@ -221,8 +222,8 @@ fn print_completions(shell: Shell) {
 }
 ```
 
-Add `clap_complete` as an optional dependency so it does not bloat the binary for
-users who do not need completions:
+Add `clap_complete` as an optional dependency so it does not bloat the binary for users
+who do not need completions:
 ```toml
 [dependencies]
 clap_complete = { version = "4", optional = true }
@@ -233,8 +234,8 @@ completions = ["clap_complete"]
 
 ## Cross-Validation Methodology
 
-Cross-validation is the most important quality gate for a port. It runs both
-implementations against the same inputs and diffs the outputs.
+Cross-validation is the most important quality gate for a port.
+It runs both implementations against the same inputs and diffs the outputs.
 
 ### Setup
 
@@ -306,9 +307,12 @@ When cross-validation finds diffs:
    - Intentional improvement (Rust behavior is better -- document and accept)
 
 2. **For parser differences:**
-   - Can it be worked around with post-processing? (preferred)
-   - Is it an edge case that rarely occurs? (accept and document)
-   - Is it a core behavior difference? (consider switching libraries)
+   - Can it be worked around with post-processing?
+     (preferred)
+   - Is it an edge case that rarely occurs?
+     (accept and document)
+   - Is it a core behavior difference?
+     (consider switching libraries)
 
 3. **Document everything** in `cross-validation-assessment.md`
 
@@ -354,9 +358,10 @@ Maintain in `docs/version-history.md`:
 
 ## Handling Python Bugs Found During Porting
 
-The porting process often discovers bugs in the original Python code. Strategy:
+The porting process often discovers bugs in the original Python code.
+Strategy:
 
-1. **Confirm it's a bug** -- not a feature or intentional behavior difference
+1. **Confirm it’s a bug** -- not a feature or intentional behavior difference
 2. **File a bug/PR** on the Python repo with a test case
 3. **Decide whether to replicate the bug** in Rust for parity or fix it
 4. **If fixing:** document the intentional divergence from Python

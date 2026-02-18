@@ -10,8 +10,8 @@ Version: 1.2 | Last Updated: 2026-02-12
 
 Cross-referenced against real-world projects: flowmark-rs, ripgrep, bat, fd, jj.
 
-For the tbd guideline (more concise, optimized for agent consumption), see
-`tbd guidelines rust-project-setup`.
+For the concise guideline version, see
+[Rust Project Setup](guidelines/rust-project-setup.md).
 
 * * *
 
@@ -68,8 +68,8 @@ pedantic = { level = "warn", priority = -1 }
 clap = { version = "4.5", features = ["derive"] }
 ```
 Virtual workspaces (no root `[package]`) must set `resolver` explicitly since there is
-no `package.edition` to infer it from. Non-virtual workspaces with `edition = "2024"`
-get `resolver = "3"` automatically.
+no `package.edition` to infer it from.
+Non-virtual workspaces with `edition = "2024"` get `resolver = "3"` automatically.
 
 Start with the single-crate pattern and split into a workspace only when you have
 concrete reasons (independent versioning, very different dependency sets, 3+ crates).
@@ -83,7 +83,7 @@ concrete reasons (independent versioning, very different dependency sets, 3+ cra
 - **Binary name**: `project` (the actual command users type)
 
 **Rationale**: Professional Rust tools avoid suffixes in package names (ripgrep, fd,
-bat) as suffixes "seem like a lesser port".
+bat) as suffixes “seem like a lesser port”.
 The `-rs` suffix remains only in the repository URL for disambiguation.
 
 ### 1.2 Cargo.toml Best Practices
@@ -134,17 +134,19 @@ Test without default features in CI: `cargo test --no-default-features`
 
 **Edition & MSRV Policy**:
 
-- **Edition 2024** is now standard. ripgrep, fd, and jj all use it. [^rust-edition]
+- **Edition 2024** is now standard.
+  ripgrep, fd, and jj all use it.
+  [^rust-edition]
 
-  - Editions are NOT calendar years -- they're language versioning markers released
+  - Editions are NOT calendar years -- they’re language versioning markers released
     ~every 3 years
 
-  - Named for when RFC'd, not released (edition 2024 shipped in Rust 1.85, Feb 2025)
+  - Named for when RFC’d, not released (edition 2024 shipped in Rust 1.85, Feb 2025)
 
   - All editions interoperate seamlessly
 
-- Always declare `rust-version` field for MSRV -- all major projects do this
-  (bat, fd, jj, ripgrep) [^msrv-policy]
+- Always declare `rust-version` field for MSRV -- all major projects do this (bat, fd,
+  jj, ripgrep) [^msrv-policy]
 
 - MSRV increases are NOT semver-breaking: use minor version bump (1.1.3 → 1.2.0)
   [^api-guidelines]
@@ -255,7 +257,8 @@ fn main() -> ExitCode {
 - Use `ExitCode::from(n)` when you need specific numeric exit codes
 
 **SIGPIPE Handling**: Rust ignores SIGPIPE by default, which causes CLI tools piped to
-`head` or similar to panic with "Broken pipe" errors. Fix this for Unix CLI tools:
+`head` or similar to panic with “Broken pipe” errors.
+Fix this for Unix CLI tools:
 ```rust
 fn main() -> ExitCode {
     // Reset SIGPIPE to default behavior (terminate silently on broken pipe).
@@ -324,7 +327,8 @@ unsafe_code = "forbid"            # No unsafe without explicit allow
 unused_qualifications = "warn"    # Catch unnecessary path qualifications
 ```
 
-**Additional useful restriction lints** (cherry-pick, never enable `restriction` as a group):
+**Additional useful restriction lints** (cherry-pick, never enable `restriction` as a
+group):
 ```toml
 [lints.clippy]
 # From the restriction group -- opt-in individually
@@ -334,8 +338,8 @@ dbg_macro = "warn"                # Catch leftover dbg!() calls
 ```
 
 **Important:** `priority = -1` is required on group lints so that individual overrides
-(at the default priority of 0) take precedence. Without this, the group setting wins
-and your `"allow"` lines have no effect.
+(at the default priority of 0) take precedence.
+Without this, the group setting wins and your `"allow"` lines have no effect.
 
 **Three approaches are used in practice:**
 
@@ -346,8 +350,8 @@ and your `"allow"` lines have no effect.
   `uninlined_format_args`, `use_self`, `explicit_iter_loop`. More maintainable, avoids
   churn when new pedantic lints are added.
 
-- **No lint config** (ripgrep, bat, fd): Just `cargo clippy -- -D warnings` in CI
-  with defaults. Simplest.
+- **No lint config** (ripgrep, bat, fd): Just `cargo clippy -- -D warnings` in CI with
+  defaults. Simplest.
 
 **Lint Groups** [^clippy-lints]:
 
@@ -402,8 +406,9 @@ tests/
 - `proptest` - Property-based testing (used by flowmark-rs for fuzzing)
 
 **Faster test runner:** `cargo-nextest` runs tests in parallel processes (not just
-threads), provides better output, and is significantly faster. Used by jj and many
-large projects. Drop-in replacement: `cargo nextest run`.
+threads), provides better output, and is significantly faster.
+Used by jj and many large projects.
+Drop-in replacement: `cargo nextest run`.
 
 ## 4. Security & Dependency Management
 
@@ -478,10 +483,10 @@ unknown-registry = "deny"           # Only allow crates.io
 unknown-git = "deny"                # No git dependencies
 ```
 
-**Important:** Use `version = 2` for `[advisories]` and `[licenses]`. The v1 schema
-is deprecated and will cause warnings or errors with current cargo-deny. The license
-allow list above covers common Rust ecosystem licenses; add others as needed (e.g.,
-`Unicode-3.0` is used by `unicode-ident`).
+**Important:** Use `version = 2` for `[advisories]` and `[licenses]`. The v1 schema is
+deprecated and will cause warnings or errors with current cargo-deny.
+The license allow list above covers common Rust ecosystem licenses; add others as needed
+(e.g., `Unicode-3.0` is used by `unicode-ident`).
 
 **Checks Performed**:
 
@@ -572,9 +577,10 @@ cargo doc --no-deps --open    # Generate and open
 clap_complete = "4.5"
 ```
 
-Generate completions for bash, zsh, fish, elvish, and PowerShell at build time or via
-a hidden CLI subcommand. This gives users tab-completion for all commands, flags, and
-arguments with no manual maintenance.
+Generate completions for bash, zsh, fish, elvish, and PowerShell at build time or via a
+hidden CLI subcommand.
+This gives users tab-completion for all commands, flags, and arguments with no manual
+maintenance.
 
 **Build-time generation** (in `build.rs`):
 ```rust
@@ -675,18 +681,19 @@ pre-release-hook = ["just", "check"]            # Run all checks before release
    crates.io
 
 **Alternative: `cargo-dist`** (now branded as `dist`): Generates complete CI release
-workflows automatically. Run `dist init` to scaffold a `release.yml` that handles
-planning, cross-compilation, artifact upload, and installer generation (shell scripts,
-Homebrew, MSI). Actively maintained by axo.dev (v0.30+). Good for projects that want
-turnkey releases without hand-rolling CI. Major projects like ripgrep, bat, and fd
-hand-roll their release workflows, but cargo-dist is a solid choice for smaller
-projects or teams that prefer convention over configuration.
+workflows automatically.
+Run `dist init` to scaffold a `release.yml` that handles planning, cross-compilation,
+artifact upload, and installer generation (shell scripts, Homebrew, MSI). Actively
+maintained by axo.dev (v0.30+). Good for projects that want turnkey releases without
+hand-rolling CI. Major projects like ripgrep, bat, and fd hand-roll their release
+workflows, but cargo-dist is a solid choice for smaller projects or teams that prefer
+convention over configuration.
 
 ### 6.4 Release CI Workflow
 
 A tag-triggered workflow that builds cross-platform binaries and creates a GitHub
-Release. Uses `softprops/action-gh-release@v2` (the standard action for GitHub
-Releases; `actions/create-release@v1` is archived and should not be used):
+Release. Uses `softprops/action-gh-release@v2` (the standard action for GitHub Releases;
+`actions/create-release@v1` is archived and should not be used):
 
 ```yaml
 name: Release
@@ -801,9 +808,10 @@ jobs:
 
 ### 7.2 GitHub Actions (Modern Pattern)
 
-Split CI into independent parallel jobs for fast feedback. This is the pattern used by
-flowmark-rs, jj, and delta. See `tbd guidelines rust-project-setup` for the full
-recommended workflow with all 7 jobs.
+Split CI into independent parallel jobs for fast feedback.
+This is the pattern used by flowmark-rs, jj, and delta.
+See [Rust Project Setup](guidelines/rust-project-setup.md) for the full recommended
+workflow with all 7 jobs.
 
 **Key patterns from real-world projects:**
 
@@ -893,7 +901,8 @@ jobs:
 ```
 
 **Key points:**
-- Use `actions/checkout@v6` (current), `dtolnay/rust-toolchain` (not deprecated `actions-rs`)
+- Use `actions/checkout@v6` (current), `dtolnay/rust-toolchain` (not deprecated
+  `actions-rs`)
 - `Swatinem/rust-cache@v2` with `shared-key` per job type for cache isolation
 - `--locked` in test/build to enforce Cargo.lock reproducibility
 - Test with `--no-default-features` to verify library builds without CLI deps
@@ -906,8 +915,8 @@ jobs:
 
 ### 8.1 Task Runner: just
 
-Use `just` instead of manual Git hooks or Makefiles. The standard pattern is a
-`precommit` target that auto-fixes then verifies:
+Use `just` instead of manual Git hooks or Makefiles.
+The standard pattern is a `precommit` target that auto-fixes then verifies:
 
 ```bash
 just precommit    # Auto-fix formatting + clippy, then run all checks
@@ -915,7 +924,8 @@ just check        # Run all CI checks locally (no auto-fix)
 just fix          # Auto-fix only (format + clippy)
 ```
 
-See `tbd guidelines rust-project-setup` for a complete justfile template.
+See [Rust Project Setup](guidelines/rust-project-setup.md) for a complete justfile
+template.
 
 ### 8.2 Recommended Tools
 
@@ -949,7 +959,7 @@ See `tbd guidelines rust-project-setup` for a complete justfile template.
 
 **Analysis:**
 
-- `cargo-bloat` - Find what's taking up space in binary
+- `cargo-bloat` - Find what’s taking up space in binary
 
 - `cargo-tree` - Visualize dependency tree (built into cargo: `cargo tree`)
 
@@ -992,10 +1002,12 @@ Rust CLI vs interpreted languages:
 **Before First Release**:
 
 - [ ] `Cargo.toml` fully configured (edition 2024, MSRV, metadata, license)
-- [ ] Workspace uses `resolver = "3"` (Edition 2024; virtual workspaces must set explicitly)
+- [ ] Workspace uses `resolver = "3"` (Edition 2024; virtual workspaces must set
+  explicitly)
 - [ ] Library + binary feature-gate pattern (if applicable)
 - [ ] `rustfmt.toml` configured; `cargo fmt` passing
-- [ ] Lint configuration chosen (pedantic with `priority = -1`, curated list, or defaults)
+- [ ] Lint configuration chosen (pedantic with `priority = -1`, curated list, or
+  defaults)
 - [ ] `cargo test` suite with >80% coverage
 - [ ] `cargo audit` passing (no vulnerabilities)
 - [ ] `deny.toml` configured with v2 schema for license/dependency checks
@@ -1005,7 +1017,8 @@ Rust CLI vs interpreted languages:
 - [ ] Cross-platform test matrix (Linux, macOS, Windows)
 - [ ] Release profile optimized (LTO, strip, panic=abort)
 - [ ] `release.toml` configured for cargo-release
-- [ ] Release CI workflow for cross-platform binary builds (softprops/action-gh-release@v2)
+- [ ] Release CI workflow for cross-platform binary builds
+  (softprops/action-gh-release@v2)
 - [ ] `justfile` with check/fix/precommit targets
 - [ ] `Cargo.lock` committed (for binary projects)
 - [ ] SIGPIPE handling: `sigpipe::reset()` at start of main (Unix CLI tools)
@@ -1024,9 +1037,8 @@ Rust CLI vs interpreted languages:
 [^cli-book]: [Command Line Applications in Rust](https://rust-cli.github.io/book/) -
     Official Rust CLI Working Group book
 
-[^cli-recommendations]: [Rain’s Rust CLI
-    Recommendations](https://rust-cli-recommendations.sunshowers.io/) - Advanced
-    patterns and best practices
+[^cli-recommendations]: [Rain’s Rust CLI Recommendations](https://rust-cli-recommendations.sunshowers.io/) -
+    Advanced patterns and best practices
 
 [^rust-clippy]: [Clippy Documentation](https://doc.rust-lang.org/clippy/) - Official
     lints documentation
@@ -1037,9 +1049,8 @@ Rust CLI vs interpreted languages:
 [^clippy-pedantic]: [Practical Pedantism](https://dystroy.org/blog/practical-pedantism/)
     \- Using clippy::pedantic effectively
 
-[^clippy-workspace]: [clippy::pedantic and Workspace
-    Lints](https://coreyja.com/til/clippy-pedantic-workspace) - Workspace-level
-    configuration
+[^clippy-workspace]: [clippy::pedantic and Workspace Lints](https://coreyja.com/til/clippy-pedantic-workspace)
+    \- Workspace-level configuration
 
 [^rustsec]: [RustSec Advisory Database](https://rustsec.org/) - Security vulnerability
     tracking
@@ -1053,13 +1064,11 @@ Rust CLI vs interpreted languages:
 [^clap-mangen]: [clap_mangen](https://crates.io/crates/clap_mangen) - Auto-generate man
     pages
 
-[^msrv-policy]: [RFC 3537: MSRV-aware
-    Resolver](https://rust-lang.github.io/rfcs/3537-msrv-resolver.html) - Cargo MSRV
-    support
+[^msrv-policy]: [RFC 3537: MSRV-aware Resolver](https://rust-lang.github.io/rfcs/3537-msrv-resolver.html)
+    \- Cargo MSRV support
 
-[^api-guidelines]: [Rust API Guidelines: MSRV
-    Policy](https://github.com/rust-lang/api-guidelines/discussions/231) - Semver and
-    MSRV
+[^api-guidelines]: [Rust API Guidelines: MSRV Policy](https://github.com/rust-lang/api-guidelines/discussions/231)
+    \- Semver and MSRV
 
 [^rust-edition]: [The Rust Edition Guide](https://doc.rust-lang.org/edition-guide/) -
     Rust editions explained
@@ -1067,19 +1076,19 @@ Rust CLI vs interpreted languages:
 [^cargo-dist]: [cargo-dist (dist)](https://opensource.axo.dev/cargo-dist/) - Automated
     release packaging and distribution by axo.dev
 
-[^sigpipe]: [SIGPIPE in Rust](https://github.com/rust-lang/rust/issues/62569) -
-    Tracking issue for Rust's SIGPIPE default behavior
+[^sigpipe]: [SIGPIPE in Rust](https://github.com/rust-lang/rust/issues/62569) - Tracking
+    issue for Rust’s SIGPIPE default behavior
 
 [^exitcode]: [ExitCode](https://doc.rust-lang.org/stable/std/process/struct.ExitCode.html) -
     std::process::ExitCode documentation
 
-[^cargo-auditable]: [cargo-auditable](https://github.com/rust-secure-code/cargo-auditable) -
-    Embed dependency info in binaries for post-build auditing
+[^cargo-auditable]: [cargo-auditable](https://github.com/rust-secure-code/cargo-auditable) - Embed
+    dependency info in binaries for post-build auditing
 
 [^clap-complete]: [clap_complete](https://docs.rs/clap_complete/latest/clap_complete/) -
     Shell completion generation for clap
 
 * * *
 
-**This document is a living reference.**
-Cross-referenced against flowmark-rs, ripgrep, bat, fd, and jj as of 2026-02-12.
+**This document is a living reference.** Cross-referenced against flowmark-rs, ripgrep,
+bat, fd, and jj as of 2026-02-12.

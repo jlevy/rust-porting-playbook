@@ -70,8 +70,8 @@ struct Cli {
 }
 ```
 
-Use a `build.rs` script to set the custom `PYTHON_SOURCE_VERSION` env var at
-compile time:
+Use a `build.rs` script to set the custom `PYTHON_SOURCE_VERSION` env var at compile
+time:
 
 **`build.rs`**:
 ```rust
@@ -134,7 +134,7 @@ fn main() {
 1. **README.md** must include a “Version Correspondence” section:
    ```markdown
    ## Version Correspondence
-   
+
    | Rust Version | Python Version | Date |
    |--------------|----------------|------|
    | 0.1.0        | v0.5.5         | 2024-11-02 |
@@ -144,12 +144,12 @@ fn main() {
 2. **CHANGELOG.md** must reference Python version in each entry:
    ```markdown
    ## [0.1.0] - 2024-11-02
-   
+
    ### Port Status
    - Ported from python-project v0.5.5
    - 100% feature parity achieved
    - All 111 tests passing
-   
+
    ### Added
    - Initial Rust port
    ```
@@ -157,11 +157,11 @@ fn main() {
 3. **Git commit messages** for sync updates must include:
    ```
    Sync from Python repo v0.5.6 @ def456e
-   
+
    Python changes:
    - Added smart quote feature
    - Fixed list formatting edge case
-   
+
    Rust updates:
    - Ported smart quote logic
    - Updated tests
@@ -170,9 +170,10 @@ fn main() {
 ### Automation in Sync Script
 
 The sync script in [Phase 4](#phase-4-ongoing-synchronization-of-python-code-changes)
-includes version tracking updates. The key step is updating the
-`[package.metadata.python_source]` section in `Cargo.toml`. Since `sed` cannot
-reliably target fields within a specific TOML section, prefer a TOML-aware tool:
+includes version tracking updates.
+The key step is updating the `[package.metadata.python_source]` section in `Cargo.toml`.
+Since `sed` cannot reliably target fields within a specific TOML section, prefer a
+TOML-aware tool:
 
 ```bash
 # Using toml-cli (cargo install toml-cli):
@@ -196,10 +197,10 @@ with open('Cargo.toml', 'w') as f:
 
 ## Phase 1: Project Setup
 
-**See:** [Initial Port Checklist - Phase 1: Project
-Setup](port-checklist-initial.md#phase-1-project-setup) for complete setup instructions
-including repository structure, workspace configuration, best practices configuration,
-and release profile optimization.
+**See:**
+[Initial Port Checklist - Phase 1: Project Setup](port-checklist-initial.md#phase-1-project-setup)
+for complete setup instructions including repository structure, workspace configuration,
+best practices configuration, and release profile optimization.
 
 ### Key Concepts
 
@@ -242,12 +243,12 @@ git commit -m "Add Python source as submodule for porting reference"
 
 ## Phase 2: Dependencies & Porting Process
 
-**See:** [Initial Port Checklist - Phase 2: Dependencies & Core
-Setup](port-checklist-initial.md#phase-2-dependencies--core-setup) for detailed
-dependency setup and [Phase 3: Porting
-Process](port-checklist-initial.md#phase-3-porting-process) for complete
-module-by-module porting instructions, critical pitfalls checklist, and integration test
-setup.
+**See:**
+[Initial Port Checklist - Phase 2: Dependencies & Core Setup](port-checklist-initial.md#phase-2-dependencies--core-setup)
+for detailed dependency setup and
+[Phase 3: Porting Process](port-checklist-initial.md#phase-3-porting-process) for
+complete module-by-module porting instructions, critical pitfalls checklist, and
+integration test setup.
 
 ### Dependency Mappings
 
@@ -315,9 +316,9 @@ For large fixtures, consider reading from disk in tests to keep binaries smaller
 
 ### CLI Parity
 
-**See:** [Initial Port Checklist - Phase 4: CLI
-Implementation](port-checklist-initial.md#phase-4-cli-implementation) for complete CLI
-parity requirements and validation procedures.
+**See:**
+[Initial Port Checklist - Phase 4: CLI Implementation](port-checklist-initial.md#phase-4-cli-implementation)
+for complete CLI parity requirements and validation procedures.
 
 **Key Requirements:**
 
@@ -345,10 +346,10 @@ output (not just processing results).
 
 ## Phase 3: Testing & Validation
 
-**See:** [Initial Port Checklist - Phase 5: Testing &
-Validation](port-checklist-initial.md#phase-5-testing--validation) for complete testing
-requirements including test coverage targets, cross-validation procedures, and quality
-checks.
+**See:**
+[Initial Port Checklist - Phase 5: Testing & Validation](port-checklist-initial.md#phase-5-testing--validation)
+for complete testing requirements including test coverage targets, cross-validation
+procedures, and quality checks.
 
 ### Cross-Validation Script
 
@@ -534,9 +535,9 @@ original Python test, and exact byte-for-byte matching on all comparisons (zero 
 This includes test output, CLI command output, help text, error messages, and all
 processing results.
 
-**See:** [Initial Port Checklist - Phase 10: Final Acceptance
-Criteria](port-checklist-initial.md#phase-10-final-acceptance-criteria) for the
-complete, detailed checklist.
+**See:**
+[Initial Port Checklist - Phase 10: Final Acceptance Criteria](port-checklist-initial.md#phase-10-final-acceptance-criteria)
+for the complete, detailed checklist.
 
 ### Summary
 
@@ -723,9 +724,9 @@ Only trim if trailing whitespace is explicitly non-semantic for your project.
 
 ### Integration Test Location
 
-**Problem:** Cargo only discovers integration tests inside a crate's `tests/`
-directory. A `tests/` directory at the workspace root is ignored unless the root
-`Cargo.toml` is also a `[package]` (not just a `[workspace]`).
+**Problem:** Cargo only discovers integration tests inside a crate’s `tests/` directory.
+A `tests/` directory at the workspace root is ignored unless the root `Cargo.toml` is
+also a `[package]` (not just a `[workspace]`).
 
 ```
 # WRONG - workspace-only root; tests/ NOT discovered by cargo test
@@ -768,12 +769,12 @@ pub fn split_frontmatter(text: &str) -> (String, String) {
 ### Other Common Issues
 
 - **String slicing**: `text[start..end]` panics if indices are not on UTF-8 char
-  boundaries; use `.char_indices()` to find safe boundaries, or `.chars()` to
-  iterate by character
+  boundaries; use `.char_indices()` to find safe boundaries, or `.chars()` to iterate by
+  character
 
 - **Library types**: `comrak` inner types change between major versions (e.g.,
-  `NodeValue::Text` was `Vec<u8>` in 0.x, `String` in 0.30+). Check docs for
-  your pinned version and convert explicitly.
+  `NodeValue::Text` was `Vec<u8>` in 0.x, `String` in 0.30+). Check docs for your pinned
+  version and convert explicitly.
 
 - **Module system**: Rust requires explicit `mod` declarations
 
@@ -814,8 +815,8 @@ pub fn process(text: &str) -> String {
 
 ### Build size and performance tips
 
-- In `Cargo.toml` release profile: enable LTO, reduce codegen units, consider `panic =
-  "abort"`
+- In `Cargo.toml` release profile: enable LTO, reduce codegen units, consider
+  `panic = "abort"`
 
 - For smaller binaries: use `opt-level = "z"` or `"s"`, and strip symbols in CI
 

@@ -1,10 +1,10 @@
 # Rust Porting Playbook
 
-A comprehensive, step-by-step playbook for porting applications to Rust. Built from
-real-world experience porting production software with AI coding agents.
+A comprehensive, step-by-step playbook for porting applications to Rust.
+Built from real-world experience porting production software with AI coding agents.
 
-Currently focused on **Python-to-Rust** porting. Future editions may cover TypeScript
-and other source languages.
+Currently focused on **Python-to-Rust** porting.
+Future editions may cover TypeScript and other source languages.
 
 ## Who This Is For
 
@@ -15,9 +15,9 @@ and other source languages.
 ## Quick Start
 
 **Read one document:**
-[`reference/python-to-rust-playbook.md`](reference/python-to-rust-playbook.md) --
-the complete 8-phase process from project assessment through ongoing sync. Everything
-else in this repo is supporting material referenced from the playbook.
+[`reference/python-to-rust-playbook.md`](reference/python-to-rust-playbook.md) -- the
+complete 8-phase process from project assessment through ongoing sync.
+Everything else in this repo is supporting material referenced from the playbook.
 
 ## How This Repo Is Organized
 
@@ -78,14 +78,14 @@ The [playbook](reference/python-to-rust-playbook.md) covers 8 phases:
 | 8. **Sync** | Track Python updates, manage divergences | Ongoing maintenance |
 
 **Key insight from real ports:** Phases 5-6 (porting + fixing) consume ~70% of total
-effort, and library workarounds account for roughly half of that. Thorough library
-evaluation in Phase 2 is the single highest-leverage activity.
+effort, and library workarounds account for roughly half of that.
+Thorough library evaluation in Phase 2 is the single highest-leverage activity.
 
 ## For AI Agents
 
 The `guidelines/` directory contains compact documents (~2-3k tokens each) designed to
-be loaded into an AI agent's context window before starting work. If using
-[tbd](https://github.com/jlevy/tbd), load them with:
+be loaded into an AI agent’s context window before starting work.
+If using [tbd](https://github.com/jlevy/tbd), load them with:
 
 ```bash
 tbd guidelines python-to-rust-porting-rules    # guidelines/python-to-rust-porting-rules.md
@@ -96,27 +96,29 @@ tbd guidelines rust-general-rules               # guidelines/rust-general-rules.
 tbd guidelines rust-cli-app-patterns            # guidelines/rust-cli-app-patterns.md
 ```
 
-Otherwise, include the raw markdown files from `guidelines/` in your agent's system prompt
-or context.
+Otherwise, include the raw markdown files from `guidelines/` in your agent’s system
+prompt or context.
 
 ## Case Study: Flowmark
 
 The `case-studies/flowmark/` directory documents the port of
 [flowmark](https://github.com/jlevy/flowmark) (a Python Markdown formatter) to
-[flowmark-rs](https://github.com/jlevy/flowmark-rs). Key stats:
+[flowmark-rs](https://github.com/jlevy/flowmark-rs).
+Key stats:
 
 - Python: ~2,000 lines app code + ~1,500 lines tests (~3,500 total)
 - Rust: ~3,400 lines app code + ~2,900 lines tests (~6,200 total)
 - Rust/Python ratio: ~1.7x app code, ~1.8x total
 - 20-40x performance improvement
-- 141 tests (139 passing, 2 ignored): 93 unit, 42 integration, 6 doctests
-  (doctests run on large real documents with various flags, providing significant end-to-end coverage)
+- 141 tests (139 passing, 2 ignored): 93 unit, 42 integration, 6 doctests (doctests run
+  on large real documents with various flags, providing significant end-to-end coverage)
 - 14 library workarounds, 3 accepted differences
 
 (See `case-studies/flowmark/` for detailed metrics and methodology.)
 
-The case study covers library evaluation methodology, all technical decisions, workaround
-strategies, and a meta-analysis of what can be automated in porting workflows.
+The case study covers library evaluation methodology, all technical decisions,
+workaround strategies, and a meta-analysis of what can be automated in porting
+workflows.
 
 ## Reference Docs
 
@@ -136,11 +138,12 @@ strategies, and a meta-analysis of what can be automated in porting workflows.
 
 ## Improving This Playbook
 
-This playbook improves through real-world case studies. Each port conducted using the
-playbook generates structured feedback that is integrated back into the playbook,
-making it more accurate and complete with every case study.
+This playbook improves through real-world case studies.
+Each port conducted using the playbook generates structured feedback that is integrated
+back into the playbook, making it more accurate and complete with every case study.
 
-See [`reference/meta-improving-this-playbook.md`](reference/meta-improving-this-playbook.md)
+See
+[`reference/meta-improving-this-playbook.md`](reference/meta-improving-this-playbook.md)
 for the full process.
 
 ### How to contribute a case study
@@ -159,8 +162,9 @@ for the full process.
 
 ## Contributing
 
-This playbook is built from real porting experience. If you've ported a project to Rust
-and have lessons to share, contributions are welcome -- especially new case studies.
+This playbook is built from real porting experience.
+If you’ve ported a project to Rust and have lessons to share, contributions are welcome
+-- especially new case studies.
 
 ## License
 

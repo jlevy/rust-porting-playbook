@@ -1,11 +1,12 @@
 # Test Coverage Playbook
 
 Step-by-step playbook for achieving maximum test coverage on a Python CLI codebase
-before porting to Rust. High pre-port coverage means the Rust implementation has a
-precise specification to match against.
+before porting to Rust.
+High pre-port coverage means the Rust implementation has a precise specification to
+match against.
 
 **Related:** [Python-to-Rust Porting Guide](python-to-rust-porting-guide.md) |
-`tbd guidelines test-coverage-for-porting` |
+[Test Coverage for Porting](guidelines/test-coverage-for-porting.md) |
 `tbd guidelines golden-testing-guidelines`
 
 **Last update:** 2026-02-12
@@ -17,11 +18,12 @@ This playbook covers six phases of test coverage work:
 1. **Measure** -- Understand current coverage
 2. **Expand** -- Write tests for uncovered code
 3. **Golden** -- Create golden/snapshot tests for CLI behavior
-4. **Document** -- Record what can't be automated
+4. **Document** -- Record what can’t be automated
 5. **Property Test** -- Add property-based tests for invariants
 6. **Rust Coverage & CI** -- Set up Rust-side coverage and enforce in CI
 
-Each phase builds on the previous one. Complete them in order.
+Each phase builds on the previous one.
+Complete them in order.
 
 ## Phase 1: Measure Current Coverage
 
@@ -224,11 +226,12 @@ golden_test!(golden_complex, "complex-formatting.md");
 golden_test!(golden_edge_cases, "edge-cases.md");
 ```
 
-**Alternative: `insta` for snapshot testing.** The [`insta`](https://crates.io/crates/insta)
-crate provides snapshot testing that automatically manages expected output files. On first
-run it captures output; on subsequent runs it compares against the stored snapshot. Use
-`cargo insta review` to interactively accept or reject changes. This is particularly useful
-for output-heavy CLI tools and is used by cargo itself.
+**Alternative: `insta` for snapshot testing.** The
+[`insta`](https://crates.io/crates/insta) crate provides snapshot testing that
+automatically manages expected output files.
+On first run it captures output; on subsequent runs it compares against the stored
+snapshot. Use `cargo insta review` to interactively accept or reject changes.
+This is particularly useful for output-heavy CLI tools and is used by cargo itself.
 
 ```rust
 use insta::assert_snapshot;
@@ -298,9 +301,9 @@ insta = "1"
 
 ## Phase 5: Property-Based Testing
 
-Property-based testing generates random inputs to verify invariants, catching edge
-cases that hand-written tests miss. Add property tests on both the Python and Rust
-sides.
+Property-based testing generates random inputs to verify invariants, catching edge cases
+that hand-written tests miss.
+Add property tests on both the Python and Rust sides.
 
 ### 5.1 Python Side: Hypothesis
 
@@ -335,9 +338,9 @@ Install: `pip install hypothesis`
 
 ### 5.2 Rust Side: proptest
 
-[`proptest`](https://crates.io/crates/proptest) is the standard property-based
-testing crate for Rust. [`quickcheck`](https://crates.io/crates/quickcheck) is a
-lighter alternative but `proptest` offers more control over input generation.
+[`proptest`](https://crates.io/crates/proptest) is the standard property-based testing
+crate for Rust. [`quickcheck`](https://crates.io/crates/quickcheck) is a lighter
+alternative but `proptest` offers more control over input generation.
 
 ```rust
 use proptest::prelude::*;
@@ -379,9 +382,9 @@ proptest = "1"
 
 ### 6.1 Rust Coverage with cargo-tarpaulin
 
-[`cargo-tarpaulin`](https://crates.io/crates/cargo-tarpaulin) provides line and
-branch coverage for Rust. It is easy to set up but less accurate than LLVM-based
-coverage on complex codebases:
+[`cargo-tarpaulin`](https://crates.io/crates/cargo-tarpaulin) provides line and branch
+coverage for Rust. It is easy to set up but less accurate than LLVM-based coverage on
+complex codebases:
 
 ```bash
 cargo install cargo-tarpaulin
@@ -391,9 +394,9 @@ cargo tarpaulin --out html --all-features
 
 ### 6.2 Rust Coverage with cargo-llvm-cov (Recommended)
 
-[`cargo-llvm-cov`](https://crates.io/crates/cargo-llvm-cov) uses LLVM's source-based
-instrumentation for more accurate results. This is the recommended tool for
-production-quality coverage measurement:
+[`cargo-llvm-cov`](https://crates.io/crates/cargo-llvm-cov) uses LLVM’s source-based
+instrumentation for more accurate results.
+This is the recommended tool for production-quality coverage measurement:
 
 ```bash
 cargo install cargo-llvm-cov

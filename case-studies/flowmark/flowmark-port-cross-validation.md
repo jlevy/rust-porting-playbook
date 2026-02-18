@@ -1,9 +1,7 @@
 # Cross-Validation Assessment Report
 
-**Related:**
-[Library Choices](flowmark-port-library-choices.md) |
-[Decision Log](flowmark-port-decision-log.md) |
-[Analysis](flowmark-port-analysis.md) |
+**Related:** [Library Choices](flowmark-port-library-choices.md) |
+[Decision Log](flowmark-port-decision-log.md) | [Analysis](flowmark-port-analysis.md) |
 [Comrak Bug](flowmark-port-comrak-bug.md) |
 [Wrapping Solution](flowmark-port-wrapping-solution.md)
 
@@ -134,8 +132,8 @@ All workarounds are marked with `XXX:` comments in
 
 - `fix_image_link_wrapping()` - Keeps image links on separate lines
 
-- `escape_fence_list_markers()` - Works around [comrak’s fence parsing
-  bug](flowmark-port-comrak-bug.md)
+- `escape_fence_list_markers()` - Works around
+  [comrak’s fence parsing bug](flowmark-port-comrak-bug.md)
 
 - `preserve_dollar_escaping()` - Re-escapes dollars in currency patterns
 

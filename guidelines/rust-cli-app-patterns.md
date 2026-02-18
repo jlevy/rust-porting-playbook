@@ -4,11 +4,12 @@ description: Modern patterns for building production-ready Rust CLI applications
 ---
 # Rust CLI App Patterns
 
-Patterns and conventions for building professional Rust CLI applications. Covers project
-structure, argument parsing, I/O handling, error reporting, and distribution.
+Patterns and conventions for building professional Rust CLI applications.
+Covers project structure, argument parsing, I/O handling, error reporting, and
+distribution.
 
-For general Rust rules, see `tbd guidelines rust-general-rules`.
-For project setup and CI/CD, see `tbd guidelines rust-project-setup`.
+See also: [Rust General Rules](guidelines/rust-general-rules.md),
+[Rust Project Setup](guidelines/rust-project-setup.md).
 For Python CLI patterns (useful when porting), see `tbd guidelines python-cli-patterns`.
 
 ## Project Structure
@@ -39,8 +40,8 @@ All logic lives in `lib.rs` and domain modules.
 - **Repository**: `project-rs` (optional `-rs` suffix for disambiguation)
 - **Library crate**: `project` (no suffix -- this is what users `use`)
 - **Binary name**: `project` (what users type in terminal)
-- **Rationale**: Professional tools avoid suffixes (ripgrep, fd, bat), as they suggest
-  a lesser port. The `-rs` goes in the repo URL only.
+- **Rationale**: Professional tools avoid suffixes (ripgrep, fd, bat), as they suggest a
+  lesser port. The `-rs` goes in the repo URL only.
 
 Dual binary targets for backwards compatibility:
 ```toml
@@ -89,7 +90,7 @@ pub struct Args {
 
 ### Flag Conventions
 
-- Match Python's flag names exactly when porting (argparse -> clap)
+- Match Python’s flag names exactly when porting (argparse -> clap)
 - Use both short and long flags: `-w` / `--width`
 - Document defaults in help text
 - Support `--version` and `--help` (clap provides these automatically)
@@ -176,8 +177,8 @@ fn write_with_backup(path: &Path, content: &str, backup_ext: &str) -> anyhow::Re
 ### Recommended: `ExitCode` with explicit error printing
 
 Prefer `fn main() -> ExitCode` over `process::exit()` -- it allows destructors to run
-and gives you full control over error formatting. Keep a separate `run()` function that
-returns `Result`:
+and gives you full control over error formatting.
+Keep a separate `run()` function that returns `Result`:
 
 ```rust
 use std::process::ExitCode;
@@ -215,7 +216,7 @@ This pattern is preferred because:
 
 For tools where backtraces and rich error context aid debugging, use `color-eyre`.
 Return `Result` from `main()` directly -- do **not** also catch errors manually with
-`if let Err(e)` and call `process::exit(1)`, as that defeats `color-eyre`'s formatting:
+`if let Err(e)` and call `process::exit(1)`, as that defeats `color-eyre`’s formatting:
 
 ```rust
 fn main() -> color_eyre::Result<()> {
@@ -227,10 +228,10 @@ fn main() -> color_eyre::Result<()> {
 }
 ```
 
-> **Maintenance note:** `color-eyre` is in maintenance mode (last published 2023).
-> It still works, but `anyhow` is actively maintained and is the safer long-term choice
-> for most CLIs. Use `color-eyre` only when you specifically need its colorized
-> backtraces and `SpanTrace` integration.
+> **Maintenance note:** `color-eyre` is in maintenance mode (last published 2023). It
+> still works, but `anyhow` is actively maintained and is the safer long-term choice for
+> most CLIs. Use `color-eyre` only when you specifically need its colorized backtraces
+> and `SpanTrace` integration.
 
 ### Exit Codes
 
@@ -256,15 +257,17 @@ destructors. If you need custom exit codes beyond SUCCESS/FAILURE, use
 
 Rust has two major logging ecosystems:
 
-- **`log`** -- the original facade crate. Simple, widely supported, sufficient for basic
-  CLI apps that only need leveled log messages.
+- **`log`** -- the original facade crate.
+  Simple, widely supported, sufficient for basic CLI apps that only need leveled log
+  messages.
 - **`tracing`** -- a superset of `log`. Adds structured fields, spans (timed scopes),
-  and async-aware instrumentation. Preferred for new projects because it is backwards-
-  compatible with `log` (libraries using `log` emit events into `tracing` subscribers).
+  and async-aware instrumentation.
+  Preferred for new projects because it is backwards- compatible with `log` (libraries
+  using `log` emit events into `tracing` subscribers).
 
-**Recommendation:** Use `tracing` + `tracing-subscriber` for CLI applications. Libraries
-should depend on `tracing` (or just `log` if they want minimal dependencies -- `tracing`
-picks up `log` events automatically).
+**Recommendation:** Use `tracing` + `tracing-subscriber` for CLI applications.
+Libraries should depend on `tracing` (or just `log` if they want minimal dependencies --
+`tracing` picks up `log` events automatically).
 
 ### Setup
 
@@ -287,8 +290,9 @@ fn setup_logging(verbose: bool) -> anyhow::Result<()> {
 }
 ```
 
-Enable with `RUST_LOG=debug` or `--verbose` flag. The `EnvFilter::from_default_env()`
-call lets users override with `RUST_LOG` even without `--verbose`.
+Enable with `RUST_LOG=debug` or `--verbose` flag.
+The `EnvFilter::from_default_env()` call lets users override with `RUST_LOG` even
+without `--verbose`.
 
 ## Progress Reporting
 
@@ -362,7 +366,8 @@ impl From<&Args> for Config {
 
 ### Layered Configuration
 
-For tools that support config files, layer sources with CLI args taking highest priority:
+For tools that support config files, layer sources with CLI args taking highest
+priority:
 
 1. **Built-in defaults** (`Config::default()`)
 2. **Config file** (e.g., `.project.toml` or `pyproject.toml` section)
@@ -388,17 +393,18 @@ fn load_config(args: &Args) -> anyhow::Result<Config> {
 }
 ```
 
-Use `Option<T>` in the Args struct for overridable fields so you can distinguish
-"user passed a value" from "clap used a default".
+Use `Option<T>` in the Args struct for overridable fields so you can distinguish “user
+passed a value” from “clap used a default”.
 
 ## Cross-Platform Concerns
 
 - **Path handling:** Use `std::path::Path` and `PathBuf`, never string concatenation.
-- **Line endings:** Normalize to `\n` on read. Rust writes bytes verbatim (`\n` stays `\n`
-  even on Windows), which is usually correct for text processing tools.
+- **Line endings:** Normalize to `\n` on read.
+  Rust writes bytes verbatim (`\n` stays `\n` even on Windows), which is usually correct
+  for text processing tools.
 - **Terminal colors:** Use `console` or `crossterm` for cross-platform color support.
-- **Signal handling:** For graceful Ctrl-C shutdown, use the `ctrlc` crate. Set an
-  `AtomicBool` flag and check it in your processing loop rather than calling
+- **Signal handling:** For graceful Ctrl-C shutdown, use the `ctrlc` crate.
+  Set an `AtomicBool` flag and check it in your processing loop rather than calling
   `process::exit()` (which skips destructors):
   ```rust
   use std::sync::atomic::{AtomicBool, Ordering};
@@ -444,17 +450,19 @@ const VERSION_INFO: &str = concat!(
 struct Args { /* ... */ }
 ```
 
-> **Important:** `env!("PYTHON_SOURCE_VERSION")` will fail to compile unless a `build.rs`
-> script sets this variable via `cargo:rustc-env=PYTHON_SOURCE_VERSION=...`. See
-> `tbd reference python-to-rust-porting-guide` for complete `build.rs` examples that
-> extract the version from a Python submodule, a VERSION file, or `git describe`.
->
+> **Important:** `env!("PYTHON_SOURCE_VERSION")` will fail to compile unless a
+> `build.rs` script sets this variable via `cargo:rustc-env=PYTHON_SOURCE_VERSION=...`.
+> See [Python-to-Rust Porting Guide](reference/python-to-rust-porting-guide.md) for
+> complete `build.rs` examples that extract the version from a Python submodule, a
+> VERSION file, or `git describe`.
+> 
 > If you do not have a Python source to track, omit this pattern entirely and use the
 > built-in `version` attribute from `Cargo.toml` (which clap reads automatically).
 
 ## Testing CLI Applications
 
-- **Integration tests** should test the full CLI pipeline (args -> processing -> output).
+- **Integration tests** should test the full CLI pipeline (args -> processing ->
+  output).
 - **Use `assert_cmd`** for testing binary invocations:
   ```rust
   use assert_cmd::Command;
@@ -471,14 +479,14 @@ struct Args { /* ... */ }
 - **Golden tests** for complex output -- compare against expected output files.
 - **Test error cases** -- missing files, invalid args, permission errors.
 
-For golden testing patterns, see `tbd guidelines golden-testing-guidelines`.
-For general testing rules, see `tbd guidelines general-testing-rules`.
+For golden testing patterns, see `tbd guidelines golden-testing-guidelines`. For general
+testing rules, see `tbd guidelines general-testing-rules`.
 
 ## SIGPIPE Handling
 
-Rust ignores SIGPIPE by default, which causes "broken pipe" errors when output is piped
-to `head`, `less`, or any command that closes the read end early. This is a common
-surprise when porting Unix CLI tools.
+Rust ignores SIGPIPE by default, which causes “broken pipe” errors when output is piped
+to `head`, `less`, or any command that closes the read end early.
+This is a common surprise when porting Unix CLI tools.
 
 Add this at the very start of `main()`:
 
@@ -516,16 +524,18 @@ fn print_completions(shell: Shell) {
 }
 ```
 
-Typical usage: `project completions bash > ~/.local/share/bash-completion/completions/project`
+Typical usage:
+`project completions bash > ~/.local/share/bash-completion/completions/project`
 
 For build-time generation (e.g., for packaging), generate completions in `build.rs` and
-include them in your release artifacts. See the
-[clap_complete documentation](https://docs.rs/clap_complete) for details.
+include them in your release artifacts.
+See the [clap_complete documentation](https://docs.rs/clap_complete) for details.
 
 ## Related Guidelines
 
-- For general Rust rules, see `tbd guidelines rust-general-rules`
-- For project setup, see `tbd guidelines rust-project-setup`
+- [Rust General Rules](guidelines/rust-general-rules.md)
+- [Rust Project Setup](guidelines/rust-project-setup.md)
 - For Python CLI patterns (porting source), see `tbd guidelines python-cli-patterns`
-- For TypeScript CLI patterns (parallel reference), see `tbd guidelines typescript-cli-tool-rules`
+- For TypeScript CLI patterns (parallel reference), see
+  `tbd guidelines typescript-cli-tool-rules`
 - For golden testing, see `tbd guidelines golden-testing-guidelines`

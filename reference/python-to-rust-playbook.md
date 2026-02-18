@@ -1,30 +1,33 @@
 # Python-to-Rust Playbook
 
-A step-by-step process for porting a Python application to Rust. Designed for AI
-coding agents with human oversight at key decision points. Built from the experience
-of porting [flowmark](https://github.com/jlevy/flowmark) and validated against the
-full knowledge base.
+A step-by-step process for porting a Python application to Rust.
+Designed for AI coding agents with human oversight at key decision points.
+Built from the experience of porting [flowmark](https://github.com/jlevy/flowmark) and
+validated against the full knowledge base.
 
-**Scope:** Any Python application with a test suite. Emphasis on CLI tools but the
-process applies to libraries, services, and other application types.
+**Scope:** Any Python application with a test suite.
+Emphasis on CLI tools but the process applies to libraries, services, and other
+application types.
 
 **Effort profile:** Roughly half of total effort goes to library workarounds and
-cross-validation (Phases 5-6), not initial implementation. Expect 2-3 human review
-points regardless of project size.
+cross-validation (Phases 5-6), not initial implementation.
+Expect 2-3 human review points regardless of project size.
 
-**Key principle:** Tests are the specification. The Python test suite defines what the
-Rust port must do. Without tests, porting is guesswork. With them, 100% passing tests
-equals correctness by definition.
+**Key principle:** Tests are the specification.
+The Python test suite defines what the Rust port must do.
+Without tests, porting is guesswork.
+With them, 100% passing tests equals correctness by definition.
 
 For detailed reference on any step, see the companion docs listed in the
-[README](../README.md). To improve this playbook through your port, see the
+[README](../README.md).
+To improve this playbook through your port, see the
 [meta-playbook](meta-improving-this-playbook.md).
 
----
+* * *
 
 ## Phase 1: Assess the Original Project
 
-**Goal:** Understand what you're porting and whether it's ready.
+**Goal:** Understand what you’re porting and whether it’s ready.
 
 **Time:** 15-30 minutes.
 
@@ -68,19 +71,21 @@ uv run pytest --cov=myproject --cov-branch --cov-report=term-missing
 | Error paths | 50% | 70%+ |
 
 If coverage is below these thresholds, **stop and write more tests first.** Every
-untested code path is a potential bug in the Rust version that you won't catch. Test
-coverage investment before porting pays for itself many times over.
+untested code path is a potential bug in the Rust version that you won’t catch.
+Test coverage investment before porting pays for itself many times over.
 
 ### 1.4 Identify areas to clarify
 
 Look for:
-- **Implicit behavior:** Things the code does that aren't tested or documented
-- **Ambiguous edge cases:** What happens with empty input? Unicode? Very large files?
-- **Known bugs:** Existing issues that you'll need to decide whether to replicate
+- **Implicit behavior:** Things the code does that aren’t tested or documented
+- **Ambiguous edge cases:** What happens with empty input?
+  Unicode? Very large files?
+- **Known bugs:** Existing issues that you’ll need to decide whether to replicate
 - **Platform-specific behavior:** File paths, line endings, locale handling
 
-Write tests for anything ambiguous. The act of writing exact-match tests often reveals
-bugs in the original -- this is expected and valuable.
+Write tests for anything ambiguous.
+The act of writing exact-match tests often reveals bugs in the original -- this is
+expected and valuable.
 
 ### 1.5 Decision: Is this project ready to port?
 
@@ -95,13 +100,13 @@ bugs in the original -- this is expected and valuable.
 - A critical dependency has no clear Rust equivalent (research more)
 - The project has significant undocumented behavior
 
----
+* * *
 
 ## Phase 2: Research and Library Evaluation
 
-**Goal:** Choose all Rust dependencies, especially the high-risk ones. Library choices
-made here predetermine how much time you'll spend in Phase 6 (typically 30-50% of total
-effort).
+**Goal:** Choose all Rust dependencies, especially the high-risk ones.
+Library choices made here predetermine how much time you’ll spend in Phase 6 (typically
+30-50% of total effort).
 
 **Time:** 30-60 minutes.
 
@@ -113,13 +118,12 @@ For each dependency rated Medium or High risk:
 
 2. **Create a feature matrix:**
 
-   | Feature | Python Lib | Candidate A | Candidate B |
-   | --- | --- | --- | --- |
-   | Core feature 1 | Y | Y | Y |
-   | Core feature 2 | Y | Y | N |
-   | Feature you need | Y | Partial | Y |
-   | AST/API access | Y | Full | Event-only |
-
+| Feature | Python Lib | Candidate A | Candidate B |
+| --- | --- | --- | --- |
+| Core feature 1 | Y | Y | Y |
+| Core feature 2 | Y | Y | N |
+| Feature you need | Y | Partial | Y |
+| AST/API access | Y | Full | Event-only |
 3. **Run proof-of-concept tests** (5-10 representative inputs from your actual project):
 
    ```bash
@@ -152,21 +156,22 @@ For each dependency rated Medium or High risk:
 
 ### 2.3 Critical lesson: spec compliance is a false signal
 
-Two libraries can both pass 100% of a specification's test suite and still produce
-different output on real-world inputs. The flowmark port discovered 15 behavioral
-differences between two spec-compliant Markdown parsers. **Always test with your actual
-inputs, not just feature checkboxes.**
+Two libraries can both pass 100% of a specification’s test suite and still produce
+different output on real-world inputs.
+The flowmark port discovered 15 behavioral differences between two spec-compliant
+Markdown parsers. **Always test with your actual inputs, not just feature checkboxes.**
 
 ### 2.4 Write a best-practices survey (optional but recommended)
 
 Before writing any code, spend 30 minutes surveying the Rust ecosystem for your
 application type. Document: recommended libraries, project setup patterns, CI
-configuration, release workflow. This prevents rework from poor initial choices.
+configuration, release workflow.
+This prevents rework from poor initial choices.
 
-See `tbd guidelines rust-project-setup` (`guidelines/rust-project-setup.md`) and
-[rust-cli-best-practices.md](rust-cli-best-practices.md) for CLI projects.
+See [Rust Project Setup](guidelines/rust-project-setup.md) and
+[Rust CLI Best Practices](reference/rust-cli-best-practices.md) for CLI projects.
 
----
+* * *
 
 ## Phase 3: Plan the Port
 
@@ -178,9 +183,11 @@ See `tbd guidelines rust-project-setup` (`guidelines/rust-project-setup.md`) and
 
 **Single package vs workspace:**
 - **Single package** (recommended for most projects): One `Cargo.toml` with
-  feature-gated binaries. Simpler build, simpler CI, fewer path issues.
+  feature-gated binaries.
+  Simpler build, simpler CI, fewer path issues.
 - **Workspace:** Only when you have 3+ crates with independent versioning or very
-  different dependency sets. You can always split later.
+  different dependency sets.
+  You can always split later.
 
 **For CLI tools:** Use the lib+bin feature-gate pattern:
 ```toml
@@ -235,11 +242,12 @@ Based on the flowmark experience and general patterns:
 | Implementation | 30-40% |
 | Bug-fixing + cross-validation | 35-50% |
 
-These ranges reflect worst-case budgeting; see the [effort allocation table](#quick-reference-effort-allocation) for typical actuals. The fix phase is not waste -- it's
-where the port achieves production quality. Plan for it explicitly rather than treating
-it as contingency.
+These ranges reflect worst-case budgeting; see the
+[effort allocation table](#quick-reference-effort-allocation) for typical actuals.
+The fix phase is not waste -- it’s where the port achieves production quality.
+Plan for it explicitly rather than treating it as contingency.
 
----
+* * *
 
 ## Phase 4: Set Up the Rust Project
 
@@ -281,8 +289,8 @@ must_use_candidate = "allow"
 unsafe_code = "forbid"
 ```
 
-See `tbd guidelines rust-project-setup` (`guidelines/rust-project-setup.md`) for complete
-configuration including release profile, deny.toml, release.toml, and justfile.
+See [Rust Project Setup](guidelines/rust-project-setup.md) for complete configuration
+including release profile, deny.toml, release.toml, and justfile.
 
 ### 4.3 Include the Python source as a submodule
 
@@ -312,8 +320,8 @@ done
 ### 4.5 Set up CI
 
 Create GitHub Actions with 7 parallel jobs: format, clippy, test, MSRV, audit, deny,
-docs. See `tbd guidelines rust-project-setup` (`guidelines/rust-project-setup.md`) for
-the complete workflow.
+docs. See [Rust Project Setup](guidelines/rust-project-setup.md) for the complete
+workflow.
 
 ### 4.6 Track version correspondence
 
@@ -323,18 +331,19 @@ Add to Cargo.toml:
 version = "0.5.5"  # Python version this port is based on
 ```
 
----
+* * *
 
 ## Phase 5: Port the Code
 
 **Goal:** A working Rust implementation with all tests passing.
 
-**Effort:** ~33% of total effort. The largest phase alongside library fixes.
+**Effort:** ~33% of total effort.
+The largest phase alongside library fixes.
 
 ### 5.1 Port tests first
 
-For each module, port its tests before (or alongside) the implementation. This gives
-immediate feedback and makes progress measurable.
+For each module, port its tests before (or alongside) the implementation.
+This gives immediate feedback and makes progress measurable.
 
 Progress tracking example: 0/45 → 12/45 → 45/45 → 87/87 → 111/111.
 
@@ -359,7 +368,8 @@ For each module, in dependency order:
   // Python: re.match(pattern, text) -- note: anchored at start
   if regex.is_match(text) { ... }
   ```
-- Mark library workarounds with `HACK:` comments and items needing future resolution with `FIXME:`:
+- Mark library workarounds with `HACK:` comments and items needing future resolution
+  with `FIXME:`:
   ```rust
   /// HACK: comrak escapes underscores but Python doesn't.
   /// Workaround: post-process to remove unnecessary escapes.
@@ -368,37 +378,38 @@ For each module, in dependency order:
 
 ### 5.4 Key pitfalls to watch for
 
-**Regex anchoring:** Python's `re.match()` anchors at start; Rust's `is_match()` does
+**Regex anchoring:** Python’s `re.match()` anchors at start; Rust’s `is_match()` does
 not. Add `^` to patterns translated from `re.match()`.
 
-**String handling:** Don't add `.trim()` unless Python does. Whitespace preservation
-matters for text formatters, config parsers, etc.
+**String handling:** Don’t add `.trim()` unless Python does.
+Whitespace preservation matters for text formatters, config parsers, etc.
 
-**Arena/lifetime patterns:** When a library uses arena allocation (like comrak), use
-the closure pattern:
+**Arena/lifetime patterns:** When a library uses arena allocation (like comrak), use the
+closure pattern:
 ```rust
 pub fn with_ast<F, R>(text: &str, f: F) -> Result<R>
 where F: for<'a> FnOnce(&'a AstNode<'a>) -> Result<R>
 ```
 
-**Error types:** Map Python exceptions to a Rust error enum with `thiserror`. Don't use
+**Error types:** Map Python exceptions to a Rust error enum with `thiserror`. Don’t use
 `unwrap()` in library code.
 
 **Dict ordering:** Python `dict` preserves insertion order (since 3.7); Rust `HashMap`
 does not. If iteration order matters, use `IndexMap` from the `indexmap` crate.
 
-**None handling:** Python uses `None` with runtime checks; Rust uses `Option<T>` enforced
-at compile time. Map `Optional[T]` to `Option<T>` and `if x is not None` to
-`if let Some(x) = value`.
+**None handling:** Python uses `None` with runtime checks; Rust uses `Option<T>`
+enforced at compile time.
+Map `Optional[T]` to `Option<T>` and `if x is not None` to `if let Some(x) = value`.
 
 **Integer overflow:** Python integers have arbitrary precision; Rust integers overflow
-(wrapping in release, panicking in debug). Use `checked_*` or `saturating_*` methods
-when porting arithmetic from Python, especially for user-supplied values.
+(wrapping in release, panicking in debug).
+Use `checked_*` or `saturating_*` methods when porting arithmetic from Python,
+especially for user-supplied values.
 
 **Unicode:** Use `\u{XXXX}` for Unicode escapes (not `\uXXXX`). Consider
 `unicode-segmentation` for grapheme-aware text processing.
 
----
+* * *
 
 ## Phase 6: Handle Library Differences
 
@@ -422,11 +433,11 @@ Run both implementations against all test fixtures and categorize every differen
 
 For each library difference, try in order:
 
-1. **Post-processing** (fix library output): Safer, most common. Build a pipeline of
-   `fix_*` functions applied after the library processes input.
+1. **Post-processing** (fix library output): Safer, most common.
+   Build a pipeline of `fix_*` functions applied after the library processes input.
 
-2. **Pre-processing** (modify input before library): Use sparingly. Riskier because
-   you're modifying input without full parsing context.
+2. **Pre-processing** (modify input before library): Use sparingly.
+   Riskier because you’re modifying input without full parsing context.
 
 3. **Accept and document:** When the difference is cosmetic and both outputs are valid.
 
@@ -437,7 +448,8 @@ For each library difference, try in order:
 
 ### 6.3 Track workarounds systematically
 
-Every workaround gets a consistent `HACK:` comment (for library workarounds) or `FIXME:` comment (for items needing future resolution) with:
+Every workaround gets a consistent `HACK:` comment (for library workarounds) or `FIXME:`
+comment (for items needing future resolution) with:
 - What the difference is
 - Why it exists (library behavior)
 - Impact level (cosmetic / functional / critical)
@@ -447,9 +459,10 @@ This creates a searchable inventory: `grep -rn "HACK:\|FIXME:" src/`
 ### 6.4 Handling bugs in the original
 
 Porting frequently reveals bugs in the original because test writing forces exact
-specification of behavior. When you find one:
+specification of behavior.
+When you find one:
 
-1. Confirm it's a bug (run the Python code manually)
+1. Confirm it’s a bug (run the Python code manually)
 2. Write a failing test in the Python repo
 3. File a bug/PR upstream
 4. Decide: replicate the bug for byte-for-byte parity, or fix it in Rust
@@ -462,14 +475,14 @@ specification of behavior. When you find one:
 - More than 3 unfixable behavioral differences
 - A core feature is broken or missing
 - The cost of workarounds exceeds the cost of switching
-- You're early enough in the port to absorb the cost
+- You’re early enough in the port to absorb the cost
 
-**Don't switch if:**
+**Don’t switch if:**
 - Differences are cosmetic and both outputs are valid
 - Workarounds are isolated and testable
-- You're past 50% implementation
+- You’re past 50% implementation
 
----
+* * *
 
 ## Phase 7: Finalize and Validate
 
@@ -491,7 +504,7 @@ intentional divergences).
 ### 7.2 CLI parity (for CLI tools)
 
 If porting a CLI tool, verify:
-- `--help` output matches Python's format and content
+- `--help` output matches Python’s format and content
 - All flags and arguments work identically
 - Exit codes match (0 = success, 1 = error, 2 = usage error)
 - stdin/stdout/stderr routing matches
@@ -499,11 +512,11 @@ If porting a CLI tool, verify:
 
 For argument mapping from Python to Rust:
 - `argparse` / `click` / `typer` all map to `clap` with derive API
-- Enable clap's `cargo` feature for automatic `--version` from Cargo.toml
+- Enable clap’s `cargo` feature for automatic `--version` from Cargo.toml
 - Use `color-eyre` for rich error display
 
-See `tbd guidelines python-to-rust-cli-porting` (`guidelines/python-to-rust-cli-porting.md`)
-for detailed argument mapping tables.
+See [CLI-Specific Porting Patterns](guidelines/python-to-rust-cli-porting.md) for
+detailed argument mapping tables.
 
 ### 7.3 CI verification
 
@@ -527,16 +540,16 @@ All CI jobs must pass:
 ### 7.5 Release configuration
 
 Set up `release.toml` for cargo-release and a release CI workflow for cross-platform
-binary builds. See `tbd guidelines rust-project-setup` (`guidelines/rust-project-setup.md`)
-for templates.
+binary builds. See [Rust Project Setup](guidelines/rust-project-setup.md) for templates.
 
----
+* * *
 
 ## Phase 8: Ongoing Synchronization
 
 **Goal:** Keep the Rust port in sync as the Python version evolves.
 
-**Time:** Ongoing; each sync cycle takes 30-120 minutes depending on scope of Python changes.
+**Time:** Ongoing; each sync cycle takes 30-120 minutes depending on scope of Python
+changes.
 
 ### 8.1 When Python updates
 
@@ -561,12 +574,13 @@ Maintain a sync log documenting each update:
 
 ### 8.3 Divergence management
 
-Over time, intentional divergences accumulate. Track them:
+Over time, intentional divergences accumulate.
+Track them:
 - Divergences where Rust is better (keep)
 - Divergences forced by library differences (revisit if library updates)
 - Divergences from Python bugs (remove when Python fixes them)
 
----
+* * *
 
 ## Quick Reference: Effort Allocation
 
@@ -574,13 +588,14 @@ Over time, intentional divergences accumulate. Track them:
 | --- | --- | --- |
 | 1. Assess | 5% | Quick if test coverage is already measured |
 | 2. Research | 10% | High-leverage: thorough research shrinks Phase 6 |
-| 3. Plan | 5% | |
-| 4. Set up | 5% | |
+| 3. Plan | 5% |  |
+| 4. Set up | 5% |  |
 | 5. Port | 33% | Tests first, module by module |
 | 6. Library fixes | 32% | Often the single largest phase |
 | 7. Finalize | 10% | CLI parity, docs, release config |
 
-Phase 6 (library fixes) is consistently the largest effort sink. Budget for it explicitly.
+Phase 6 (library fixes) is consistently the largest effort sink.
+Budget for it explicitly.
 If your library evaluation in Phase 2 is thorough, Phase 6 shrinks significantly.
 
 ## Checklist Summary

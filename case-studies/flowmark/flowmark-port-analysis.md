@@ -3,8 +3,7 @@
 Analysis of the flowmark Python-to-Rust port looking for generalizable patterns, areas
 for automation, and future research directions.
 
-**Related:**
-[Library Choices](flowmark-port-library-choices.md) |
+**Related:** [Library Choices](flowmark-port-library-choices.md) |
 [Decision Log](flowmark-port-decision-log.md) |
 [Migration Plan](flowmark-port-migration-plan.md) |
 [Cross-Validation](flowmark-port-cross-validation.md) |
@@ -23,7 +22,7 @@ for automation, and future research directions.
 | --- | --- |
 | Project setup | Template generation (Cargo.toml, directory structure, CI/CD) |
 | Dependency mapping | Lookup table (Python pkg → Rust crate) |
-| Module structure creation | Mirror Python's module tree in Rust |
+| Module structure creation | Mirror Python’s module tree in Rust |
 | Function signature porting | Type mapping rules + code generation |
 | Unit test porting | Mechanical translation with type mapping |
 | CI/CD setup | Template GitHub Actions workflows |
@@ -41,7 +40,7 @@ for automation, and future research directions.
 
 ### Requires Human Judgment
 
-| Task | Why It Can't Be Automated |
+| Task | Why It Can’t Be Automated |
 | --- | --- |
 | Accepting intentional divergences | Requires domain knowledge |
 | Deciding to vendor/fork | Requires risk/effort assessment |
@@ -58,14 +57,15 @@ Every successful port follows this pattern:
 3. **Implement** (~33% of effort): TDD, module-by-module, leaf-first
 4. **Fix** (~32% of effort): Cross-validation, workarounds, documentation
 
-The fix phase consistently takes 30-50% of total effort. This is not waste -- it's
-where the port achieves production quality.
+The fix phase consistently takes 30-50% of total effort.
+This is not waste -- it’s where the port achieves production quality.
 
 ### 2. Tests as Specification
 
-The Python test suite is the most important artifact for a port. Not the source code.
-With 100% passing tests, the Rust implementation is correct by definition. Without
-tests, you're guessing.
+The Python test suite is the most important artifact for a port.
+Not the source code.
+With 100% passing tests, the Rust implementation is correct by definition.
+Without tests, you’re guessing.
 
 **Implication:** Before porting any Python app, invest in maximizing test coverage.
 Every untested code path is a potential bug in the Rust version.
@@ -79,21 +79,23 @@ pattern works:
 Input → Pre-process → Library → Post-process → Output
 ```
 
-This is general-purpose. It works for Markdown parsers, JSON formatters, HTML renderers,
-or any library where output needs adjustment.
+This is general-purpose.
+It works for Markdown parsers, JSON formatters, HTML renderers, or any library where
+output needs adjustment.
 
 ### 4. Cross-Validation as Quality Gate
 
 Running both implementations against the same inputs and diffing outputs is the most
-effective quality assurance technique for ports. It catches issues that:
+effective quality assurance technique for ports.
+It catches issues that:
 - Unit tests miss (complex input interactions)
 - Code review misses (subtle behavioral differences)
-- Static analysis can't detect (runtime output differences)
+- Static analysis can’t detect (runtime output differences)
 
 ### 5. Workaround Tracking with XXX Comments
 
 Marking every workaround with `XXX:` creates a searchable inventory of technical debt.
-This pattern generalizes to any project where you're working around third-party library
+This pattern generalizes to any project where you’re working around third-party library
 behavior.
 
 ## Empirical Data from the Flowmark Port
@@ -129,7 +131,8 @@ functionality in library code that Python delegates to C extensions or the runti
 
 ### Time Breakdown
 
-From the author's account (source: [flowmark-rs README](https://github.com/jlevy/flowmark-rs)):
+From the author’s account (source:
+[flowmark-rs README](https://github.com/jlevy/flowmark-rs)):
 
 | Phase | Observed effort | Notes |
 | --- | --- | --- |
@@ -137,29 +140,30 @@ From the author's account (source: [flowmark-rs README](https://github.com/jlevy
 | Porting plan | ~15% | Migration plan, library evaluation |
 | Additional plans | ~15% (parallel) | CI/CD plan, port checklist template |
 | Initial implementation | ~25% | TDD, module-by-module, 8-9 encouragement prompts needed |
-| Bug-fixing | ~30% | "The most painful part" — largest single phase |
+| Bug-fixing | ~30% | “The most painful part” — largest single phase |
 
 ### Key Operational Insights
 
-1. **100% AI-generated Rust code.** Every line of Rust was written by Claude. The human's
-   role was organizing architecture and testing up front, providing guidance during
-   bug-fixing, and enforcing quality standards.
+1. **100% AI-generated Rust code.** Every line of Rust was written by Claude.
+   The human’s role was organizing architecture and testing up front, providing guidance
+   during bug-fixing, and enforcing quality standards.
 
 2. **Zero-tolerance for output divergence.** The agent repeatedly insisted results were
-   "close enough" — the human had to enforce exact byte-for-byte matching. This
-   discipline is critical: relaxing it compounds into unacceptable drift.
+   “close enough” — the human had to enforce exact byte-for-byte matching.
+   This discipline is critical: relaxing it compounds into unacceptable drift.
 
 3. **Bug-fixing required explicit prompting to read code.** During the bug-fixing phase,
-   the agent had to be reminded multiple times to read code carefully and understand root
-   causes rather than attempting workarounds. The agent also needed explicit instruction
-   to read comrak's source code to identify specific flags and behavior.
+   the agent had to be reminded multiple times to read code carefully and understand
+   root causes rather than attempting workarounds.
+   The agent also needed explicit instruction to read comrak’s source code to identify
+   specific flags and behavior.
 
 4. **Multiple work trees for parallel investigation.** Claude Code cloud with multiple
    work trees avoided blocking on slow CI runs during the bug-fixing phase.
 
 5. **Porting reveals bugs in the original.** About a dozen corner case issues were
-   discovered, including actual bugs in the Python implementation. These were fixed in
-   Python with new tests, then the submodule was updated.
+   discovered, including actual bugs in the Python implementation.
+   These were fixed in Python with new tests, then the submodule was updated.
 
 6. **Cross-model review.** GPT-5 High was used as a sanity check on the planning
    documents, contributing minor improvements.
@@ -175,13 +179,14 @@ From the author's account (source: [flowmark-rs README](https://github.com/jlevy
 
 ### The Ideal Agent-Driven Workflow
 
-1. **Agent reads guidelines** (`tbd guidelines python-to-rust-porting-rules` etc.)
+1. **Agent reads guidelines**
+   ([Python-to-Rust Porting Rules](guidelines/python-to-rust-porting-rules.md), etc.)
 2. **Agent sets up project** using templates and checklists
 3. **Agent evaluates libraries** using the evaluation framework
 4. **Agent ports tests first** (mechanical translation with type mapping)
 5. **Agent implements modules** to make tests pass
 6. **Agent runs cross-validation** and categorizes differences
-7. **Human reviews** agent's categorization of differences
+7. **Human reviews** agent’s categorization of differences
 8. **Agent implements workarounds** for approved categories
 9. **Human decides** on unfixable differences (accept, fork, or switch)
 10. **Agent writes documentation** for all decisions and workarounds
@@ -190,7 +195,7 @@ From the author's account (source: [flowmark-rs README](https://github.com/jlevy
 
 For this workflow to work, agents need:
 
-1. **Comprehensive guidelines** (the docs we're creating in this effort)
+1. **Comprehensive guidelines** (the docs we’re creating in this effort)
 2. **Evaluation framework** for library selection (with real-world test criteria)
 3. **Type mapping tables** (Python → Rust, maintained and tested)
 4. **Workaround pattern library** (common fixes for common library differences)
@@ -207,12 +212,12 @@ Based on the flowmark experience:
 - **Performance optimization:** Profiling and trade-off analysis require human judgment.
 - **Architecture decisions:** When to use workspace vs single package, trait vs enum,
   etc.
-- **"Close enough" bias:** Agents tend to accept approximate output matching. Humans must
-  enforce zero-tolerance for byte-level divergence.
+- **“Close enough” bias:** Agents tend to accept approximate output matching.
+  Humans must enforce zero-tolerance for byte-level divergence.
 - **Workaround-first instinct:** Agents attempt workarounds before understanding root
   causes. Humans need to redirect them to read dependency source code.
-- **Sustained focus:** The initial implementation required 8-9 encouragement prompts
-  to keep the agent working through the full module set.
+- **Sustained focus:** The initial implementation required 8-9 encouragement prompts to
+  keep the agent working through the full module set.
 
 ## Handling Library Bugs: Generalizable Strategies
 
@@ -246,7 +251,7 @@ Porting frequently reveals bugs in the original because:
 
 ### Response Playbook
 
-1. **Confirm it's a bug.** Run the Python code manually to verify.
+1. **Confirm it’s a bug.** Run the Python code manually to verify.
 2. **Write a failing test** in the Python repo.
 3. **File a bug/PR** on the Python repo.
 4. **Decide:** replicate the bug for parity, or fix it in the Rust version.
@@ -259,13 +264,14 @@ Porting frequently reveals bugs in the original because:
 ### 1. Alternative Markdown Parsers
 
 **markdown-rs** (a Rust reimplementation inspired by micromark, by the unified.js
-author) deserves a thorough evaluation. It may provide better behavioral equivalence
-with web-ecosystem Markdown tools because it shares lineage with remark/rehype.
+author) deserves a thorough evaluation.
+It may provide better behavioral equivalence with web-ecosystem Markdown tools because
+it shares lineage with remark/rehype.
 
 **Research needed:**
 - Does markdown-rs support GFM tables, footnotes, task lists?
 - Does it provide AST access or just events?
-- How does its output compare to marko (Python) on flowmark's test fixtures?
+- How does its output compare to marko (Python) on flowmark’s test fixtures?
 - Is the ecosystem mature enough for production use?
 
 ### 2. Automated Cross-Validation Tooling
@@ -307,9 +313,10 @@ Define quantitative metrics for port quality:
 
 ## Conclusions
 
-The flowmark port demonstrates that **Python-to-Rust porting is highly automatable**
-for CLI applications with good test suites. The key bottleneck is library behavioral
-differences, which require human judgment for triage and strategy selection.
+The flowmark port demonstrates that **Python-to-Rust porting is highly automatable** for
+CLI applications with good test suites.
+The key bottleneck is library behavioral differences, which require human judgment for
+triage and strategy selection.
 
 With the right documentation, guidelines, and tooling:
 - Project setup: 100% automatable
@@ -321,7 +328,7 @@ A significant reduction in human effort (10-20X today, potentially more with mat
 tooling) is achievable for projects that:
 1. Have comprehensive Python test coverage (>=90%)
 2. Use libraries with well-matched Rust equivalents
-3. Don't require complex concurrent/async behavior
+3. Don’t require complex concurrent/async behavior
 4. Have well-documented requirements (tests as specification)
 
 For projects like flowmark (a CLI text processor with good tests), a complete port can

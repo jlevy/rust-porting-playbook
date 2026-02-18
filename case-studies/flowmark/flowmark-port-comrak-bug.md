@@ -1,7 +1,6 @@
 # Comrak Bug Report: Code Fence Parsing with Indented Lists
 
-**Related:**
-[Library Choices](flowmark-port-library-choices.md) |
+**Related:** [Library Choices](flowmark-port-library-choices.md) |
 [Decision Log D6](flowmark-port-decision-log.md#d6-comrak-fence-parsing-bug) |
 [Cross-Validation](flowmark-port-cross-validation.md)
 
@@ -21,23 +20,25 @@ out.
 
 - **Extensions enabled:** GFM (GitHub Flavored Markdown)
 
-> **Version note (2026-02-09):** This bug was identified and tested against comrak 0.29.0
-> (November 2025). Comrak has since evolved to 0.30+ through 0.50+. This bug may have been
-> fixed in a later release -- re-test against the current version before filing upstream.
-> If fixed, the pre-processing workaround in flowmark-rs (`escape_fence_list_markers()`)
-> can be removed.
+> **Version note (2026-02-09):** This bug was identified and tested against comrak
+> 0.29.0 (November 2025). Comrak has since evolved to 0.30+ through 0.50+. This bug may
+> have been fixed in a later release -- re-test against the current version before
+> filing upstream. If fixed, the pre-processing workaround in flowmark-rs
+> (`escape_fence_list_markers()`) can be removed.
 
 ## Minimal Reproduction
 
 ### Input Markdown:
 
-    ```yaml
-    jobs:
-      steps:
-        - item1
+````
+```yaml
+jobs:
+  steps:
+    - item1
 
-        - item2
-    ```
+    - item2
+```
+````
 
 ### Expected Output (Python marko, compliant parsers):
 
@@ -45,27 +46,33 @@ The fence should remain intact with all content inside.
 
 ### Actual Output (comrak 0.29.0):
 
-    ```yaml
-    jobs:
-      steps:
-        - item1
-    ```
+````
+```yaml
+jobs:
+  steps:
+    - item1
+```
 
-    - item2
-    ```
-    ```
+- item2
+```
+```
+````
 
-The fence closes early, `- item2` leaks out as a list item, followed by an empty fence pair.
+The fence closes early, `- item2` leaks out as a list item, followed by an empty fence
+pair.
 
 ## Root Cause Analysis
 
-Through code analysis of comrak's parser (`parser/mod.rs`):
+Through code analysis of comrak’s parser (`parser/mod.rs`):
 
-1. **Trigger Condition:** Content indented >= 4 spaces (`CODE_INDENT`) inside a fenced code block, following a blank line, that begins with a list marker (`-`)
+1. **Trigger Condition:** Content indented >= 4 spaces (`CODE_INDENT`) inside a fenced
+   code block, following a blank line, that begins with a list marker (`-`)
 
 2. **Parser Logic Flaw:**
-   - When parsing line `    - item2` (4 spaces + list marker) inside an open fenced code block:
-   - The parser's `parse_code_block_prefix()` correctly identifies we're in a fenced block
+   - When parsing line ` - item2` (4 spaces + list marker) inside an open fenced code
+     block:
+   - The parser’s `parse_code_block_prefix()` correctly identifies we’re in a fenced
+     block
    - However, `open_new_blocks()` is subsequently called
    - The `CODE_INDENT` check (>= 4 spaces) triggers indented code block logic
    - This causes the fence to close prematurely
@@ -84,13 +91,15 @@ Through code analysis of comrak's parser (`parser/mod.rs`):
 
 Input with 3-space indentation:
 
-    ```yaml
-    jobs:
-      steps:
-       - item1
+````
+```yaml
+jobs:
+  steps:
+   - item1
 
-       - item2
-    ```
+   - item2
+```
+````
 
 ✅ Parses correctly
 
@@ -98,13 +107,15 @@ Input with 3-space indentation:
 
 Input with 4-space indentation (standard YAML):
 
-    ```yaml
-    jobs:
-      steps:
-        - item1
+````
+```yaml
+jobs:
+  steps:
+    - item1
 
-        - item2
-    ```
+    - item2
+```
+````
 
 ❌ Fence breaks, content leaks
 
@@ -112,13 +123,15 @@ Input with 4-space indentation (standard YAML):
 
 Input with 5-space indentation:
 
-    ```yaml
-    jobs:
-      steps:
-         - item1
+````
+```yaml
+jobs:
+  steps:
+     - item1
 
-         - item2
-    ```
+     - item2
+```
+````
 
 ❌ Fence breaks, content leaks
 
@@ -126,12 +139,14 @@ Input with 5-space indentation:
 
 Input without blank line between items:
 
-    ```yaml
-    jobs:
-      steps:
-        - item1
-        - item2
-    ```
+````
+```yaml
+jobs:
+  steps:
+    - item1
+    - item2
+```
+````
 
 ✅ Parses correctly - blank line is required trigger
 
@@ -140,7 +155,7 @@ Input without blank line between items:
 This bug affects:
 - GitHub Actions workflow examples
 - Any YAML/configuration documentation
-- CI/CD pipeline documentation  
+- CI/CD pipeline documentation
 - Kubernetes manifests
 - Any indented list syntax in code examples
 
@@ -174,12 +189,15 @@ fenced CodeBlock.
 ## Workarounds
 
 ### Workaround 1: Adjust Indentation
+
 Use 3 spaces or other non-4-space indentation in examples (breaks YAML validity).
 
 ### Workaround 2: Remove Blank Lines
+
 Eliminate blank lines between list items in code examples (reduces readability).
 
 ### Workaround 3: Post-Processing (lossy)
+
 Regex-based repairs after rendering, but this loses indentation information:
 ```rust
 // Pattern: \n\n```\n<leaked>\n```\n```
@@ -188,6 +206,7 @@ Regex-based repairs after rendering, but this loses indentation information:
 ```
 
 ### Workaround 4: Vendor comrak
+
 Fork comrak and patch the parser (recommended for production use).
 
 ## References
@@ -204,13 +223,15 @@ Fork comrak and patch the parser (recommended for production use).
 
 To verify the fix, create a test file with this content:
 
-    ```yaml
-    jobs:
-      steps:
-        - item1
+````
+```yaml
+jobs:
+  steps:
+    - item1
 
-        - item2
-    ```
+    - item2
+```
+````
 
 Then test with comrak:
 
@@ -218,5 +239,5 @@ Then test with comrak:
 comrak test.md
 ```
 
-**Expected result:** single code block with all content preserved
-**Current result:** broken fence with leaked content
+**Expected result:** single code block with all content preserved **Current result:**
+broken fence with leaked content

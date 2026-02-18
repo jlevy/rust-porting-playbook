@@ -1,8 +1,8 @@
 # Python→Rust Initial Port Checklist
 
-**Reference:** This checklist implements the process described in the [Python-to-Rust
-Playbook](python-to-rust-playbook.md) (8-phase process) and the [Python to Rust CLI
-Porting Guide](python-to-rust-porting-guide.md).
+**Reference:** This checklist implements the process described in the
+[Python-to-Rust Playbook](python-to-rust-playbook.md) (8-phase process) and the
+[Python to Rust CLI Porting Guide](python-to-rust-porting-guide.md).
 See those guides for detailed explanations, pitfalls, and patterns.
 
 **Instructions:** Copy this document to port-checklist-initial-202Y-MM-DD.md (filling in
@@ -10,8 +10,8 @@ the date as appropriate).
 Use a copy so this original template is not altered.
 (But only one copy should be needed per project.)
 
-**Related:** [Subsequent Update Checklist](port-checklist-update.md) | [Rust CLI Best
-Practices](rust-cli-best-practices.md)
+**Related:** [Subsequent Update Checklist](port-checklist-update.md) |
+[Rust CLI Best Practices](rust-cli-best-practices.md)
 
 * * *
 
@@ -19,7 +19,7 @@ Practices](rust-cli-best-practices.md)
 > parity with every original Python test, and byte-for-byte matching with documented
 > exceptions on all comparisons (zero unexplained diffs).
 > This includes:
->
+> 
 > - Test output and processing results
 >
 > - CLI command output (help, errors, warnings, status messages)
@@ -27,15 +27,16 @@ Practices](rust-cli-best-practices.md)
 > - Cross-validation across all fixtures
 >
 > - File outputs (no whitespace or encoding differences unless documented)
->
+> 
 > Documented exceptions are acceptable when: (a) the Rust output is objectively correct
 > and the Python output is a bug, (b) the difference is cosmetic and both outputs are
-> valid per specification, or (c) the difference is an intentional improvement. All
-> exceptions must be recorded with rationale.
+> valid per specification, or (c) the difference is an intentional improvement.
+> All exceptions must be recorded with rationale.
 
 ## Phase 1: Assess the Original Project
 
-*(Corresponds to [Playbook Phase 1](python-to-rust-playbook.md#phase-1-assess-the-original-project))*
+*(Corresponds to
+[Playbook Phase 1](python-to-rust-playbook.md#phase-1-assess-the-original-project))*
 
 - [ ] **Codebase Measurement**
 
@@ -78,7 +79,8 @@ Practices](rust-cli-best-practices.md)
 
 ## Phase 2: Research and Library Evaluation
 
-*(Corresponds to [Playbook Phase 2](python-to-rust-playbook.md#phase-2-research-and-library-evaluation))*
+*(Corresponds to
+[Playbook Phase 2](python-to-rust-playbook.md#phase-2-research-and-library-evaluation))*
 
 - [ ] **High-Risk Dependency Evaluation**
 
@@ -86,7 +88,8 @@ Practices](rust-cli-best-practices.md)
 
   - [ ] Create feature comparison matrix for each
 
-  - [ ] Run proof-of-concept tests with real project inputs (not just feature checkboxes)
+  - [ ] Run proof-of-concept tests with real project inputs (not just feature
+    checkboxes)
 
   - [ ] Count and categorize differences (0 = ideal, 1-5 cosmetic = acceptable, 6+ =
     consider alternatives)
@@ -108,7 +111,8 @@ Practices](rust-cli-best-practices.md)
 
 - [ ] **Architecture Decision**
 
-  - [ ] Choose single package vs workspace (single package recommended for most projects)
+  - [ ] Choose single package vs workspace (single package recommended for most
+    projects)
 
   - [ ] Define crate structure (library + binary)
 
@@ -129,11 +133,13 @@ Practices](rust-cli-best-practices.md)
   - [ ] CI pipeline passing
 
 > **Completion Gate:** Concrete plan exists that specifies architecture, module order,
-> and acceptance criteria. Budget allocates 40-50% of effort for library workarounds.
+> and acceptance criteria.
+> Budget allocates 40-50% of effort for library workarounds.
 
 ## Phase 4: Project Setup
 
-*(Corresponds to [Playbook Phase 4](python-to-rust-playbook.md#phase-4-set-up-the-rust-project))*
+*(Corresponds to
+[Playbook Phase 4](python-to-rust-playbook.md#phase-4-set-up-the-rust-project))*
 
 - [ ] **Repository Structure**
 
@@ -173,13 +179,13 @@ Practices](rust-cli-best-practices.md)
   - [ ] Create `build.rs` to extract Python version from submodule for `--version`
     display
 
-  - [ ] Update CLI to show both versions: `project-cli 0.1.0 (port of python-project
-    0.5.5)`
+  - [ ] Update CLI to show both versions:
+    `project-cli 0.1.0 (port of python-project 0.5.5)`
 
   - [ ] Create `docs/version-history.md` with table tracking version correspondence:
     ```markdown
     # Version History
-    
+
     | Rust Version | Python Version | Date       | Notes |
     |--------------|----------------|------------|-------|
     | 0.1.0        | v0.5.5         | 2024-11-02 | Initial port |
@@ -227,7 +233,9 @@ Practices](rust-cli-best-practices.md)
 
 ## Phase 5: Dependencies & Core Setup
 
-*(Corresponds to [Playbook Phase 4](python-to-rust-playbook.md#phase-4-set-up-the-rust-project), continued)*
+*(Corresponds to
+[Playbook Phase 4](python-to-rust-playbook.md#phase-4-set-up-the-rust-project),
+continued)*
 
 - [ ] **Map and Add Core Dependencies**
 
@@ -236,8 +244,8 @@ Practices](rust-cli-best-practices.md)
   - [ ] Error handling: `thiserror = "2"` (library errors), `color-eyre = "0.6"` or
     `anyhow = "1.0"` (application errors)
 
-  - [ ] Logging: `tracing = "0.1"`, `tracing-subscriber = { version = "0.3", features =
-    ["env-filter"] }`
+  - [ ] Logging: `tracing = "0.1"`,
+    `tracing-subscriber = { version = "0.3", features = ["env-filter"] }`
 
   - [ ] Serialization (if needed): `serde`, `toml`, `serde_json`, `serde_yaml_ng`
 
@@ -284,13 +292,14 @@ Practices](rust-cli-best-practices.md)
 
     - [ ] Use Unicode escapes (`\u{2019}`) in tests for clarity
 
-- [ ] **Critical Pitfalls Checklist** (see [Key Non-Obvious Pitfalls](python-to-rust-porting-guide.md#key-non-obvious-pitfalls))
+- [ ] **Critical Pitfalls Checklist** (see
+  [Key Non-Obvious Pitfalls](python-to-rust-porting-guide.md#key-non-obvious-pitfalls))
 
-  - [ ] Regex: Add `^` anchor to patterns used with Python's `re.match()`
+  - [ ] Regex: Add `^` anchor to patterns used with Python’s `re.match()`
 
   - [ ] Regex: Use `fancy-regex` if look-arounds/backreferences needed
 
-  - [ ] Strings: Return unchanged input when Python does (no "helpful" transforms)
+  - [ ] Strings: Return unchanged input when Python does (no “helpful” transforms)
 
   - [ ] Function signatures: Match exactly (no `Option<>` or `Result<>` mismatches)
 
@@ -302,7 +311,7 @@ Practices](rust-cli-best-practices.md)
 
   - [ ] String slicing: Use `.chars()` iterator to avoid panics on char boundaries
 
-  - [ ] Library types: Convert explicitly (e.g., comrak's `CowStr`/`Vec<u8>` to
+  - [ ] Library types: Convert explicitly (e.g., comrak’s `CowStr`/`Vec<u8>` to
     `String`)
 
   - [ ] Dict ordering: Use `IndexMap` if Python dict iteration order matters
@@ -321,12 +330,14 @@ Practices](rust-cli-best-practices.md)
 
   - [ ] Add Rust-specific unit tests for development/edge cases (beyond Python parity)
 
-> **Completion Gate:** All ported unit tests pass. Integration tests confirm output
-> matches expected fixtures (with documented exceptions only).
+> **Completion Gate:** All ported unit tests pass.
+> Integration tests confirm output matches expected fixtures (with documented exceptions
+> only).
 
 ## Phase 7: Handle Library Differences
 
-*(Corresponds to [Playbook Phase 6](python-to-rust-playbook.md#phase-6-handle-library-differences))*
+*(Corresponds to
+[Playbook Phase 6](python-to-rust-playbook.md#phase-6-handle-library-differences))*
 
 - [ ] **Cross-Validation and Failure Categorization**
 
@@ -404,13 +415,15 @@ Practices](rust-cli-best-practices.md)
 
     - [ ] Verify error messages match (byte-for-byte with documented exceptions)
 
-    - [ ] Verify status/warning messages match (byte-for-byte with documented exceptions)
+    - [ ] Verify status/warning messages match (byte-for-byte with documented
+      exceptions)
 
     - [ ] Verify exit codes match (0 success, 1 errors, 2 usage)
 
 ## Phase 9: Testing & Validation
 
-*(Corresponds to [Playbook Phase 7](python-to-rust-playbook.md#phase-7-finalize-and-validate))*
+*(Corresponds to
+[Playbook Phase 7](python-to-rust-playbook.md#phase-7-finalize-and-validate))*
 
 - [ ] **Test Coverage**
 
@@ -437,8 +450,8 @@ Practices](rust-cli-best-practices.md)
 
   - [ ] Run validation across all fixtures
 
-  - [ ] Verify zero unexplained diffs between Python and Rust output (byte-for-byte
-    with documented exceptions)
+  - [ ] Verify zero unexplained diffs between Python and Rust output (byte-for-byte with
+    documented exceptions)
 
   - [ ] Verify all file outputs match (no whitespace/encoding differences unless
     documented)
@@ -551,7 +564,8 @@ Practices](rust-cli-best-practices.md)
 
 ## Phase 13: Scripts & Automation
 
-*(Corresponds to [Playbook Phase 8](python-to-rust-playbook.md#phase-8-ongoing-synchronization))*
+*(Corresponds to
+[Playbook Phase 8](python-to-rust-playbook.md#phase-8-ongoing-synchronization))*
 
 - [ ] **Create Sync Script** (for ongoing Python synchronization)
 
@@ -658,8 +672,8 @@ Practices](rust-cli-best-practices.md)
 
 - [ ] **Runtime Performance**
 
-  - [ ] Processing speed >= 10x faster than Python (benchmark critical paths; 50-100x
-    is typical for well-optimized ports)
+  - [ ] Processing speed >= 10x faster than Python (benchmark critical paths; 50-100x is
+    typical for well-optimized ports)
 
   - [ ] No performance regressions in hot paths
 
@@ -667,8 +681,8 @@ Practices](rust-cli-best-practices.md)
 
 - [ ] **Code Quality** *(Zero warnings/errors required)*
 
-  - [ ] Zero clippy warnings (`cargo clippy --all-targets --all-features -- -D
-    warnings`)
+  - [ ] Zero clippy warnings
+    (`cargo clippy --all-targets --all-features -- -D warnings`)
 
   - [ ] Zero format diffs (`cargo fmt --all -- --check`)
 
@@ -715,7 +729,7 @@ Practices](rust-cli-best-practices.md)
 Record all byte-for-byte matching exceptions here with rationale:
 
 | # | Location | Description | Category | Rationale |
-|---|----------|-------------|----------|-----------|
+| --- | --- | --- | --- | --- |
 | 1 | *(example: help text line wrapping)* | *(clap wraps at 80 cols vs argparse at 79)* | *(cosmetic)* | *(both valid, difference is 1 char)* |
 
 Categories: **Python bug** (Rust is correct), **cosmetic** (both outputs valid),
@@ -735,4 +749,5 @@ If conducting this port as a case study to improve the playbook:
 See the [meta-playbook](meta-improving-this-playbook.md) for the full process.
 
 **Port is complete when ALL mandatory items above are checked.
-Zero unexplained failures accepted. All exceptions must be documented with rationale.**
+Zero unexplained failures accepted.
+All exceptions must be documented with rationale.**
