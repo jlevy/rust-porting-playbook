@@ -9,8 +9,10 @@ anti-patterns observed during porting work.
 These principles override convenience, speed, and local judgment.
 There are no exceptions.
 
-See also: [Python-to-Rust Porting Rules](guidelines/python-to-rust-porting-rules.md),
-[Test Coverage for Porting](guidelines/test-coverage-for-porting.md).
+See also: [Python-to-Rust Porting Rules](guidelines/python-to-rust-porting-rules.md) and
+[Test Coverage for Porting](guidelines/test-coverage-for-porting.md) (for implementation
+specifics: fixture organization, golden test patterns, coverage tools, and
+cross-validation mechanics).
 
 ## Key Principles
 
@@ -45,6 +47,12 @@ None are hypothetical.
 7. **Ignored tests are only allowed for work that’s been explicitly deferred by the
    user.** Every `#[ignore]` needs a reason string and a tracking issue.
    Ignored tests are debt.
+
+8. **Disparities must be tested before they are fixed, and investigated
+   systematically.** When a disparity is found, write a discriminating test before
+   attempting any fix. If no equivalent test exists in the original, add one there first.
+   Then investigate the class of behavior the disparity represents — one discovered gap
+   usually means more are hiding nearby.
 
 * * *
 
@@ -113,6 +121,31 @@ When writing or refining a parity spec:
 - Only exclude something if the user explicitly approves the exclusion.
 - Document tolerated variations as a short, closed list — not an open-ended “and similar
   differences.”
+
+### Anti-Pattern: Improving on the Original Without Approval
+
+**What happens:** An agent discovers the Python implementation has a bug or suboptimal
+behavior. Instead of matching it exactly, the agent “improves” the Rust port to do the
+right thing. The port now diverges from the original intentionally, but with no test
+comparing the two, the divergence is invisible.
+
+**Why agents do this:** Matching a known bug feels wrong.
+The correct behavior seems obvious, and the agent reasons the user would want the
+improvement.
+
+**The fix:** Parity means parity, including bugs.
+The default is to match the original's behavior exactly.
+
+1. Match the buggy behavior in the port.
+2. Write a test that captures the (buggy) behavior and passes against both
+   implementations.
+3. Note the bug in the spec or as a tracked issue — agents should absolutely document
+   bugs they discover in the original. But documenting is not fixing. The bug is a
+   separate issue to escalate as unresolved at the end of the current development
+   cycle, not a reason to diverge from the original now.
+4. If the user explicitly approves fixing the bug during the current cycle, fix it in
+   both implementations and add the intentional divergence to the tolerated variations
+   list.
 
 * * *
 
@@ -484,6 +517,105 @@ whether the underlying issue was ever fixed.
 
 * * *
 
+## Principle 8: Disparities Must Be Tested Before They Are Fixed, and Investigated Systematically
+
+**When a disparity is discovered, the first action is to write a test that reveals it.
+Only after the test fails do you attempt a fix.
+After every disparity, systematically investigate the class of behavior it represents.**
+
+A disparity without a discriminating test is unverified — you cannot prove it existed,
+and you cannot prove your fix addressed it.
+The test-before-fix sequence is non-negotiable:
+
+1. **Write a test against the original’s behavior.** The expected output comes from the
+   Python reference implementation.
+   The test must specifically reveal the disparity, not just exercise the code path.
+
+2. **Confirm the test fails.** If it doesn’t fail, either the disparity isn’t real or
+   the test doesn’t discriminate.
+   Revise the test until it captures the actual divergence.
+
+3. **Add the test upstream if it doesn’t exist.** If the original implementation has no
+   test covering this behavior, add one.
+   Run it against the original to confirm it passes.
+   This validates the test itself — if the test fails against the original, the test is
+   wrong, not the original.
+   This also protects the reference implementation from regressions.
+
+4. **Investigate the class, not just the instance.** Every disparity is a symptom.
+   Ask: what category of behavior does this represent?
+   Are there other inputs, flags, or code paths where the same kind of divergence could
+   occur? A single discovered disparity should trigger a systematic search for related
+   ones.
+
+5. **Then fix.** With a failing test in hand and related disparities investigated, now
+   attempt the fix. The test going green is the proof.
+
+### Anti-Pattern: Fix Without Evidence
+
+**What happens:** An agent notices a behavioral difference, immediately fixes the Rust
+code, and reports the fix.
+There is no test that demonstrated the disparity before the fix and no test that
+verifies the fix is correct.
+The agent’s claim that the gap is closed is unverifiable.
+
+**Example (real):** An agent reports: “Fixed reference link inlining to match Python
+behavior.” But no test compares reference link output between the two implementations.
+The fix may be correct for the one file the agent checked manually, but without a
+discriminating test, regressions are invisible and edge cases are uncovered.
+
+**Why agents do this:** The fix feels obvious and the agent wants to show progress.
+Writing the test first feels like bureaucracy when you already know what’s wrong.
+
+**The fix:** No fix is accepted without a test that was red before and green after.
+This is not overhead — it is the only way to verify the fix works and to prevent
+regressions. The test is the deliverable; the code change is secondary.
+
+### Anti-Pattern: Fixing the Instance, Not the Class
+
+**What happens:** An agent finds that one specific input produces different output.
+The agent fixes that case and moves on.
+Later, a different input triggers the same category of divergence — different escaping
+logic, different whitespace handling, different flag interpretation — because the agent
+treated the symptom, not the cause.
+
+**Example (real):** An agent fixes escape handling for `\"` but doesn’t investigate
+other escape sequences (`\\`, `\n`, `\t`, `\*`). Each subsequent escape-handling
+disparity is discovered and fixed individually across multiple sessions, each time
+presented as a new finding.
+
+**Why agents do this:** Fixing the specific reported case feels complete.
+Investigating the broader category requires more work and might surface additional
+failures that complicate the current PR.
+
+**The fix:** When you find a disparity, generalize before you fix:
+
+1. **Name the category.** “Escape handling,” “whitespace normalization,” “path
+   resolution,” “flag parsing.”
+   If you can name it, you can search for it.
+
+2. **Enumerate the instances.** What are all the inputs, flags, or code paths in this
+   category? If you fixed `\"`, what about every other escape sequence?
+
+3. **Write tests for the category, not just the instance.** A single test for `\"` is
+   insufficient. Write tests for the full set of escape sequences, confirm which pass and
+   which fail, and track all failures.
+
+4. **Report the scope.** “I found a disparity in escape handling for `\"`. I
+   investigated all escape sequences and found 3 additional disparities: `\\`, `\n`, and
+   `\*`. I’ve added failing tests for all 4 and fixed 2 of them.
+   The remaining 2 are tracked in issues #NNN and #NNN."
+
+This principle applies retroactively.
+When a disparity is found that was not caught by existing tests, this is evidence that
+the test suite has a gap in that category.
+The agent must ask: “Why didn’t our tests catch this?
+What other behaviors in this category are also untested?”
+Every missed disparity is a lesson about what the test suite is not covering, and that
+lesson must be generalized.
+
+* * *
+
 ## Compliance Checklist
 
 Use this checklist at the end of every porting session, PR, or milestone to verify
@@ -518,8 +650,8 @@ prominently tracked before the work is considered done.
 
 - [ ] All tests, without exception, run as part of CI. No test file exists that is not
   executed by the CI pipeline.
-- [ ] No tests are `#[ignore]`d. If a test cannot be made to pass, the port is
-  prominently marked as incomplete with a tracked issue to fix it.
+- [ ] No tests are `#[ignore]`d without a reason string and a corresponding tracked
+  issue. If any `#[ignore]`d tests remain, the port is explicitly marked as incomplete.
 - [ ] No test contains “graceful” degradation that silently passes when a dependency is
   missing or a check fails.
 
@@ -543,19 +675,34 @@ prominently tracked before the work is considered done.
 - [ ] Every `#[ignore]` annotation (if any remain) has a reason string and a
   corresponding tracking issue.
 
+### Test-Before-Fix Discipline
+
+- [ ] Every disparity fix was preceded by a discriminating test that failed before the
+  fix and passed after.
+- [ ] For every disparity test, an equivalent test exists in the original implementation
+  (or was added) confirming the expected behavior.
+- [ ] Every discovered disparity triggered investigation of the broader category — not
+  just the specific instance.
+- [ ] No disparity was fixed without first naming the class of behavior it belongs to
+  and checking for related gaps.
+- [ ] Every missed disparity (found late or by the user) resulted in a review of why
+  existing tests did not catch it and what other behaviors in that category are
+  untested.
+
 * * *
 
 ## Summary
 
 | # | Principle | Anti-Pattern |
 | --- | --- | --- |
-| 1 | Parity must be defined crisply and never redefined | Implicit scope reduction |
+| 1 | Parity must be defined crisply and never redefined | Implicit scope reduction; improving on the original without approval |
 | 2 | Agents must actively pursue parity | Passive gap acknowledgment; stale ignores; "pre-existing"/"out of scope" dismissals |
 | 3 | Tests must always run in CI | Orphaned tests that exist but never execute |
 | 4 | Tests must never hide failures | “Graceful” degradation; massaging golden tests |
 | 5 | Fix the process, not the test | Disabling tests to unblock development |
 | 6 | Environment deps must be enforced | Tolerating missing dependencies at runtime |
 | 7 | Ignored tests must be tracked | Untracked `#[ignore]` annotations |
+| 8 | Disparities must be tested before fixed | Fix without evidence; fixing the instance not the class |
 
 **When in doubt:** A loud failure is always better than a silent pass.
 A red CI that shows a real parity gap is always better than a green CI that hides one.
