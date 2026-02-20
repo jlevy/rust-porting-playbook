@@ -107,8 +107,8 @@ Would require custom renderer to preserve original markers.
 
 ### Implementation Details
 
-All workarounds are marked with `XXX:` comments in
-`crates/flowmark-core/src/formatter/filling.rs`:
+All workarounds are marked with `COMRAK-WORKAROUND` labels in
+`src/formatter/filling.rs` (originally `XXX:`, migrated to structured labels):
 
 - `fix_thematic_breaks()` - Preserves original thematic break format
 
@@ -139,9 +139,9 @@ All workarounds are marked with `XXX:` comments in
 
 - `fix_square_bracket_escaping()` - Removes comrak’s added bracket escapes
 
-Search for `XXX:` to find all workarounds:
+Search for workarounds:
 ```bash
-grep -n "XXX:" crates/flowmark-core/src/formatter/filling.rs
+grep -n "COMRAK-WORKAROUND\|FIXME:" src/formatter/filling.rs
 ```
 
 Search for unfixable issues:

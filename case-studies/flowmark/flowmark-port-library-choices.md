@@ -223,9 +223,10 @@ rendered text rather than modifying the parser’s input.
 | List marker normalization | comrak hardcodes `-` renderer | Low | Accept: both valid Markdown |
 | Hyphen escape removal | comrak removes `\-` during parsing | Very low | Accept: rare in real use |
 
-All workarounds use consistent `XXX:` comment marking for searchability:
+All workarounds use consistent `COMRAK-WORKAROUND` label marking for searchability
+(originally `XXX:`, migrated to structured labels recognized by linters):
 ```rust
-/// XXX: comrak escapes underscores like `x86\_64` but Python doesn't.
+/// COMRAK-WORKAROUND: comrak escapes underscores like `x86\_64` but Python doesn't.
 /// Workaround: post-process to remove unnecessary escapes.
 /// Impact: low -- cosmetic only.
 fn fix_underscore_escaping(text: &str) -> String {

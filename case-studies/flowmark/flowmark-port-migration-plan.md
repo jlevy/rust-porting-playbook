@@ -3251,18 +3251,15 @@ These have different rendering behaviors that required post-processing workaroun
   positions. This is hardcoded in comrak and **cannot be fixed** without
   vendoring/forking comrak.
 
-All workarounds are marked with `XXX:` comments in
-`crates/flowmark-core/src/formatter/filling.rs`. The unfixable issue is marked with
-`FIXME:` comment.
+All workarounds are marked with `COMRAK-WORKAROUND` labels in
+`src/formatter/filling.rs` (originally `XXX:`, migrated to structured labels). The
+unfixable issue is marked with `FIXME:`.
 
 ### Finding Workarounds
 
 ```bash
 # Find all comrak workarounds
-grep -n "XXX:" crates/flowmark-core/src/formatter/filling.rs
-
-# Find unfixed issues
-grep -n "FIXME:" crates/flowmark-core/src/formatter/filling.rs
+grep -n "COMRAK-WORKAROUND\|FIXME:" src/formatter/filling.rs
 ```
 
 These indicate fragile code that depends on specific comrak output format and may break

@@ -495,7 +495,7 @@ See [Library Choices](flowmark-port-library-choices.md) for the full workaround 
 1. Run all tests, categorize failures: parser difference / porting bug / Python bug
 2. For each parser difference: can we pre-process?
    post-process? or is it unfixable?
-3. Track everything with `XXX:` comments in the code
+3. Track everything with `HACK:`/`FIXME:` comments in the code
 
 **Python bugs discovered** during cross-validation:
 - Inconsistent heading spacing (no blank line after headings)
@@ -527,17 +527,30 @@ See [Library Choices](flowmark-port-library-choices.md) for the full workaround 
 | Lines of Rust (tests) | ~2,900 (1,600 inline + 1,300 integration) |
 | Rust/Python app code ratio | ~1.7x |
 
+### Key Metrics (v2 Current)
+
+| Metric | Value |
+| --- | --- |
+| Python tests | 292 |
+| Rust tests | 442 |
+| Test mapping | 292 mapped (100%), 0 missing |
+| Lines of Python (app) | ~4,400 |
+| Lines of Rust (app) | ~6,000 |
+| Rust/Python app code ratio | ~1.36x |
+| Workaround comments | 65 (`COMRAK-WORKAROUND`/`FIXME:`) |
+
 ## Summary of Key Tactics
 
 1. **Research before coding.** Spend 30-60 min on ecosystem research.
    Write it down.
 2. **Plan comprehensively.** Feature matrix, library evaluation, architecture decisions.
-3. **Port tests first.** TDD ensures you know when you’re done.
+3. **Port tests first.** TDD ensures you know when you're done.
 4. **Port leaf modules first, integration modules last, CLI last.**
 5. **Expect parser differences.** Budget 50% of time for workarounds.
 6. **Use post-processing liberally.** A chain of `fix_*` functions is practical.
-7. **Document everything with `XXX:` comments.**
+7. **Document everything with structured comments** (`HACK:`, `FIXME:`, or
+   project-specific labels like `COMRAK-WORKAROUND`).
 8. **Accept unfixable differences.** Document them clearly, move on.
 9. **Cross-validate continuously.** Run both implementations, diff outputs.
 10. **Keep the Rust version cleaner where it makes sense.** Matching Python bugs
-    verbatim isn’t always the right call.
+    verbatim isn't always the right call.

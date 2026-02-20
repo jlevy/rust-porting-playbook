@@ -92,18 +92,21 @@ It catches issues that:
 - Code review misses (subtle behavioral differences)
 - Static analysis can’t detect (runtime output differences)
 
-### 5. Workaround Tracking with XXX Comments
+### 5. Workaround Tracking with Structured Comments
 
-Marking every workaround with `XXX:` creates a searchable inventory of technical debt.
-This pattern generalizes to any project where you’re working around third-party library
-behavior.
+Marking every workaround with `HACK:` or a project-specific label (e.g.,
+`COMRAK-WORKAROUND`) creates a searchable inventory of technical debt. Use `FIXME:` for
+items needing future resolution. Avoid `XXX:` as it is not recognized by most linters
+and IDEs. This pattern generalizes to any project where you're working around
+third-party library behavior.
 
 ## Empirical Data from the Flowmark Port
 
-The following data comes from the actual flowmark port (Python v0.5.5 → Rust v0.1.3),
-verified against the source repos.
+The following data comes from the actual flowmark port, verified against the source
+repos. The initial port (v1, Python v0.5.5 → Rust v0.1.3) is documented below, with
+v2 current metrics in the update section.
 
-### Code Metrics
+### Code Metrics (v1 Initial Port)
 
 | Metric | Python | Rust |
 | --- | --- | --- |
@@ -115,13 +118,24 @@ verified against the source repos.
 The 6 doctests run on large real documents with various formatting flags, providing
 significant end-to-end coverage beyond their line count.
 
+### Code Metrics (v2 Current)
+
+| Metric | Python | Rust |
+| --- | --- | --- |
+| Application code | ~4,400 lines | ~6,000 lines |
+| Rust/Python ratio | -- | ~1.36x |
+| Python tests | 292 | -- |
+| Rust tests | -- | 442 |
+| Test mapping | 292 mapped (100%) | 0 missing |
+| Workaround comments | -- | 65 (`COMRAK-WORKAROUND`/`FIXME:`) |
+
 ### Dependency Footprint
 
 | Dependency | Python LOC | Rust Equivalent | Rust LOC |
 | --- | --- | --- | --- |
 | Markdown parser | marko: ~3,800 | comrak: ~47,600 | 12.5x larger |
 | Regex engine | regex: ~10,000 (Python wrapper + C ext) | regex: ~12,000 (pure Rust) | ~1.2x |
-| Serialization | -- | serde + serde_yaml: ~30,600 | -- |
+| Serialization | -- | serde + serde_yaml_ng: ~30,600 | -- |
 | Unicode | -- | unicode-segmentation: ~8,400 | -- |
 | Error handling | -- | thiserror: ~2,800 | -- |
 | Total deps | ~14,800 | ~101,400 (core only) | ~6.9x |
