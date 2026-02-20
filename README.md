@@ -30,6 +30,7 @@ rust-porting-playbook/
 │   ├── python-to-rust-porting-guide.md
 │   ├── rust-cli-best-practices.md
 │   ├── rust-code-review-checklist.md
+│   ├── cross-language-test-mapping.md
 │   ├── python-to-rust-test-coverage-playbook.md
 │   ├── port-checklist-initial-template.md
 │   ├── port-checklist-update-template.md
@@ -43,6 +44,9 @@ rust-porting-playbook/
 │   ├── rust-cli-app-patterns.md
 │   ├── rust-project-setup.md
 │   └── test-coverage-for-porting.md
+├── guidelines/                # Compact rules for AI agent context (~2-3k tokens each)
+│   ├── porting-principles-and-antipatterns.md   # 9 principles + anti-patterns
+│   └── ...
 └── case-studies/              # Real-world porting examples
     └── flowmark/              # Python Markdown formatter → Rust
         ├── flowmark-port-library-choices.md
@@ -104,15 +108,15 @@ prompt or context.
 The `case-studies/flowmark/` directory documents the port of
 [flowmark](https://github.com/jlevy/flowmark) (a Python Markdown formatter) to
 [flowmark-rs](https://github.com/jlevy/flowmark-rs).
-Key stats:
+Key stats (v2, current):
 
-- Python: ~2,000 lines app code + ~1,500 lines tests (~3,500 total)
-- Rust: ~3,400 lines app code + ~2,900 lines tests (~6,200 total)
-- Rust/Python ratio: ~1.7x app code, ~1.8x total
+- Python: ~4,400 lines app code, 292 tests
+- Rust: ~6,000 lines app code, 442 tests
+- Rust/Python ratio: ~1.36x app code
+- 292/292 Python tests mapped (100% coverage)
+- 65 library workaround comments (`COMRAK-WORKAROUND`/`FIXME:`)
 - 20-40x performance improvement
-- 141 tests (139 passing, 2 ignored): 93 unit, 42 integration, 6 doctests (doctests run
-  on large real documents with various flags, providing significant end-to-end coverage)
-- 14 library workarounds, 3 accepted differences
+- Cross-language test mapping with CI enforcement
 
 (See `case-studies/flowmark/` for detailed metrics and methodology.)
 
@@ -129,6 +133,7 @@ workflows.
 | [python-to-rust-porting-guide.md](reference/python-to-rust-porting-guide.md) | Detailed methodology with pitfalls and automation scripts |
 | [rust-cli-best-practices.md](reference/rust-cli-best-practices.md) | Modern Rust CLI project setup (CI, linting, releases, tooling) |
 | [rust-code-review-checklist.md](reference/rust-code-review-checklist.md) | Code review checklist for Rust ports |
+| [cross-language-test-mapping.md](reference/cross-language-test-mapping.md) | YAML-based test mapping with CI enforcement |
 | [python-to-rust-test-coverage-playbook.md](reference/python-to-rust-test-coverage-playbook.md) | Pre-port test coverage strategy and tooling |
 | [port-checklist-initial-template.md](reference/port-checklist-initial-template.md) | 10-phase checklist template (copy and fill in) |
 | [port-checklist-update-template.md](reference/port-checklist-update-template.md) | Ongoing sync checklist template |
@@ -158,7 +163,7 @@ for the full process.
 
 | Project | Size | Domain | Key learnings |
 | --- | --- | --- | --- |
-| [flowmark](case-studies/flowmark/) | ~2,000 lines | Markdown formatting CLI | Parser library differences dominate effort; Rust deps 7x larger than Python deps |
+| [flowmark](case-studies/flowmark/) | ~4,400 lines Python → ~6,000 lines Rust | Markdown formatting CLI | Parser workarounds dominate effort; cross-language test mapping as CI gate; 9 porting principles distilled |
 
 ## Contributing
 
