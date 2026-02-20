@@ -239,6 +239,42 @@ proptest! {
 }
 ```
 
+### Golden Tests with Multiple Modes
+
+When porting a tool with multiple output modes or formatting options, create golden tests
+that exercise each mode against the same set of inputs. This catches mode-specific
+parity bugs that single-mode testing misses.
+
+For example, if a text formatter supports 4 modes (wrap-only, sentence-breaks, both,
+neither), generate 4 expected outputs per input fixture:
+
+```
+test-fixtures/
+├── input/basic.md
+├── expected/basic.wrap.md         # --width=80
+├── expected/basic.sentence.md     # --sentence-breaks
+├── expected/basic.both.md         # --width=80 --sentence-breaks
+└── expected/basic.neither.md      # (no flags)
+```
+
+In Rust, parameterize the test:
+```rust
+#[rstest]
+#[case("wrap", Config { width: Some(80), sentence_breaks: false })]
+#[case("sentence", Config { width: None, sentence_breaks: true })]
+#[case("both", Config { width: Some(80), sentence_breaks: true })]
+#[case("neither", Config { width: None, sentence_breaks: false })]
+fn test_format_modes(#[case] mode: &str, #[case] config: Config) {
+    let input = include_str!("../../test-fixtures/input/basic.md");
+    let expected_path = format!("../../test-fixtures/expected/basic.{mode}.md");
+    let expected = std::fs::read_to_string(expected_path).unwrap();
+    assert_eq!(format_document(input, &config), expected);
+}
+```
+
+This pattern was used in the flowmark port to test all 4 formatting modes across every
+fixture, catching several mode-specific parity bugs that single-mode tests missed.
+
 ## Coverage Tools for Rust
 
 ### cargo-llvm-cov (Recommended)

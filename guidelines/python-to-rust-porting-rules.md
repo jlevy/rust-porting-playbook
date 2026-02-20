@@ -350,6 +350,30 @@ Switch if you find >3 unfixable differences that affect core behavior.
 The cost of working around one library’s bugs accumulates rapidly.
 Research alternatives early.
 
+## Post-Port Cleanup
+
+### Stale Python-Reference Comments
+
+During porting, agents add comments mapping Rust code back to Python (e.g.,
+`// Python: self._format_line(text)`). After the port stabilizes, many of these become
+stale as the Rust code evolves independently. Schedule a cleanup pass:
+
+1. **Verify each Python reference comment is still accurate.** If the Rust
+   implementation has diverged, update or remove the comment.
+2. **Keep module-level mapping comments** (`//! Ported from Python: flowmark/filling.py`)
+   — these remain valuable for traceability.
+3. **Remove per-line Python comments** that describe implementation details no longer
+   relevant to the Rust code. Rust code should explain itself idiomatically, not as a
+   translation of Python.
+4. **Keep comments that explain non-obvious behavioral parity** — e.g., "matches Python's
+   behavior of returning empty string for None input."
+
+### Visibility Audit
+
+After porting is complete, audit `pub` visibility. During porting, agents tend to make
+everything `pub` for convenience. Convert internal-only items to `pub(crate)`. See
+[Code Review Checklist](reference/rust-code-review-checklist.md) for details.
+
 ## Acceptance Criteria
 
 **Zero-tolerance completion gate:**
