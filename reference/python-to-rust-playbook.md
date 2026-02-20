@@ -376,7 +376,20 @@ For each module, in dependency order:
   fn fix_underscore_escaping(text: &str) -> String { ... }
   ```
 
-### 5.4 Key pitfalls to watch for
+### 5.4 Maintain a parity tracking spec
+
+For non-trivial ports, maintain a structured "parity spec" document alongside the code
+that tracks:
+- **Exact parity definition** (what "parity" means for this project)
+- **Current status** (mapped tests, passing tests, known gaps)
+- **All known discrepancies** with status (fixed, accepted, open)
+- **Test mapping coverage** (see [Cross-Language Test Mapping](reference/cross-language-test-mapping.md))
+
+This document serves as the single source of truth for the porting effort's progress and
+prevents drift across multiple agent sessions. Update it after every significant
+milestone.
+
+### 5.5 Key pitfalls to watch for
 
 **Regex anchoring:** Python’s `re.match()` anchors at start; Rust’s `is_match()` does
 not. Add `^` to patterns translated from `re.match()`.
