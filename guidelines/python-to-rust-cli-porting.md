@@ -137,6 +137,32 @@ fn main() -> ExitCode {
 Use `process::exit()` only in signal handlers (e.g., the `ctrlc` handler) where you need
 immediate termination with a specific code.
 
+### Error Behavior as a First-Class Parity Surface
+
+Error handling is not an afterthought — it is a first-class parity surface that must be
+tested as rigorously as success-path output. During porting, it is common to focus on
+correct output for valid inputs and treat error paths as secondary. This leads to
+divergent error behavior that breaks drop-in compatibility.
+
+**What must match:**
+- Error message text (or be explicitly documented as an intentional improvement)
+- Exit codes for every error condition, not just the common ones
+- Whether errors go to stderr (they must)
+- Error behavior for invalid inputs, missing files, permission errors, malformed data
+- Error behavior for edge cases: empty input, input with only whitespace, binary input
+
+**How to test:**
+```bash
+# Test every error path in cross-validation
+project nonexistent.md 2>py_err; echo $? > py_exit
+project-rs nonexistent.md 2>rs_err; echo $? > rs_exit
+diff py_err rs_err         # Error message parity
+diff py_exit rs_exit       # Exit code parity
+```
+
+Add error-path fixtures to your test suite — files that should trigger errors, with
+expected stderr output and exit codes captured from the Python implementation.
+
 ### SIGPIPE Handling
 
 Rust ignores SIGPIPE by default, which causes “broken pipe” panics when output is piped
