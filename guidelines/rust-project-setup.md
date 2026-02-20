@@ -173,6 +173,12 @@ Simplest, but catches fewer issues.
 All approaches are valid.
 Choose based on project size and team preference.
 
+**Why `warn` in Cargo.toml + `-D warnings` in CI:** Setting pedantic lints to `warn`
+(not `deny`) in Cargo.toml lets developers see warnings during local development without
+blocking compilation. The CI command `cargo clippy -- -D warnings` then promotes all
+warnings to errors, enforcing zero-warning builds. This two-tier strategy gives fast
+local iteration while maintaining strict quality gates in CI.
+
 ## CI/CD with GitHub Actions
 
 ### Recommended: Separate Jobs (Modern Pattern)

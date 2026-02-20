@@ -365,7 +365,7 @@ Strategy:
 2. **File a bug/PR** on the Python repo with a test case
 3. **Decide whether to replicate the bug** in Rust for parity or fix it
 4. **If fixing:** document the intentional divergence from Python
-5. **If replicating:** add a `XXX: Python bug` comment and track for future cleanup
+5. **If replicating:** add a `FIXME: Python bug` comment and track for future cleanup
 
 ## Ongoing Synchronization
 

@@ -180,16 +180,18 @@ struct Cli {
 }
 ```
 
-**Error Handling**: `color-eyre` or `anyhow`
+**Error Handling**: `anyhow` (recommended) or `color-eyre`
 ```toml
-color-eyre = "0.6"  # Rich error display with backtraces and suggestions
+anyhow = "1.0"      # Recommended for new projects -- simple, well-maintained
 # OR
-anyhow = "1.0"      # Simpler, more minimal
+color-eyre = "0.6"  # Rich error display with colored backtraces (maintenance-only)
 ```
 
-- `color-eyre` provides enhanced error reports for end users
+- `anyhow` for most projects — actively maintained, simple, ergonomic
 
-- `anyhow` for libraries where error display is less critical
+- `color-eyre` for projects that need colored backtraces and rich diagnostics. Note:
+  `color-eyre` 0.6 is in **maintenance-only mode** (no active feature development).
+  It works well but is not receiving new features.
 
 **Logging/Tracing**: `tracing` ecosystem
 ```toml

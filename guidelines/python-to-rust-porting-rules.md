@@ -330,11 +330,11 @@ Be explicit about expectations in byte-for-byte comparison tests.
 ### Workaround Pattern
 
 Mark all workarounds with structured comment prefixes:
-- `HACK:` or `WORKAROUND:` for library workarounds that are intentional and stable.
+- `HACK:` for library workarounds that are intentional and stable.
 - `FIXME:` for items needing future resolution.
-- `XXX:` for anything that is incorrect or problematic but cannot be addressed now
-  (note: `XXX:` is a non-standard convention not recognized by most linters; it signals
-  “dangerous/requires attention” in this project).
+
+Avoid `XXX:` — it is not recognized by most linters, IDEs, or CI grep patterns.
+Use `HACK:` for workarounds and `FIXME:` for known issues instead.
 
 ```rust
 /// WORKAROUND: comrak normalizes list markers to `-`, but Python preserves `*`.
@@ -358,8 +358,7 @@ Research alternatives early.
   `WORKAROUND:` if a library difference makes exact match impossible)
 - [ ] Cross-validation with zero diffs on representative documents (or all diffs
   explained by documented workarounds)
-- [ ] All known differences documented with `WORKAROUND:`/`HACK:`/`FIXME:`/`XXX:`
-  comments
+- [ ] All known differences documented with `HACK:` or `FIXME:` comments
 - [ ] All `#[ignore]` tests have documented reasons
 - [ ] CLI help text matches Python exactly
 - [ ] Exit codes match Python behavior
