@@ -140,9 +140,10 @@ immediate termination with a specific code.
 ### Error Behavior as a First-Class Parity Surface
 
 Error handling is not an afterthought — it is a first-class parity surface that must be
-tested as rigorously as success-path output. During porting, it is common to focus on
-correct output for valid inputs and treat error paths as secondary. This leads to
-divergent error behavior that breaks drop-in compatibility.
+tested as rigorously as success-path output.
+During porting, it is common to focus on correct output for valid inputs and treat error
+paths as secondary. This leads to divergent error behavior that breaks drop-in
+compatibility.
 
 **What must match:**
 - Error message text (or be explicitly documented as an intentional improvement)
@@ -430,7 +431,8 @@ CONFLICT (submodule): Merge conflict in python-repo
 
 3. Decide on resolution strategy:
 
-   **Option A: Merge both commits (recommended if both branches added new tests/features)**
+   **Option A: Merge both commits (recommended if both branches added new
+   tests/features)**
    ```bash
    git checkout <commit-from-your-branch>
    git merge <commit-from-their-branch> -m "Merge submodule updates"

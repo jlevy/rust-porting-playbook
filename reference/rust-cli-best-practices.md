@@ -189,9 +189,9 @@ color-eyre = "0.6"  # Rich error display with colored backtraces (maintenance-on
 
 - `anyhow` for most projects — actively maintained, simple, ergonomic
 
-- `color-eyre` for projects that need colored backtraces and rich diagnostics. Note:
-  `color-eyre` 0.6 is in **maintenance-only mode** (no active feature development).
-  It works well but is not receiving new features.
+- `color-eyre` for projects that need colored backtraces and rich diagnostics.
+  Note: `color-eyre` 0.6 is in **maintenance-only mode** (no active feature
+  development). It works well but is not receiving new features.
 
 **Logging/Tracing**: `tracing` ecosystem
 ```toml
@@ -1002,7 +1002,8 @@ This catches behavioral drift that unit tests might miss (e.g., whitespace chang
 Unicode handling, edge case regressions).
 
 **Example:** flowmark-rs enforces 100% test mapping coverage in CI and maintains a
-292-test mapping manifest. Any unmapped Python test causes CI to fail.
+292-test mapping manifest.
+Any unmapped Python test causes CI to fail.
 
 ## 8. Development Workflow
 
