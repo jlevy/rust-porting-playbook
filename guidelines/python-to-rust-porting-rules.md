@@ -330,11 +330,11 @@ Be explicit about expectations in byte-for-byte comparison tests.
 ### Workaround Pattern
 
 Mark all workarounds with structured comment prefixes:
-- `HACK:` or `WORKAROUND:` for library workarounds that are intentional and stable.
+- `HACK:` for library workarounds that are intentional and stable.
 - `FIXME:` for items needing future resolution.
-- `XXX:` for anything that is incorrect or problematic but cannot be addressed now
-  (note: `XXX:` is a non-standard convention not recognized by most linters; it signals
-  “dangerous/requires attention” in this project).
+
+Avoid `XXX:` — it is not recognized by most linters, IDEs, or CI grep patterns.
+Use `HACK:` for workarounds and `FIXME:` for known issues instead.
 
 ```rust
 /// WORKAROUND: comrak normalizes list markers to `-`, but Python preserves `*`.
@@ -350,6 +350,30 @@ Switch if you find >3 unfixable differences that affect core behavior.
 The cost of working around one library’s bugs accumulates rapidly.
 Research alternatives early.
 
+## Post-Port Cleanup
+
+### Stale Python-Reference Comments
+
+During porting, agents add comments mapping Rust code back to Python (e.g.,
+`// Python: self._format_line(text)`). After the port stabilizes, many of these become
+stale as the Rust code evolves independently. Schedule a cleanup pass:
+
+1. **Verify each Python reference comment is still accurate.** If the Rust
+   implementation has diverged, update or remove the comment.
+2. **Keep module-level mapping comments** (`//! Ported from Python: flowmark/filling.py`)
+   — these remain valuable for traceability.
+3. **Remove per-line Python comments** that describe implementation details no longer
+   relevant to the Rust code. Rust code should explain itself idiomatically, not as a
+   translation of Python.
+4. **Keep comments that explain non-obvious behavioral parity** — e.g., "matches Python's
+   behavior of returning empty string for None input."
+
+### Visibility Audit
+
+After porting is complete, audit `pub` visibility. During porting, agents tend to make
+everything `pub` for convenience. Convert internal-only items to `pub(crate)`. See
+[Code Review Checklist](reference/rust-code-review-checklist.md) for details.
+
 ## Acceptance Criteria
 
 **Zero-tolerance completion gate:**
@@ -358,8 +382,7 @@ Research alternatives early.
   `WORKAROUND:` if a library difference makes exact match impossible)
 - [ ] Cross-validation with zero diffs on representative documents (or all diffs
   explained by documented workarounds)
-- [ ] All known differences documented with `WORKAROUND:`/`HACK:`/`FIXME:`/`XXX:`
-  comments
+- [ ] All known differences documented with `HACK:` or `FIXME:` comments
 - [ ] All `#[ignore]` tests have documented reasons
 - [ ] CLI help text matches Python exactly
 - [ ] Exit codes match Python behavior

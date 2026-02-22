@@ -137,6 +137,33 @@ fn main() -> ExitCode {
 Use `process::exit()` only in signal handlers (e.g., the `ctrlc` handler) where you need
 immediate termination with a specific code.
 
+### Error Behavior as a First-Class Parity Surface
+
+Error handling is not an afterthought — it is a first-class parity surface that must be
+tested as rigorously as success-path output.
+During porting, it is common to focus on correct output for valid inputs and treat error
+paths as secondary. This leads to divergent error behavior that breaks drop-in
+compatibility.
+
+**What must match:**
+- Error message text (or be explicitly documented as an intentional improvement)
+- Exit codes for every error condition, not just the common ones
+- Whether errors go to stderr (they must)
+- Error behavior for invalid inputs, missing files, permission errors, malformed data
+- Error behavior for edge cases: empty input, input with only whitespace, binary input
+
+**How to test:**
+```bash
+# Test every error path in cross-validation
+project nonexistent.md 2>py_err; echo $? > py_exit
+project-rs nonexistent.md 2>rs_err; echo $? > rs_exit
+diff py_err rs_err         # Error message parity
+diff py_exit rs_exit       # Exit code parity
+```
+
+Add error-path fixtures to your test suite — files that should trigger errors, with
+expected stderr output and exit codes captured from the Python implementation.
+
 ### SIGPIPE Handling
 
 Rust ignores SIGPIPE by default, which causes “broken pipe” panics when output is piped
@@ -365,7 +392,7 @@ Strategy:
 2. **File a bug/PR** on the Python repo with a test case
 3. **Decide whether to replicate the bug** in Rust for parity or fix it
 4. **If fixing:** document the intentional divergence from Python
-5. **If replicating:** add a `XXX: Python bug` comment and track for future cleanup
+5. **If replicating:** add a `FIXME: Python bug` comment and track for future cleanup
 
 ## Ongoing Synchronization
 
@@ -377,6 +404,69 @@ When the Python repo gets updates:
 4. Run cross-validation to verify parity is maintained
 5. Update version correspondence table
 6. Document in sync log
+
+## Resolving Submodule Conflicts
+
+When working with the Python source as a git submodule and merging branches, you may
+encounter submodule merge conflicts.
+Git cannot automatically resolve divergent submodule commits.
+
+**Typical conflict message:**
+```
+Failed to merge submodule python-repo
+CONFLICT (submodule): Merge conflict in python-repo
+```
+
+**Resolution steps:**
+
+1. Navigate into the submodule:
+   ```bash
+   cd python-repo
+   ```
+
+2. Check which commit each branch wants:
+   ```bash
+   git log --oneline --graph -10 <commit-from-yours> <commit-from-theirs>
+   ```
+
+3. Decide on resolution strategy:
+
+   **Option A: Merge both commits (recommended if both branches added new
+   tests/features)**
+   ```bash
+   git checkout <commit-from-your-branch>
+   git merge <commit-from-their-branch> -m "Merge submodule updates"
+   cd ..
+   git add python-repo
+   git commit
+   ```
+
+   **Option B: Use one commit (if one branch has the latest)**
+   ```bash
+   git checkout <the-latest-commit>
+   cd ..
+   git add python-repo
+   git commit
+   ```
+
+4. Return to parent repo and complete the merge:
+   ```bash
+   cd ..
+   git add python-repo
+   git commit -m "Resolve python-repo submodule conflict"
+   ```
+
+5. Verify the resolution:
+   ```bash
+   git submodule status  # Should show clean state
+   cd python-repo && git log --oneline -3  # Verify correct commit
+   ```
+
+**Prevention tip:** Before merging branches, sync submodule state explicitly:
+```bash
+git fetch origin
+git submodule update --remote python-repo
+```
 
 ## Acceptance Criteria for CLI Parity
 

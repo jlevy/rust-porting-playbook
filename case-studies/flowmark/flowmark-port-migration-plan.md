@@ -533,7 +533,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # Clone Python repo (not as submodule, just for testing)
       - name: Clone Python flowmark
@@ -693,7 +693,7 @@ same-file = "1.0"                  # Detect same file paths
 
 # YAML frontmatter & JSON output
 serde = { version = "1.0", features = ["derive"] }
-serde_yaml = "0.9"
+serde_yaml_ng = "0.10"             # serde_yaml is archived; use serde_yaml_ng
 serde_json = "1.0"
 
 # Signal handling
@@ -2118,7 +2118,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive  # Fetch python-repo submodule
 
@@ -2132,7 +2132,7 @@ jobs:
   cross-validation:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -2182,7 +2182,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -3251,18 +3251,15 @@ These have different rendering behaviors that required post-processing workaroun
   positions. This is hardcoded in comrak and **cannot be fixed** without
   vendoring/forking comrak.
 
-All workarounds are marked with `XXX:` comments in
-`crates/flowmark-core/src/formatter/filling.rs`. The unfixable issue is marked with
-`FIXME:` comment.
+All workarounds are marked with `COMRAK-WORKAROUND` labels in
+`src/formatter/filling.rs` (originally `XXX:`, migrated to structured labels). The
+unfixable issue is marked with `FIXME:`.
 
 ### Finding Workarounds
 
 ```bash
 # Find all comrak workarounds
-grep -n "XXX:" crates/flowmark-core/src/formatter/filling.rs
-
-# Find unfixed issues
-grep -n "FIXME:" crates/flowmark-core/src/formatter/filling.rs
+grep -n "COMRAK-WORKAROUND\|FIXME:" src/formatter/filling.rs
 ```
 
 These indicate fragile code that depends on specific comrak output format and may break

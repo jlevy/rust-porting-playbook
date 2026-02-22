@@ -147,6 +147,11 @@ workspace lints configured; formatting enforced.
   Extra types should stay `pub(crate)` or private so the crate can evolve without
   breaking changes.
 
+- [ ] **[HIGH] `pub(crate)` visibility audit (post-port).** After porting is complete,
+  audit every `pub` item: is it part of the library's external API, or only used
+  internally? Convert internal-only items to `pub(crate)`. During porting, agents tend to
+  mark everything `pub` for convenience; this must be tightened before release.
+
 - [ ] **[MEDIUM] Modules are coherent.** Related types/functions live together.
   If a module mixes parsing, network calls, and business logic, suggest splitting.
 
@@ -243,8 +248,18 @@ workspace lints configured; formatting enforced.
   error enums, or newtypes, additions should follow the existing pattern -- don’t
   introduce a new style for similar problems.
 
-- [ ] **[MEDIUM] Dead code / unused features removed.** If a function exists “for
-  later,” it should be behind a feature, documented, or removed.
+- [ ] **[MEDIUM] Dead code / unused features removed.** If a function exists "for
+  later," it should be behind a feature, documented, or removed.
+
+- [ ] **[MEDIUM] Dead error variants removed.** Error enums should only contain variants
+  that are actually constructed somewhere. Speculative variants like `NotImplemented` or
+  `Unknown` that exist "for future use" are dead code. Check with
+  `grep -r 'VariantName' src/` for each variant.
+
+- [ ] **[MEDIUM] Code duplication flagged.** Similar logic appearing in multiple
+  locations should be consolidated into shared functions. During porting, duplication
+  often creeps in when similar patterns are ported independently from different Python
+  modules.
 
 * * *
 
@@ -291,6 +306,10 @@ workspace lints configured; formatting enforced.
 - [ ] **[MEDIUM] Minimal dependency tree.** Avoid adding a crate for trivial
   functionality that can be written in a few lines.
   Each dependency is an ongoing maintenance and supply-chain risk.
+
+- [ ] **[MEDIUM] Dead dependencies removed.** Run `cargo machete` (fast, no nightly
+  needed) or `cargo udeps` (requires nightly) to detect unused dependencies in
+  `Cargo.toml`. Dependencies pulled in during porting but later unused are common.
 
 - [ ] **[MEDIUM] Feature flags on dependencies.** Pull in only the features you need.
   E.g., `tokio = { features = ["rt", "macros"] }` rather than `features = ["full"]`.
@@ -348,6 +367,9 @@ Each item here corresponds to a detailed check in sections 1-9 above.
 | Magic constants in logic without naming/explanation | MEDIUM | 6 |
 | `TODO` / `FIXME` / `HACK` without a tracking issue | MEDIUM | 7 |
 | `#[allow(clippy::...)]` without justification comment | MEDIUM | 6 |
+| Dead error variants never constructed anywhere | MEDIUM | 6 |
+| Unused dependencies in `Cargo.toml` (`cargo machete`) | MEDIUM | 8 |
+| `pub` items only used within the crate | HIGH | 4 |
 
 * * *
 

@@ -180,16 +180,18 @@ struct Cli {
 }
 ```
 
-**Error Handling**: `color-eyre` or `anyhow`
+**Error Handling**: `anyhow` (recommended) or `color-eyre`
 ```toml
-color-eyre = "0.6"  # Rich error display with backtraces and suggestions
+anyhow = "1.0"      # Recommended for new projects -- simple, well-maintained
 # OR
-anyhow = "1.0"      # Simpler, more minimal
+color-eyre = "0.6"  # Rich error display with colored backtraces (maintenance-only)
 ```
 
-- `color-eyre` provides enhanced error reports for end users
+- `anyhow` for most projects — actively maintained, simple, ergonomic
 
-- `anyhow` for libraries where error display is less critical
+- `color-eyre` for projects that need colored backtraces and rich diagnostics.
+  Note: `color-eyre` 0.6 is in **maintenance-only mode** (no active feature
+  development). It works well but is not receiving new features.
 
 **Logging/Tracing**: `tracing` ecosystem
 ```toml
@@ -910,6 +912,98 @@ jobs:
 - Use `rustsec/audit-check@v2` action, not `cargo install cargo-audit` (faster)
 - Use `EmbarkStudios/cargo-deny-action@v2` (no manual install needed)
 - Doc build with `-D warnings` catches broken doc links and missing docs
+
+### 7.3 Parity Drift Detection for Ports
+
+When porting from another language (Python, TypeScript, etc.), prevent gradual
+divergence from the source implementation by enforcing parity in CI.
+
+**Problem:** Without automated checks, the Rust port can drift from the source as:
+- New tests are added to the source but not ported
+- Source bugs are fixed but not reflected in the port
+- Rust-only tests are added without verifying source behavior
+
+**Solution:** Cross-language test mapping as a CI hard gate.
+
+#### Test Mapping Validation
+
+Maintain a YAML manifest (`test-mapping.yaml`) that maps every source test to its Rust
+equivalent(s), then validate completeness in CI:
+
+```yaml
+test-mapping:
+  name: Test Mapping Check
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v6
+      with:
+        submodules: true  # If source is a submodule
+    - uses: dtolnay/rust-toolchain@stable
+    - run: cargo test --list > rust-tests.txt
+    - run: python scripts/check-mapping.py
+```
+
+**Check script** (`scripts/check-mapping.py`):
+```python
+# Verify that test-mapping.yaml accounts for all source tests
+# Report: missing, excluded (with reasons), partial (split tests)
+# Exit non-zero if any tests are unmapped without justification
+```
+
+**See also:** [Cross-Language Test Mapping](reference/cross-language-test-mapping.md)
+for the full YAML schema and tooling patterns.
+
+#### Smoke Test for Test Count
+
+Add an assertion on total test count to catch unmapped tests:
+
+```python
+# In source repo: tests/test_smoke.py
+def test_rust_port_completeness():
+    """Verify Rust port has expected test count."""
+    result = subprocess.run(
+        ["cargo", "test", "--list"],
+        capture_output=True, text=True, cwd="../rust-port"
+    )
+    rust_test_count = len([l for l in result.stdout.splitlines() if ": test" in l])
+
+    # Update this number when new tests are added
+    assert rust_test_count >= 442, \
+        f"Rust port has {rust_test_count} tests, expected >= 442"
+```
+
+Update the threshold whenever new tests are added to either repo.
+
+#### Dynamic Corpus Validation
+
+Run both implementations over a shared corpus and diff outputs:
+
+```yaml
+cross-validation:
+  name: Cross-Validation
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v6
+      with:
+        submodules: true
+    - name: Set up source environment
+      run: |
+        cd python-repo
+        uv sync
+    - name: Build Rust
+      run: cargo build --release
+    - name: Run cross-validation
+      run: |
+        ./scripts/cross-validate.sh test-corpus/
+        # Fails if any diffs between Python and Rust output
+```
+
+This catches behavioral drift that unit tests might miss (e.g., whitespace changes,
+Unicode handling, edge case regressions).
+
+**Example:** flowmark-rs enforces 100% test mapping coverage in CI and maintains a
+292-test mapping manifest.
+Any unmapped Python test causes CI to fail.
 
 ## 8. Development Workflow
 
