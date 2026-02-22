@@ -404,6 +404,68 @@ When the Python repo gets updates:
 5. Update version correspondence table
 6. Document in sync log
 
+## Resolving Submodule Conflicts
+
+When working with the Python source as a git submodule and merging branches, you may
+encounter submodule merge conflicts.
+Git cannot automatically resolve divergent submodule commits.
+
+**Typical conflict message:**
+```
+Failed to merge submodule python-repo
+CONFLICT (submodule): Merge conflict in python-repo
+```
+
+**Resolution steps:**
+
+1. Navigate into the submodule:
+   ```bash
+   cd python-repo
+   ```
+
+2. Check which commit each branch wants:
+   ```bash
+   git log --oneline --graph -10 <commit-from-yours> <commit-from-theirs>
+   ```
+
+3. Decide on resolution strategy:
+
+   **Option A: Merge both commits (recommended if both branches added new tests/features)**
+   ```bash
+   git checkout <commit-from-your-branch>
+   git merge <commit-from-their-branch> -m "Merge submodule updates"
+   cd ..
+   git add python-repo
+   git commit
+   ```
+
+   **Option B: Use one commit (if one branch has the latest)**
+   ```bash
+   git checkout <the-latest-commit>
+   cd ..
+   git add python-repo
+   git commit
+   ```
+
+4. Return to parent repo and complete the merge:
+   ```bash
+   cd ..
+   git add python-repo
+   git commit -m "Resolve python-repo submodule conflict"
+   ```
+
+5. Verify the resolution:
+   ```bash
+   git submodule status  # Should show clean state
+   cd python-repo && git log --oneline -3  # Verify correct commit
+   ```
+
+**Prevention tip:** Before merging branches, sync submodule state explicitly:
+```bash
+git fetch origin
+git submodule update --remote python-repo
+```
+
 ## Acceptance Criteria for CLI Parity
 
 **All of these must pass before the port is considered complete:**
