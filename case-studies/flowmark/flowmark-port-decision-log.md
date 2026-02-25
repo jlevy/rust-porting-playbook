@@ -6,12 +6,13 @@ port. For library-specific decisions and workarounds, see
 
 **Related:** [Library Choices](flowmark-port-library-choices.md) |
 [Analysis](flowmark-port-analysis.md) |
+[Metrics Source of Truth](flowmark-port-metrics.md) |
 [Migration Plan](flowmark-port-migration-plan.md) |
 [Cross-Validation](flowmark-port-cross-validation.md) |
 [Comrak Bug](flowmark-port-comrak-bug.md) |
 [Wrapping Solution](flowmark-port-wrapping-solution.md)
 
-**Last update:** 2026-02-08
+**Last update:** 2026-02-25
 
 ## Decision Format
 
@@ -509,7 +510,7 @@ See [Library Choices](flowmark-port-library-choices.md) for the full workaround 
 - Version tracking between Python and Rust versions
 - CI/CD pipeline with format, clippy, test, and security checks
 
-## Key Metrics
+## Key Metrics (historical baseline, initial port)
 
 | Metric | Value |
 | --- | --- |
@@ -527,7 +528,10 @@ See [Library Choices](flowmark-port-library-choices.md) for the full workaround 
 | Lines of Rust (tests) | ~2,900 (1,600 inline + 1,300 integration) |
 | Rust/Python app code ratio | ~1.7x |
 
-### Key Metrics (v2 Current)
+### Key Metrics (v2 Current, canonical)
+
+For canonical current values, use
+[flowmark-port-metrics.md](flowmark-port-metrics.md).
 
 | Metric | Value |
 | --- | --- |

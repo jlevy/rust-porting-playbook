@@ -2,13 +2,16 @@
 
 **Related:** [Library Choices](flowmark-port-library-choices.md) |
 [Decision Log D6](flowmark-port-decision-log.md#d6-comrak-fence-parsing-bug) |
-[Cross-Validation](flowmark-port-cross-validation.md)
+[Cross-Validation](flowmark-port-cross-validation.md) |
+[Metrics Source of Truth](flowmark-port-metrics.md)
 
 **Bug Summary:** Fenced code blocks containing YAML-style indented lists with blank
 lines are incorrectly parsed, causing the fence to close prematurely and content to leak
 out.
 
 **Severity:** High - causes data loss and incorrect parsing of valid CommonMark
+
+**Last reviewed:** 2026-02-25
 
 ## Environment
 

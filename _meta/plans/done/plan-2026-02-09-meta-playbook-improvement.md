@@ -4,7 +4,7 @@
 
 **Author:** Senior Engineering Review (automated)
 
-**Status:** In progress (mostly implemented; superseded by
+**Status:** Done (implemented; superseded by
 `plan-2026-02-25-playbook-meta-gap-map-and-structure.md` for ongoing gap closure)
 
 ## Overview
@@ -196,7 +196,7 @@ for the full process.
   template agents fill out during a port
 - [x] Create `_meta/case-study-improvement-triage-template.md` — the template for
   Phase B triage of observations into playbook changes
-- [ ] Update `playbooks/port-checklist-initial-template.md` to include an observation
+- [x] Update `playbooks/port-checklist-initial-template.md` to include an observation
   recording step in each phase
 
 ## Testing Strategy

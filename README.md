@@ -74,6 +74,7 @@ rust-porting-playbook/
         ├── flowmark-port-library-choices.md
         ├── flowmark-port-decision-log.md
         ├── flowmark-port-analysis.md
+        ├── flowmark-port-metrics.md
         ├── flowmark-port-migration-plan.md
         ├── flowmark-port-cross-validation.md
         ├── flowmark-port-comrak-bug.md
@@ -88,6 +89,15 @@ rust-porting-playbook/
 | **Guidelines** | `guidelines/` | Compact rules optimized for AI agent context windows | Load into agent context before porting |
 | **Case Studies** | `case-studies/` | Real-world examples with decisions, metrics, lessons | When you hit a specific problem and want to see how it was handled |
 | **Meta Process** | `_meta/` | How to improve the playbook itself via case studies | Use when contributing playbook improvements |
+
+### Documentation Taxonomy
+
+- **Playbook:** normative end-to-end process (what to do, in order)
+- **Guide:** deep explanatory detail and implementation patterns
+- **Checklist template:** copy-and-fill execution checklist for a run
+- **Guideline:** compact high-signal rules for agent context windows
+- **Case study:** empirical evidence from a real port
+- **Meta plan:** backlog/planning artifact for improving the docs themselves
 
 ## The Porting Process (Summary)
 
@@ -141,7 +151,9 @@ Key stats (v2, current):
 - 20-40x performance improvement
 - Cross-language test mapping with CI enforcement
 
-(See `case-studies/flowmark/` for detailed metrics and methodology.)
+(See `case-studies/flowmark/` for detailed methodology.
+Canonical metrics are in
+[`case-studies/flowmark/flowmark-port-metrics.md`](case-studies/flowmark/flowmark-port-metrics.md).)
 
 The case study covers library evaluation methodology, all technical decisions,
 workaround strategies, and a meta-analysis of what can be automated in porting
@@ -170,8 +182,8 @@ workflows.
 | [case-study-observations-template.md](_meta/case-study-observations-template.md) | Template for recording observations during a port |
 | [case-study-improvement-triage-template.md](_meta/case-study-improvement-triage-template.md) | Template for triaging observations into playbook changes |
 | [playbook-improvement-log.md](_meta/playbook-improvement-log.md) | Chronological log of playbook and meta-process improvements |
-| [plans/active/plan-2026-02-25-playbook-meta-gap-map-and-structure.md](_meta/plans/active/plan-2026-02-25-playbook-meta-gap-map-and-structure.md) | Consolidated gap map and implementation plan for playbook improvements |
-| [plans/active/plan-2026-02-25-flowmark-case-study-sync-and-readme-highlight.md](_meta/plans/active/plan-2026-02-25-flowmark-case-study-sync-and-readme-highlight.md) | Active plan to synchronize Flowmark case-study docs and improve top-level summary |
+| [plans/done/plan-2026-02-25-playbook-meta-gap-map-and-structure.md](_meta/plans/done/plan-2026-02-25-playbook-meta-gap-map-and-structure.md) | Consolidated gap map and implementation plan for playbook improvements |
+| [plans/done/plan-2026-02-25-flowmark-case-study-sync-and-readme-highlight.md](_meta/plans/done/plan-2026-02-25-flowmark-case-study-sync-and-readme-highlight.md) | Completed plan to synchronize Flowmark case-study docs and improve top-level summary |
 
 ## Improving This Playbook
 

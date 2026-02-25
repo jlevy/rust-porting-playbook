@@ -58,3 +58,28 @@ Chronological log of improvements to the Rust Porting Playbook and its meta-proc
 - Completed a core-doc link sweep and resolved broken relative paths.
 - Updated gap-map statuses to reflect completed items:
   G02, G06, G16, G17, G20, and G22.
+
+### Meta gap-closure pass (framework hardening)
+
+- Closed remaining process gaps in the meta framework and templates:
+  - per-phase observation gating in the initial checklist
+  - standardized metrics command recipes
+  - evidence fields in observations template
+  - severity x impact priority matrix in triage template
+  - mandatory closure loop (triage -> merge evidence -> log entry)
+  - explicit diff-first hard gate in update checklist
+  - sync-update observation context fields
+- Added documentation taxonomy to `README.md`.
+- Added owner/review cadence and link-validation guidance to `_meta/README.md`.
+
+### Flowmark case-study sync completion
+
+- Added canonical metrics source file:
+  `case-studies/flowmark/flowmark-port-metrics.md`.
+- Updated Flowmark case-study docs to reference canonical metrics and clearly separate:
+  historical baseline (2025) vs current v2 metrics.
+- Added/updated review timestamps and historical-artifact notes across Flowmark docs.
+- Completed plan archival moves:
+  - `_meta/plans/done/plan-2026-02-09-meta-playbook-improvement.md`
+  - `_meta/plans/done/plan-2026-02-25-playbook-meta-gap-map-and-structure.md`
+  - `_meta/plans/done/plan-2026-02-25-flowmark-case-study-sync-and-readme-highlight.md`

@@ -198,5 +198,5 @@ Reviews can be performed and committed independently per-phase:
 - Prior review spec:
   `_meta/plans/done/plan-2026-02-08-playbook-review-fixes.md`
 - Meta-playbook spec:
-  `_meta/plans/active/plan-2026-02-09-meta-playbook-improvement.md`
+  `_meta/plans/done/plan-2026-02-09-meta-playbook-improvement.md`
 - All playbook content: `playbooks/`, `guidelines/`, `case-studies/flowmark/`

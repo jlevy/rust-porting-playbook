@@ -32,13 +32,37 @@ categories as follows:
 | Project name |  |
 | Source repo |  |
 | Rust repo |  |
+| Run mode | `initial-port` / `auto-sync-update` |
 | Python version |  |
+| Baseline Python version/tag (sync mode) |  |
+| Target Python version/tag (sync mode) |  |
 | Python LOC (app) |  |
 | Python LOC (tests) |  |
 | Domain |  |
 | Key dependencies |  |
 | Date started |  |
 | Date completed |  |
+
+* * *
+
+## Sync Update Context (auto-sync mode only)
+
+Complete this section only when the run mode is `auto-sync-update`.
+
+| Field | Value |
+| --- | --- |
+| Baseline Python commit/tag |  |
+| Target Python commit/tag |  |
+| Upstream diff artifact path |  |
+| Python commit log artifact path |  |
+| Accepted pre-existing divergences |  |
+| Newly introduced intentional divergences |  |
+
+For sync-mode observations, each affected phase should explicitly answer:
+
+- Which upstream diff item(s) this phase implemented
+- Whether changed upstream tests were ported or deferred (with rationale)
+- What parity evidence was captured after the update
 
 * * *
 
@@ -53,6 +77,16 @@ categories as follows:
 ### What actually happened
 
 [Description of actual experience during assessment]
+
+### Evidence
+
+- Commands run:
+
+- Output/artifact paths:
+
+- Source commit/tag examined:
+
+- Rust commit/branch evaluated:
 
 ### Playbook assessment
 
@@ -91,6 +125,16 @@ Easy / Moderate / Hard — and why]
 
 [Description]
 
+### Evidence
+
+- Commands run:
+
+- Output/artifact paths:
+
+- Source commit/tag examined:
+
+- Rust commit/branch evaluated:
+
 ### Playbook assessment
 
 - [ ] Helpful → `VALIDATE`
@@ -124,6 +168,16 @@ Easy / Moderate / Hard — and why]
 
 [Description]
 
+### Evidence
+
+- Commands run:
+
+- Output/artifact paths:
+
+- Source commit/tag examined:
+
+- Rust commit/branch evaluated:
+
 ### Playbook assessment
 
 - [ ] Helpful → `VALIDATE`
@@ -156,6 +210,16 @@ Easy / Moderate / Hard — and why]
 ### What actually happened
 
 [Description]
+
+### Evidence
+
+- Commands run:
+
+- Output/artifact paths:
+
+- Source commit/tag examined:
+
+- Rust commit/branch evaluated:
 
 ### Playbook assessment
 
@@ -191,6 +255,16 @@ Easy / Moderate / Hard — and why]
 
 [Description]
 
+### Evidence
+
+- Commands run:
+
+- Output/artifact paths:
+
+- Source commit/tag examined:
+
+- Rust commit/branch evaluated:
+
 ### Playbook assessment
 
 - [ ] Helpful → `VALIDATE`
@@ -225,6 +299,16 @@ Easy / Moderate / Hard — and why]
 
 [Description]
 
+### Evidence
+
+- Commands run:
+
+- Output/artifact paths:
+
+- Source commit/tag examined:
+
+- Rust commit/branch evaluated:
+
 ### Playbook assessment
 
 - [ ] Helpful → `VALIDATE`
@@ -257,6 +341,16 @@ Easy / Moderate / Hard — and why]
 ### What actually happened
 
 [Description]
+
+### Evidence
+
+- Commands run:
+
+- Output/artifact paths:
+
+- Source commit/tag examined:
+
+- Rust commit/branch evaluated:
 
 ### Playbook assessment
 
@@ -291,6 +385,16 @@ Easy / Moderate / Hard — and why]
 ### What actually happened
 
 [Description — note: if the Python project has not been updated since the port, record “Not applicable yet” and describe whether the playbook’s sync guidance seems sufficient based on the project’s structure]
+
+### Evidence
+
+- Commands run:
+
+- Output/artifact paths:
+
+- Source commit/tag examined:
+
+- Rust commit/branch evaluated:
 
 ### Playbook assessment
 

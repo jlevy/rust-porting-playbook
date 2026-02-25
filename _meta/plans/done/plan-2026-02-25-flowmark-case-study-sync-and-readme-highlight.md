@@ -4,7 +4,7 @@
 
 **Author:** Joshua Levy + Codex
 
-**Status:** In progress
+**Status:** Done
 
 ## Overview
 
@@ -59,13 +59,13 @@ And top-level summary updates in:
 
 ### Phase 1: Case Study Sync
 
-- [ ] Create a metric/source-of-truth table (metric, value, source file/line, date)
-- [ ] Audit all files in `case-studies/flowmark/` for stale or contradictory claims
-- [ ] Normalize key metrics across case-study docs (tests, LOC ratios, parity claims,
+- [x] Create a metric/source-of-truth table (metric, value, source file/line, date)
+- [x] Audit all files in `case-studies/flowmark/` for stale or contradictory claims
+- [x] Normalize key metrics across case-study docs (tests, LOC ratios, parity claims,
   workaround counts, coverage mapping)
-- [ ] Add explicit historical labels where old metrics are intentionally retained
-- [ ] Reconcile references to old port iterations versus current port
-- [ ] Add/refresh “last updated” markers where missing
+- [x] Add explicit historical labels where old metrics are intentionally retained
+- [x] Reconcile references to old port iterations versus current port
+- [x] Add/refresh “last updated” markers where missing
 
 ### Phase 2: README Highlight
 
@@ -77,7 +77,7 @@ And top-level summary updates in:
 
 ### Phase 3: Consistency and Validation
 
-- [ ] Run consistency sweep for repeated metrics across README and case-study docs
+- [x] Run consistency sweep for repeated metrics across README and case-study docs
 - [x] Validate internal markdown links
 - [x] Add a changelog entry in `_meta/playbook-improvement-log.md` for this sync
 
@@ -103,4 +103,4 @@ And top-level summary updates in:
 
 - `case-studies/flowmark/`
 - `README.md`
-- `_meta/plans/active/plan-2026-02-25-playbook-meta-gap-map-and-structure.md`
+- `_meta/plans/done/plan-2026-02-25-playbook-meta-gap-map-and-structure.md`

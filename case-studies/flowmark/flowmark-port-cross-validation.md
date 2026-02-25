@@ -2,10 +2,17 @@
 
 **Related:** [Library Choices](flowmark-port-library-choices.md) |
 [Decision Log](flowmark-port-decision-log.md) | [Analysis](flowmark-port-analysis.md) |
+[Metrics Source of Truth](flowmark-port-metrics.md) |
 [Comrak Bug](flowmark-port-comrak-bug.md) |
 [Wrapping Solution](flowmark-port-wrapping-solution.md)
 
 **Date**: 2025-11-03 (Updated with corrected Python behavior from PR #8)
+**Last reviewed:** 2026-02-25
+
+> **Historical note (reviewed 2026-02-25):** This report captures the initial
+> cross-validation cycle in 2025-11.
+> Treat it as baseline context; current summary metrics are maintained in
+> [flowmark-port-metrics.md](flowmark-port-metrics.md).
 
 **Status**: ✅ **FUNCTIONAL** - Core functionality complete with specific known
 differences

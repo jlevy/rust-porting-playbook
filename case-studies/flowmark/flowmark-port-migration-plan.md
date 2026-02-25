@@ -2,11 +2,19 @@
 
 **Related:** [Library Choices](flowmark-port-library-choices.md) |
 [Decision Log](flowmark-port-decision-log.md) | [Analysis](flowmark-port-analysis.md) |
+[Metrics Source of Truth](flowmark-port-metrics.md) |
 [Cross-Validation](flowmark-port-cross-validation.md) |
 [Comrak Bug](flowmark-port-comrak-bug.md) |
 [Wrapping Solution](flowmark-port-wrapping-solution.md)
 
 **Version:** 2.4 | **Date:** 2025-11-02
+**Last reviewed:** 2026-02-25
+
+> **Historical artifact note (reviewed 2026-02-25):** This is the original 2025
+> migration planning document and intentionally preserves planning-time assumptions,
+> versions, and estimates.
+> For current implementation metrics, use
+> [flowmark-port-metrics.md](flowmark-port-metrics.md).
 
 ## Table of Contents
 

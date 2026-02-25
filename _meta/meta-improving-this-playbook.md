@@ -9,15 +9,16 @@ accurate and complete.
 [Observation Template](case-study-observations-template.md) |
 [Improvement Triage Template](case-study-improvement-triage-template.md) |
 [Improvement Log](playbook-improvement-log.md) |
-[Current Gap Map Plan](plans/active/plan-2026-02-25-playbook-meta-gap-map-and-structure.md) |
+[Current Gap Map Plan](plans/done/plan-2026-02-25-playbook-meta-gap-map-and-structure.md) |
 [Auto-Sync Agent Prompt](../playbooks/auto-sync-agent-prompt-template.md)
 
 * * *
 
 ## Why Case Studies Matter
 
-The playbook was built primarily from the flowmark case study — a text-processing CLI of
-~2,000 lines using marko→comrak.
+The playbook was built primarily from the flowmark case study.
+Initial port baseline (2025-11) was ~2,000 lines Python app code; current flowmark
+state (2026-02-25) is ~4,400 lines Python app code and ~6,000 lines Rust app code.
 While flowmark is a good test case, it represents a single data point.
 The playbook will improve significantly with additional case studies covering:
 
@@ -45,8 +46,10 @@ recording structured observations along the way.
 
 Good candidates for case studies have:
 
-- **Test coverage:** At minimum 60% line coverage; ideally 80%+. Without tests, the
-  playbook’s test-first approach can’t be followed.
+- **Test coverage (standard mode):** At minimum 80% core-library line coverage.
+  Without tests, the playbook’s test-first approach can’t be followed.
+- **Test coverage (exploratory mode):** 60-79% can be used only if explicitly marked as
+  exploratory and non-generalizing in conclusions.
 - **Sufficient size:** At least 500 lines of Python app code.
   Smaller projects don’t exercise enough of the playbook to produce useful feedback.
 - **Clear dependencies:** A `requirements.txt`, `pyproject.toml`, or `setup.py` that
@@ -54,15 +57,14 @@ Good candidates for case studies have:
 - **Different character from existing case studies:** Cover a domain, size bracket, or
   dependency profile not yet represented.
 
-Ideal candidates by priority:
+Ideal candidates by priority mix:
 
-1. **CLI tools with I/O:** Similar to flowmark but different domain (validates playbook
-   breadth)
-2. **HTTP clients/servers:** Exercises async, reqwest/hyper, serde — areas the playbook
-   has limited guidance on
-3. **Data processing pipelines:** Exercises iterators, parallelism, file I/O patterns
-4. **Libraries with public APIs:** Exercises API design guidance, trait-based
+1. **HTTP clients/servers:** Exercises async, reqwest/hyper, serde — areas the playbook
+   needs broader validation in
+2. **Data processing pipelines:** Exercises iterators, parallelism, file I/O patterns
+3. **Libraries with public APIs:** Exercises API design guidance, trait-based
    abstractions
+4. **CLI tools with I/O:** Still valuable, but should not dominate case-study mix
 
 #### A.2 Set up the case study
 
@@ -121,6 +123,36 @@ Include in the decision log:
 | Test count | Unit, integration, doctests — separately |
 | Time per phase | Wall clock, with agent vs. human breakdown |
 | Playbook issues found | Count by category: FIX, ADD, CLARIFY, GENERALIZE, VALIDATE |
+
+#### A.6 Metrics command recipes (standardized)
+
+Capture commands and artifacts in the case-study repo so metrics are reproducible.
+
+```bash
+# Python app LOC (exclude tests)
+rg --files -g '*.py' | rg -v '(^|/)(test|tests)/|(_test\\.py$)' | xargs wc -l
+
+# Python test LOC
+rg --files -g '*.py' | rg '(^|/)(test|tests)/|(_test\\.py$)' | xargs wc -l
+
+# Rust app LOC (src only)
+rg --files src -g '*.rs' | xargs wc -l
+
+# Rust test LOC (tests/ directory + inline #[cfg(test)] blocks via grep count)
+rg --files tests -g '*.rs' | xargs wc -l
+rg -n '#\\[cfg\\(test\\)\\]' src
+
+# Python test count
+pytest --collect-only -q > artifacts/python-tests-collected.txt
+
+# Rust test count
+cargo test -- --list > artifacts/rust-tests-listed.txt
+```
+
+For each metric set, record:
+- command run
+- output artifact path
+- repo commit hash used for measurement
 
 ### Phase B: Extract Playbook Improvements
 
@@ -188,7 +220,34 @@ The agent implements all approved changes:
 
 - Use beads (tbd) or issues to track each change
 - Group changes by file to minimize merge conflicts
-- Run any validation checks (link integrity, code block syntax, etc.)
+- Run validation checks:
+  - link integrity
+  - markdown syntax and formatting
+  - code-block syntax sanity for shell/code snippets
+
+#### C.2a Mandatory closure loop (required)
+
+Each approved triage item is complete only when all of the following are recorded:
+
+- Observation ID(s) linked to the change (`OBS-N`, `FIX-N`/`ADD-N`/etc.)
+- Target doc(s) updated and merged
+- Merge evidence recorded (PR/commit SHA)
+- `_meta/playbook-improvement-log.md` entry added with date and outcome
+- Any rejected/deferred item documented with rationale
+
+Do not close a triage item without merge evidence and log entry.
+
+#### C.2b Standard link-check workflow
+
+Use one of the following before merging meta/playbook doc changes:
+
+```bash
+# Option A: lychee (preferred if available)
+lychee README.md _meta/**/*.md playbooks/**/*.md guidelines/**/*.md case-studies/**/*.md
+
+# Option B: repo script/check command (if configured)
+make check-links
+```
 
 #### C.3 Update the case study index
 
@@ -231,11 +290,12 @@ When upstream Python releases a new version, follow this sequence:
    modules/functions, tests, CLI/interface, dependencies.
 3. Categorize changes:
    bug fix, new feature, test addition/update, refactor.
-4. Execute the update checklist end-to-end.
-5. Port changes with tests-first discipline.
-6. Re-run parity and quality gates.
-7. Update version correspondence and sync log.
-8. Record observations on update-playbook guidance quality (`FIX`, `ADD`, `CLARIFY`,
+4. **Hard gate:** record baseline->target diff summary artifact before coding.
+5. Execute the update checklist end-to-end.
+6. Port changes with tests-first discipline.
+7. Re-run parity and quality gates.
+8. Update version correspondence and sync log.
+9. Record observations on update-playbook guidance quality (`FIX`, `ADD`, `CLARIFY`,
    `GENERALIZE`, `VALIDATE`).
 
 Use the [auto-sync agent prompt template](../playbooks/auto-sync-agent-prompt-template.md) to keep
@@ -258,6 +318,20 @@ The full artifact set (analysis, library choices, decision log) adds significant
 but is optional for smaller projects.
 
 ## Selecting Good Candidate Projects
+
+### Applicability by application type
+
+When writing conclusions from a case study, state which app types the conclusion applies
+to:
+
+- CLI tools
+- libraries
+- HTTP services/clients
+- data pipelines/batch processing
+- async/event-driven apps
+
+Avoid presenting CLI-specific conclusions as universal unless validated by at least one
+non-CLI case study.
 
 ### Must-haves
 
