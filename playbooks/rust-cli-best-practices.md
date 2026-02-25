@@ -11,7 +11,7 @@ Version: 1.2 | Last Updated: 2026-02-12
 Cross-referenced against real-world projects: flowmark-rs, ripgrep, bat, fd, jj.
 
 For the concise guideline version, see
-[Rust Project Setup](guidelines/rust-project-setup.md).
+[Rust Project Setup](../guidelines/rust-project-setup.md).
 
 * * *
 
@@ -812,7 +812,7 @@ jobs:
 
 Split CI into independent parallel jobs for fast feedback.
 This is the pattern used by flowmark-rs, jj, and delta.
-See [Rust Project Setup](guidelines/rust-project-setup.md) for the full recommended
+See [Rust Project Setup](../guidelines/rust-project-setup.md) for the full recommended
 workflow with all 7 jobs.
 
 **Key patterns from real-world projects:**
@@ -950,7 +950,7 @@ test-mapping:
 # Exit non-zero if any tests are unmapped without justification
 ```
 
-**See also:** [Cross-Language Test Mapping](reference/cross-language-test-mapping.md)
+**See also:** [Cross-Language Test Mapping](cross-language-test-mapping.md)
 for the full YAML schema and tooling patterns.
 
 #### Smoke Test for Test Count
@@ -1018,7 +1018,7 @@ just check        # Run all CI checks locally (no auto-fix)
 just fix          # Auto-fix only (format + clippy)
 ```
 
-See [Rust Project Setup](guidelines/rust-project-setup.md) for a complete justfile
+See [Rust Project Setup](../guidelines/rust-project-setup.md) for a complete justfile
 template.
 
 ### 8.2 Recommended Tools

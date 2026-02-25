@@ -10,8 +10,8 @@ development tooling.
 
 Cross-referenced against real-world projects: flowmark-rs, ripgrep, bat, fd, jj.
 
-See also: [Rust General Rules](guidelines/rust-general-rules.md),
-[Rust CLI App Patterns](guidelines/rust-cli-app-patterns.md).
+See also: [Rust General Rules](rust-general-rules.md),
+[Rust CLI App Patterns](rust-cli-app-patterns.md).
 For commit conventions, see `tbd guidelines commit-conventions`.
 
 ## Cargo.toml Configuration
@@ -670,8 +670,8 @@ This lets agents read the Python source directly and provides an exact commit re
 
 ## Related Guidelines
 
-- [Rust General Rules](guidelines/rust-general-rules.md)
-- [Rust CLI App Patterns](guidelines/rust-cli-app-patterns.md)
-- [Python-to-Rust Porting Rules](guidelines/python-to-rust-porting-rules.md)
+- [Rust General Rules](rust-general-rules.md)
+- [Rust CLI App Patterns](rust-cli-app-patterns.md)
+- [Python-to-Rust Porting Rules](python-to-rust-porting-rules.md)
 - For commit conventions, see `tbd guidelines commit-conventions`
 - For release notes, see `tbd guidelines release-notes-guidelines`

@@ -5,9 +5,12 @@ studies. Each port conducted using the playbook generates structured feedback th
 integrated back, creating a feedback loop where every case study makes the playbook more
 accurate and complete.
 
-**Related:** [Playbook](python-to-rust-playbook.md) |
+**Related:** [Playbook](../playbooks/python-to-rust-playbook.md) |
 [Observation Template](case-study-observations-template.md) |
-[Improvement Triage Template](case-study-improvement-triage-template.md)
+[Improvement Triage Template](case-study-improvement-triage-template.md) |
+[Improvement Log](playbook-improvement-log.md) |
+[Current Gap Map Plan](plans/active/plan-2026-02-25-playbook-meta-gap-map-and-structure.md) |
+[Auto-Sync Agent Prompt](../playbooks/auto-sync-agent-prompt-template.md)
 
 * * *
 
@@ -192,6 +195,51 @@ The agent implements all approved changes:
 - Add the new case study to the table in `README.md`
 - Update any cross-references in the playbook and analysis docs
 - Update the “validated by N case studies” count as the playbook matures
+
+* * *
+
+## Two Porting Modes (Avoid Confusion)
+
+Use different entry points depending on whether this is a first port or an update to an
+existing Rust port.
+
+### Mode 1: Initial Port (new Rust implementation)
+
+Start with:
+
+- [`../playbooks/python-to-rust-playbook.md`](../playbooks/python-to-rust-playbook.md)
+- [`../playbooks/port-checklist-initial-template.md`](../playbooks/port-checklist-initial-template.md)
+
+### Mode 2: Auto-Sync Update (existing Rust port, new upstream Python release)
+
+Start with:
+
+- [`../playbooks/port-checklist-update-template.md`](../playbooks/port-checklist-update-template.md)
+- [`auto-sync-agent-prompt-template.md`](../playbooks/auto-sync-agent-prompt-template.md)
+- Phase 8 in the core playbook:
+  [`../playbooks/python-to-rust-playbook.md#phase-8-ongoing-synchronization`](../playbooks/python-to-rust-playbook.md#phase-8-ongoing-synchronization)
+
+If the work is an upstream release sync, do not begin from the initial-port checklist.
+Begin from the update checklist and run a baseline-to-target diff first.
+
+## Codified Auto-Sync Process
+
+When upstream Python releases a new version, follow this sequence:
+
+1. Identify baseline and target versions (currently ported Python version vs new release).
+2. Diff upstream changes from baseline to target:
+   modules/functions, tests, CLI/interface, dependencies.
+3. Categorize changes:
+   bug fix, new feature, test addition/update, refactor.
+4. Execute the update checklist end-to-end.
+5. Port changes with tests-first discipline.
+6. Re-run parity and quality gates.
+7. Update version correspondence and sync log.
+8. Record observations on update-playbook guidance quality (`FIX`, `ADD`, `CLARIFY`,
+   `GENERALIZE`, `VALIDATE`).
+
+Use the [auto-sync agent prompt template](../playbooks/auto-sync-agent-prompt-template.md) to keep
+agent runs consistent and reproducible.
 
 * * *
 

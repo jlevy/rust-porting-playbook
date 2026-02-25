@@ -9,8 +9,8 @@ for automation, and future research directions.
 [Cross-Validation](flowmark-port-cross-validation.md) |
 [Comrak Bug](flowmark-port-comrak-bug.md) |
 [Wrapping Solution](flowmark-port-wrapping-solution.md) |
-[Python-to-Rust Porting Guide](../../reference/python-to-rust-porting-guide.md) |
-[Improving This Playbook](../../reference/meta-improving-this-playbook.md)
+[Python-to-Rust Porting Guide](../../playbooks/python-to-rust-porting-guide.md) |
+[Improving This Playbook](../../_meta/meta-improving-this-playbook.md)
 
 **Last update:** 2026-02-08
 
@@ -194,7 +194,7 @@ From the author’s account (source:
 ### The Ideal Agent-Driven Workflow
 
 1. **Agent reads guidelines**
-   ([Python-to-Rust Porting Rules](guidelines/python-to-rust-porting-rules.md), etc.)
+   ([Python-to-Rust Porting Rules](../../guidelines/python-to-rust-porting-rules.md), etc.)
 2. **Agent sets up project** using templates and checklists
 3. **Agent evaluates libraries** using the evaluation framework
 4. **Agent ports tests first** (mechanical translation with type mapping)

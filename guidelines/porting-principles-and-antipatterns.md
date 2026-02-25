@@ -9,8 +9,8 @@ anti-patterns observed during porting work.
 These principles override convenience, speed, and local judgment.
 There are no exceptions.
 
-See also: [Python-to-Rust Porting Rules](guidelines/python-to-rust-porting-rules.md) and
-[Test Coverage for Porting](guidelines/test-coverage-for-porting.md) (for implementation
+See also: [Python-to-Rust Porting Rules](python-to-rust-porting-rules.md) and
+[Test Coverage for Porting](test-coverage-for-porting.md) (for implementation
 specifics: fixture organization, golden test patterns, coverage tools, and
 cross-validation mechanics).
 

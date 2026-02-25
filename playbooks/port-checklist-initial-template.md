@@ -10,7 +10,7 @@ the date as appropriate).
 Use a copy so this original template is not altered.
 (But only one copy should be needed per project.)
 
-**Related:** [Subsequent Update Checklist](port-checklist-update.md) |
+**Related:** [Subsequent Update Checklist](port-checklist-update-template.md) |
 [Rust CLI Best Practices](rust-cli-best-practices.md)
 
 * * *
@@ -740,13 +740,13 @@ Categories: **Python bug** (Rust is correct), **cosmetic** (both outputs valid),
 If conducting this port as a case study to improve the playbook:
 
 - [ ] Observations recorded for each phase using the
-  [observation template](case-study-observations-template.md)
+  [observation template](../_meta/case-study-observations-template.md)
 - [ ] Final metrics summary completed (LOC, tests, time, dependency comparison)
 - [ ] Playbook issues triaged using the
-  [improvement triage template](case-study-improvement-triage-template.md)
+  [improvement triage template](../_meta/case-study-improvement-triage-template.md)
 - [ ] Case study artifacts placed in `case-studies/<project-name>/`
 
-See the [meta-playbook](meta-improving-this-playbook.md) for the full process.
+See the [meta-playbook](../_meta/meta-improving-this-playbook.md) for the full process.
 
 **Port is complete when ALL mandatory items above are checked.
 Zero unexplained failures accepted.

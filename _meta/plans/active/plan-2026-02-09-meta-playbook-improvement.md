@@ -1,10 +1,11 @@
 # Feature: Meta-Playbook for Improving the Porting Playbook
 
-**Date:** 2026-02-09 (last updated 2026-02-09)
+**Date:** 2026-02-09 (last updated 2026-02-25)
 
 **Author:** Senior Engineering Review (automated)
 
-**Status:** Draft
+**Status:** In progress (mostly implemented; superseded by
+`plan-2026-02-25-playbook-meta-gap-map-and-structure.md` for ongoing gap closure)
 
 ## Overview
 
@@ -51,8 +52,8 @@ Each case study is an opportunity to discover:
 
 ### The Meta-Playbook: Three Phases
 
-The meta-playbook is a document (`meta-improving-this-playbook.md`) in the `reference/`
-directory that describes three phases:
+The meta-playbook is a document (`_meta/meta-improving-this-playbook.md`) that describes
+three phases:
 
 #### Phase A: Conduct a Case Study Port
 
@@ -160,7 +161,7 @@ Add to `README.md`:
 This playbook improves through real-world case studies. Each port conducted using the
 playbook generates structured feedback that is integrated back.
 
-See [`reference/meta-improving-this-playbook.md`](reference/meta-improving-this-playbook.md)
+See [`_meta/meta-improving-this-playbook.md`](../../meta-improving-this-playbook.md)
 for the full process.
 
 ### How to contribute a case study
@@ -174,28 +175,28 @@ for the full process.
 
 | Project | Size | Domain | Key learnings |
 | --- | --- | --- | --- |
-| [flowmark](case-studies/flowmark/) | ~2,000 lines | Markdown formatting CLI | Parser library differences dominate effort |
+| [flowmark](../../../case-studies/flowmark/) | ~2,000 lines | Markdown formatting CLI | Parser library differences dominate effort |
 ```
 
 ## Implementation Plan
 
 ### Phase 1: Create the meta-playbook document and README section
 
-- [ ] Create `reference/meta-improving-this-playbook.md` with the full three-phase
+- [x] Create `_meta/meta-improving-this-playbook.md` with the full three-phase
   process (Phase A: Conduct, Phase B: Extract, Phase C: Integrate)
-- [ ] Include the observation template
-- [ ] Include a checklist for “minimum viable case study” (what must be captured)
-- [ ] Include guidance on selecting good candidate projects for case studies
-- [ ] Add “Improving This Playbook” section to `README.md` with case study table
-- [ ] Add cross-references from the playbook overview and analysis docs
+- [x] Include the observation template
+- [x] Include a checklist for “minimum viable case study” (what must be captured)
+- [x] Include guidance on selecting good candidate projects for case studies
+- [x] Add “Improving This Playbook” section to `README.md` with case study table
+- [x] Add cross-references from the playbook overview and analysis docs
 
 ### Phase 2: Create supporting templates
 
-- [ ] Create `reference/case-study-observations-template.md` — the observation recording
+- [x] Create `_meta/case-study-observations-template.md` — the observation recording
   template agents fill out during a port
-- [ ] Create `reference/case-study-improvement-triage-template.md` — the template for
+- [x] Create `_meta/case-study-improvement-triage-template.md` — the template for
   Phase B triage of observations into playbook changes
-- [ ] Update `reference/port-checklist-initial-template.md` to include an observation
+- [ ] Update `playbooks/port-checklist-initial-template.md` to include an observation
   recording step in each phase
 
 ## Testing Strategy
@@ -220,7 +221,7 @@ The meta-playbook is validated by using it:
 
 ## References
 
-- Current playbook: `reference/python-to-rust-playbook.md`
+- Current playbook: `playbooks/python-to-rust-playbook.md`
 - Existing case study: `case-studies/flowmark/`
 - Playbook review spec:
-  `docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md`
+  `_meta/plans/done/plan-2026-02-08-playbook-review-fixes.md`

@@ -4,8 +4,8 @@ This document covers a systematic process for porting modern Python CLI applicat
 Rust for use by AI agents, maintaining feature parity through comprehensive test
 fixtures.
 
-**Checklists:** [Initial Port](port-checklist-initial.md) |
-[Subsequent Updates](port-checklist-update.md)
+**Checklists:** [Initial Port](port-checklist-initial-template.md) |
+[Subsequent Updates](port-checklist-update-template.md)
 
 **Related:** [Rust CLI Best Practices](rust-cli-best-practices.md)
 
@@ -198,7 +198,7 @@ with open('Cargo.toml', 'w') as f:
 ## Phase 1: Project Setup
 
 **See:**
-[Initial Port Checklist - Phase 1: Project Setup](port-checklist-initial.md#phase-1-project-setup)
+[Initial Port Checklist - Phase 1: Project Setup](port-checklist-initial-template.md#phase-1-project-setup)
 for complete setup instructions including repository structure, workspace configuration,
 best practices configuration, and release profile optimization.
 
@@ -244,9 +244,9 @@ git commit -m "Add Python source as submodule for porting reference"
 ## Phase 2: Dependencies & Porting Process
 
 **See:**
-[Initial Port Checklist - Phase 2: Dependencies & Core Setup](port-checklist-initial.md#phase-2-dependencies--core-setup)
+[Initial Port Checklist - Phase 2: Dependencies & Core Setup](port-checklist-initial-template.md#phase-2-dependencies--core-setup)
 for detailed dependency setup and
-[Phase 3: Porting Process](port-checklist-initial.md#phase-3-porting-process) for
+[Phase 3: Porting Process](port-checklist-initial-template.md#phase-3-porting-process) for
 complete module-by-module porting instructions, critical pitfalls checklist, and
 integration test setup.
 
@@ -317,7 +317,7 @@ For large fixtures, consider reading from disk in tests to keep binaries smaller
 ### CLI Parity
 
 **See:**
-[Initial Port Checklist - Phase 4: CLI Implementation](port-checklist-initial.md#phase-4-cli-implementation)
+[Initial Port Checklist - Phase 4: CLI Implementation](port-checklist-initial-template.md#phase-4-cli-implementation)
 for complete CLI parity requirements and validation procedures.
 
 **Key Requirements:**
@@ -347,7 +347,7 @@ output (not just processing results).
 ## Phase 3: Testing & Validation
 
 **See:**
-[Initial Port Checklist - Phase 5: Testing & Validation](port-checklist-initial.md#phase-5-testing--validation)
+[Initial Port Checklist - Phase 5: Testing & Validation](port-checklist-initial-template.md#phase-5-testing--validation)
 for complete testing requirements including test coverage targets, cross-validation
 procedures, and quality checks.
 
@@ -471,7 +471,7 @@ echo "4. Validate parity: ./scripts/validate-parity.sh"
 
 ### Handling Python Code Updates
 
-**See:** [Subsequent Update Checklist](port-checklist-update.md) for the complete
+**See:** [Subsequent Update Checklist](port-checklist-update-template.md) for the complete
 workflow when syncing Python updates to Rust.
 
 **Quick Reference - Categorize updates:**
@@ -521,10 +521,10 @@ workflow when syncing Python updates to Rust.
 
 ## Checklists
 
-- **[Initial Port Checklist](port-checklist-initial.md)** - Complete checklist for
+- **[Initial Port Checklist](port-checklist-initial-template.md)** - Complete checklist for
   porting a Python CLI to Rust for the first time
 
-- **[Subsequent Update Checklist](port-checklist-update.md)** - Checklist for syncing
+- **[Subsequent Update Checklist](port-checklist-update-template.md)** - Checklist for syncing
   and porting updates from Python to existing Rust port
 
 ## Final Acceptance Criteria
@@ -536,7 +536,7 @@ This includes test output, CLI command output, help text, error messages, and al
 processing results.
 
 **See:**
-[Initial Port Checklist - Phase 10: Final Acceptance Criteria](port-checklist-initial.md#phase-10-final-acceptance-criteria)
+[Initial Port Checklist - Phase 10: Final Acceptance Criteria](port-checklist-initial-template.md#phase-10-final-acceptance-criteria)
 for the complete, detailed checklist.
 
 ### Summary

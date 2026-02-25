@@ -9,7 +9,7 @@ Python-to-Rust port.
 High test coverage in the Python source directly translates to a higher-quality, more
 automatable port.
 
-See also: [Python-to-Rust Porting Rules](guidelines/python-to-rust-porting-rules.md).
+See also: [Python-to-Rust Porting Rules](python-to-rust-porting-rules.md).
 For golden testing patterns, see `tbd guidelines golden-testing-guidelines`. For general
 testing rules, see `tbd guidelines general-testing-rules`. For TDD methodology, see
 `tbd guidelines general-tdd-guidelines`.
@@ -358,8 +358,8 @@ As you port each module:
 
 ## Related Guidelines
 
-- [Python-to-Rust Porting Rules](guidelines/python-to-rust-porting-rules.md)
-- [CLI-Specific Porting](guidelines/python-to-rust-cli-porting.md)
+- [Python-to-Rust Porting Rules](python-to-rust-porting-rules.md)
+- [CLI-Specific Porting](python-to-rust-cli-porting.md)
 - For golden testing patterns, see `tbd guidelines golden-testing-guidelines`
 - For general testing rules, see `tbd guidelines general-testing-rules`
 - For TDD methodology, see `tbd guidelines general-tdd-guidelines`

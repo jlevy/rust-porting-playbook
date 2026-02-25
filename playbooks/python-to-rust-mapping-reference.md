@@ -5,7 +5,7 @@ Organized by category with code examples for each mapping.
 Use this as a lookup reference during porting.
 
 **Related:** [Python-to-Rust Porting Guide](python-to-rust-porting-guide.md) |
-[Python-to-Rust Porting Rules](guidelines/python-to-rust-porting-rules.md)
+[Python-to-Rust Porting Rules](../guidelines/python-to-rust-porting-rules.md)
 
 **Last update:** 2026-02-12
 

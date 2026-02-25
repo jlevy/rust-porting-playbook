@@ -8,8 +8,8 @@ General coding rules for Rust projects.
 Use these as a baseline for any new Rust codebase or when reviewing Rust code quality.
 Focuses on Edition 2024+ (Rust 1.85+) patterns and modern idioms.
 
-See also: [Rust CLI App Patterns](guidelines/rust-cli-app-patterns.md),
-[Rust Project Setup](guidelines/rust-project-setup.md).
+See also: [Rust CLI App Patterns](rust-cli-app-patterns.md),
+[Rust Project Setup](rust-project-setup.md).
 For general coding rules (language-agnostic), see `tbd guidelines general-coding-rules`.
 
 ## Edition and MSRV
@@ -321,9 +321,9 @@ For comprehensive testing guidelines, see `tbd guidelines general-testing-rules`
 
 ## Related Guidelines
 
-- [Rust CLI App Patterns](guidelines/rust-cli-app-patterns.md)
-- [Rust Project Setup](guidelines/rust-project-setup.md)
-- [Python-to-Rust Porting Rules](guidelines/python-to-rust-porting-rules.md)
+- [Rust CLI App Patterns](rust-cli-app-patterns.md)
+- [Rust Project Setup](rust-project-setup.md)
+- [Python-to-Rust Porting Rules](python-to-rust-porting-rules.md)
 - For general coding rules, see `tbd guidelines general-coding-rules`
 - For error handling, see `tbd guidelines error-handling-rules`
 - For testing, see `tbd guidelines general-testing-rules`

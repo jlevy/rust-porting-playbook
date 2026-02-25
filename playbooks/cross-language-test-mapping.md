@@ -11,8 +11,8 @@ enforcement to prevent coverage drift.
 This technique was developed during the flowmark port and is generalizable to any
 Python-to-Rust porting effort.
 
-See also: [Test Coverage for Porting](guidelines/test-coverage-for-porting.md),
-[Porting Principles and Anti-Patterns](guidelines/porting-principles-and-antipatterns.md)
+See also: [Test Coverage for Porting](../guidelines/test-coverage-for-porting.md),
+[Porting Principles and Anti-Patterns](../guidelines/porting-principles-and-antipatterns.md)
 (Principle 9: Dynamic Corpus Validation).
 
 ## Why Test Mapping Matters
@@ -279,9 +279,9 @@ before the next PR merges.
 
 ## Related
 
-- [Test Coverage for Porting](guidelines/test-coverage-for-porting.md) — fixture
+- [Test Coverage for Porting](../guidelines/test-coverage-for-porting.md) — fixture
   organization, golden tests, coverage tools
-- [Porting Principles](guidelines/porting-principles-and-antipatterns.md) — Principle 9
+- [Porting Principles](../guidelines/porting-principles-and-antipatterns.md) — Principle 9
   covers dynamic corpus validation as a complement to static test mapping
-- [Python-to-Rust Playbook](reference/python-to-rust-playbook.md) — Phase 5 references
+- [Python-to-Rust Playbook](python-to-rust-playbook.md) — Phase 5 references
   test coverage strategy
