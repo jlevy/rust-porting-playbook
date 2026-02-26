@@ -10,11 +10,14 @@ High), and beads (I use my own [tbd](https://github.com/jlevy/tbd) but
 [the original](https://github.com/steveyegge/beads) should work too) to better automate
 the porting plans.
 
+## How Does it Work?
+
 This is new! But it seems to work quite well.
 This [Markdown auto-formatter](https://github.com/jlevy/flowmark-rs) was automatically
 ported and imho it’s now the best and fastest auto-formatter for Markdown.
 
-And it’s structurted with meta-playbooks to self improve as we do more ports.
+In addition to guidelines and playbooks, it’s structurted with meta-playbooks to self
+improve as we do more ports.
 If you do a port, have it track a case study, using my last port as an example, and then
 the meta playbook will help improve the overall porting playbook!
 
