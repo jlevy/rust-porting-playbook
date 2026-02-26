@@ -36,7 +36,10 @@ Notes and caveats:
   See my [tryscript](https://github.com/jlevy/tryscript) CLI to make thorough testing
   scripts easy for CLI apps.
 
-The idea is
+- Even if you don’t use the whole playbook, you’ll find giving agents these docs will
+  make their coding quality really improve.
+
+The overall idea is
 - Increasing test coverage (if needed) on the original app
 - Systematically mapping tests from the original to the target Rust application’s tests
 - Making heavy use of reusable guidelines to streamline project setup and avoid pitfalls
