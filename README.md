@@ -1,30 +1,63 @@
 # Rust Porting Playbook
 
-A comprehensive, step-by-step playbook for porting applications to Rust.
-Built from real-world experience porting production software with AI coding agents.
+A comprehensive, step-by-step **agent playbook** for **automated porting** of
+applications to Rust.
+It is a collecction of **20 in-depth** docs to guide the porting process that an agent
+should use.
 
-Currently focused on **Python-to-Rust** porting.
-Future editions may cover TypeScript and other source languages.
+I suggest using the playbook with a strong model (I’ve used Opus 4.6 or Codex 5.3 Extra
+High), and beads (I use my own [tbd](https://github.com/jlevy/tbd) but
+[the original](https://github.com/steveyegge/beads) should work too) to better automate
+the porting plans.
 
-## Proven in Practice
+This is new! But it seems to work quite well.
+This [Markdown auto-formatter](https://github.com/jlevy/flowmark-rs) was automatically
+ported and imho it’s now the best and fastest auto-formatter for Markdown.
 
-This playbook has already been used to port a complex, production-style Python CLI app
-to Rust and keep it synchronized over time:
+And it’s structurted with meta-playbooks to self improve as we do more ports.
+If you do a port, have it track a case study, using my last port as an example, and then
+the meta playbook will help improve the overall porting playbook!
+
+Caveats:
+
+- Currently focused on **Python-to-Rust** porting.
+  (But a lot is reusable so future editions may cover TypeScript and other source
+  languages.)
+
+- This requires **thoroughly testable** Python apps where all features can be mapped to
+  Rust. So libraries and CLI applications are great.
+  (You don’t need prefect tests to begin with, as long as the agent can add them and
+  write equivalent tests in Rust.)
+
+The idea is
+- Increasing test coverage (if needed) on the original app
+- Systematically mapping tests from the original to the target Rust application’s tests
+- Making heavy use of reusable guidelines to streamline project setup and avoid pitfalls
+- Using **case studies** for ports to refine the overall process
+- Codifying the process for future port updates into into two kinds: improvements to
+  Rust port (type A) and port synchronization with a new release (type B)
+
+## Case Study: Flowmark
+
+Here’s the first nontrivial use of this playbook:
 
 - Source project: [flowmark (Python)](https://github.com/jlevy/flowmark)
+
 - Ported project: [flowmark-rs (Rust)](https://github.com/jlevy/flowmark-rs)
-- Full write-up: [Flowmark case study](case-studies/flowmark/)
-- Detailed methodology and lessons:
-  [flowmark-port-analysis.md](case-studies/flowmark/flowmark-port-analysis.md)
 
-The result demonstrates full-port execution plus ongoing upstream sync discipline using
-Claude Code workflows (including Opus 4.6-era runs) with human review gates.
+This is packaged here as a [case study](case-studies/flowmark/) with
+[details and lessons](case-studies/flowmark/flowmark-port-analysis.md) to illustrate:
 
-## Who This Is For
+- Full Python→Rust lifecycle, including post-port synchronization
 
-- **AI coding agents** performing ports with human oversight
-- **Engineers** directing AI agents through a porting effort
-- **Teams** evaluating whether to port a project to Rust
+- Decision logs, library tradeoffs, discrepancy handling, and cross-validation
+
+The result demonstrates full-port execution plus ongoing upstream sync discipline.
+It was mostly Opus 4.6.
+
+All this is docs that help an agent make better Rust ports!
+The case studies can be reused for helping agents on the meta-process of playbook
+improvement.
 
 ## Quick Start
 
@@ -37,16 +70,6 @@ Choose the correct entry point:
   + [`playbooks/auto-sync-agent-prompt-template.md`](playbooks/auto-sync-agent-prompt-template.md)
 
 Everything else in this repo is supporting material referenced from these entry points.
-
-## Featured Example
-
-[Flowmark case study](case-studies/flowmark/) remains the primary end-to-end reference
-for this playbook:
-
-- Full Python→Rust lifecycle, including post-port synchronization
-- Decision logs, library tradeoffs, discrepancy handling, and cross-validation
-- Strongest concrete “start here” example:
-  [flowmark-port-analysis.md](case-studies/flowmark/flowmark-port-analysis.md)
 
 ## How This Repo Is Organized
 
@@ -225,8 +248,8 @@ the full process.
 ## Contributing
 
 This playbook is built from real porting experience.
-If you’ve ported a project to Rust and have lessons to share, contributions are welcome
--- especially new case studies.
+If you’re ported a project to Rust and have lessons to share, PR them or especially try
+adding an entire new case study so the process keeps improving.
 
 ## License
 
