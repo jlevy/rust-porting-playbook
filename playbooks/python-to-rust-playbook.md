@@ -5,13 +5,13 @@ Designed for AI coding agents with human oversight at key decision points.
 Built from the experience of porting [flowmark](https://github.com/jlevy/flowmark) and
 validated against the full knowledge base.
 
-**Scope:** Any Python application with a test suite.
-Emphasis on CLI tools but the process applies to libraries, services, and other
-application types.
+**Scope:** Complex Python applications with a test suite, especially CLI tools.
+The process can still be adapted to libraries, services, and other application types,
+but this playbook is validated most strongly on CLI-heavy projects.
 
 **Effort profile:** Roughly half of total effort goes to library workarounds and
 cross-validation (Phases 5-6), not initial implementation.
-Expect 2-3 human review points regardless of project size.
+Expect a few human review points regardless of project size.
 
 **Key principle:** Tests are the specification.
 The Python test suite defines what the Rust port must do.

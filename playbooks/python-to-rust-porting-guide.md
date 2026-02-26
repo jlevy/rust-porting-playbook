@@ -536,7 +536,7 @@ This includes test output, CLI command output, help text, error messages, and al
 processing results.
 
 **See:**
-[Initial Port Checklist - Phase 10: Final Acceptance Criteria](port-checklist-initial-template.md#phase-10-final-acceptance-criteria)
+[Initial Port Checklist - Final Acceptance Criteria](port-checklist-initial-template.md#final-acceptance-criteria)
 for the complete, detailed checklist.
 
 ### Summary
@@ -547,8 +547,9 @@ The acceptance criteria cover:
   1:1 behavioral parity, module/function mapping comments, proper use of
   `include_str!()` for fixtures
 
-- **CLI Parity (Mandatory):** Exact flag names/defaults/help text, zero diffs on all CLI
-  output (help, errors, warnings, status), correct exit codes, stdin/stdout piping
+- **CLI Parity (Mandatory for CLI apps):** Exact flag names/defaults/help text, zero
+  diffs on all CLI output (help, errors, warnings, status), correct exit codes,
+  stdin/stdout piping
 
 - **Test Parity (Mandatory):** 100% of tests pass, every original Python test replicated
   with exact behavior, all output comparisons are byte-for-byte matches (zero diffs)

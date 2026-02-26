@@ -2,6 +2,35 @@
 
 Chronological log of improvements to the Rust Porting Playbook and its meta-process.
 
+## 2026-02-26
+
+### Scope and claim calibration
+
+- Tightened primary scope language to avoid over-claiming universality.
+- Reframed top-level messaging around complex Python apps, especially CLI-oriented ports.
+- Replaced brittle count-driven wording in top-level summaries with stable outcome framing.
+
+### Checklist applicability and phase-consistency hardening
+
+- Updated initial checklist to explicitly distinguish broad core workflow vs
+  CLI-specific sections.
+- Marked CLI parity as mandatory only for CLI applications and added non-CLI
+  applicability guidance.
+- Removed stale phase-count wording from top-level reference tables and replaced with
+  stable phrasing.
+
+### Case-study discoverability and evidence hygiene
+
+- Added `case-studies/flowmark/README.md` as a local index/start-here entry point.
+- Added reproducibility/evidence protocol to
+  `case-studies/flowmark/flowmark-port-metrics.md` (commit+command+artifact expectations).
+
+### Meta plan hygiene
+
+- Archived `_meta/plans/active/plan-2026-02-12-comprehensive-playbook-review.md` to
+  `_meta/plans/done/` as superseded.
+- Updated historical references to the new archived plan location.
+
 ## 2026-02-25
 
 ### Meta documentation reorganization

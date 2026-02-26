@@ -6,6 +6,19 @@ Built from real-world experience porting production software with AI coding agen
 Currently focused on **Python-to-Rust** porting.
 Future editions may cover TypeScript and other source languages.
 
+## Proven in Practice
+
+This playbook has already been used to port a complex, production-style Python CLI app
+to Rust and keep it synchronized over time:
+
+- Source project: [flowmark (Python)](https://github.com/jlevy/flowmark)
+- Ported project: [flowmark-rs (Rust)](https://github.com/jlevy/flowmark-rs)
+- Full write-up: [Flowmark case study](case-studies/flowmark/)
+- Detailed methodology and lessons: [flowmark-port-analysis.md](case-studies/flowmark/flowmark-port-analysis.md)
+
+The result demonstrates full-port execution plus ongoing upstream sync discipline using
+Claude Code workflows (including Opus 4.6-era runs) with human review gates.
+
 ## Who This Is For
 
 - **AI coding agents** performing ports with human oversight
@@ -26,12 +39,12 @@ Everything else in this repo is supporting material referenced from these entry 
 
 ## Featured Example
 
-[Flowmark case study](case-studies/flowmark/) is the primary end-to-end example of this
-playbook in production-like use.
+[Flowmark case study](case-studies/flowmark/) remains the primary end-to-end reference
+for this playbook:
 
-- Demonstrates full Python→Rust port lifecycle plus ongoing parity/sync discipline
-- Includes decision logs, library tradeoffs, discrepancy handling, and cross-validation
-- Best starting point for concrete patterns:
+- Full Python→Rust lifecycle, including post-port synchronization
+- Decision logs, library tradeoffs, discrepancy handling, and cross-validation
+- Strongest concrete “start here” example:
   [flowmark-port-analysis.md](case-studies/flowmark/flowmark-port-analysis.md)
 
 ## How This Repo Is Organized
@@ -71,6 +84,7 @@ rust-porting-playbook/
 │   └── ...
 └── case-studies/              # Real-world porting examples
     └── flowmark/              # Python Markdown formatter → Rust
+        ├── README.md
         ├── flowmark-port-library-choices.md
         ├── flowmark-port-decision-log.md
         ├── flowmark-port-analysis.md
@@ -101,7 +115,7 @@ rust-porting-playbook/
 
 ## The Porting Process (Summary)
 
-The [playbook](playbooks/python-to-rust-playbook.md) covers 8 phases:
+The [playbook](playbooks/python-to-rust-playbook.md) covers these core phases:
 
 | Phase | What happens | Key output |
 | --- | --- | --- |
@@ -141,15 +155,12 @@ prompt or context.
 The `case-studies/flowmark/` directory documents the port of
 [flowmark](https://github.com/jlevy/flowmark) (a Python Markdown formatter) to
 [flowmark-rs](https://github.com/jlevy/flowmark-rs).
-Key stats (v2, current):
+Current outcomes include:
 
-- Python: ~4,400 lines app code, 292 tests
-- Rust: ~6,000 lines app code, 442 tests
-- Rust/Python ratio: ~1.36x app code
-- 292/292 Python tests mapped (100% coverage)
-- 65 library workaround comments (`COMRAK-WORKAROUND`/`FIXME:`)
-- 20-40x performance improvement
-- Cross-language test mapping with CI enforcement
+- A non-trivial Python CLI codebase successfully ported to Rust
+- Full Python test-to-Rust mapping discipline
+- Cross-language parity validation and CI enforcement
+- Documented workaround tracking and ongoing upstream sync workflow
 
 (See `case-studies/flowmark/` for detailed methodology.
 Canonical metrics are in
@@ -163,14 +174,14 @@ workflows.
 
 | Document | What it covers |
 | --- | --- |
-| [python-to-rust-playbook.md](playbooks/python-to-rust-playbook.md) | The complete 8-phase porting process |
+| [python-to-rust-playbook.md](playbooks/python-to-rust-playbook.md) | The complete phased porting process |
 | [python-to-rust-mapping-reference.md](playbooks/python-to-rust-mapping-reference.md) | Type mappings, project setup equivalences, dependency tables |
 | [python-to-rust-porting-guide.md](playbooks/python-to-rust-porting-guide.md) | Detailed methodology with pitfalls and automation scripts |
 | [rust-cli-best-practices.md](playbooks/rust-cli-best-practices.md) | Modern Rust CLI project setup (CI, linting, releases, tooling) |
 | [rust-code-review-checklist.md](playbooks/rust-code-review-checklist.md) | Code review checklist for Rust ports |
 | [cross-language-test-mapping.md](playbooks/cross-language-test-mapping.md) | YAML-based test mapping with CI enforcement |
 | [python-to-rust-test-coverage-playbook.md](playbooks/python-to-rust-test-coverage-playbook.md) | Pre-port test coverage strategy and tooling |
-| [port-checklist-initial-template.md](playbooks/port-checklist-initial-template.md) | 10-phase checklist template (copy and fill in) |
+| [port-checklist-initial-template.md](playbooks/port-checklist-initial-template.md) | Expanded execution checklist template (copy and fill in) |
 | [port-checklist-update-template.md](playbooks/port-checklist-update-template.md) | Ongoing sync checklist template |
 | [auto-sync-agent-prompt-template.md](playbooks/auto-sync-agent-prompt-template.md) | Canonical prompt for syncing existing Rust ports to new upstream Python releases |
 
@@ -207,7 +218,7 @@ for the full process.
 
 | Project | Size | Domain | Key learnings |
 | --- | --- | --- | --- |
-| [flowmark](case-studies/flowmark/) | ~4,400 lines Python → ~6,000 lines Rust | Markdown formatting CLI | Parser workarounds dominate effort; cross-language test mapping as CI gate; 9 porting principles distilled |
+| [flowmark](case-studies/flowmark/) | Complex multi-thousand-line Python app ported to Rust | Markdown formatting CLI | Parser workarounds dominate effort; cross-language test mapping as CI gate; porting principles distilled |
 
 ## Contributing
 

@@ -1,9 +1,14 @@
 # Python→Rust Initial Port Checklist
 
 **Reference:** This checklist implements the process described in the
-[Python-to-Rust Playbook](python-to-rust-playbook.md) (8-phase process) and the
+[Python-to-Rust Playbook](python-to-rust-playbook.md) (core phase process) and the
 [Python to Rust CLI Porting Guide](python-to-rust-porting-guide.md).
 See those guides for detailed explanations, pitfalls, and patterns.
+
+**Applicability profile:** This is an expanded execution checklist.
+The core parity/testing/dependency workflow applies broadly to complex Python apps.
+CLI-specific sections are required for CLI ports and can be marked **N/A** for
+library/service ports with equivalent interface checks substituted.
 
 **Instructions:** Copy this document to port-checklist-initial-202Y-MM-DD.md (filling in
 the date as appropriate).
@@ -167,7 +172,7 @@ Use a copy so this original template is not altered.
 
     - [ ] Library crate: `project-core` or `project` (no `-rs` suffix)
 
-    - [ ] Binary crate: `project-cli` or `project`
+    - [ ] Binary crate (if CLI): `project-cli` or `project`
 
   - [ ] Set edition to `2024` (Rust 1.85+) or `2021` for compatibility and declare
     `rust-version` (MSRV) explicitly
@@ -393,9 +398,13 @@ continued)*
 > **Completion Gate:** All cross-validation differences are categorized and resolved.
 > Remaining differences are documented as intentional divergences with rationale.
 
-## Phase 8: CLI Implementation
+## Phase 8: Interface Layer (CLI if applicable)
 
 - [ ] **Case-study mode only:** Record `OBS-N` for this phase in your copy of [`../_meta/case-study-observations-template.md`](../_meta/case-study-observations-template.md) before proceeding.
+
+- [ ] **Applicability gate:** If this project does not expose a CLI, mark CLI items in
+  this phase **N/A** and define equivalent interface-parity checks for your public API
+  surface.
 
 - [ ] **CLI Parity Requirements**
 
@@ -632,7 +641,7 @@ continued)*
 
   - [ ] Comments at top of every major function indicating source Python function
 
-### CLI Parity (Mandatory)
+### CLI Parity (Mandatory for CLI applications)
 
 - [ ] **Interface Compatibility** *(Zero unexplained diffs required)*
 
@@ -660,7 +669,8 @@ continued)*
 
   - [ ] 100% of Rust tests pass (unit, integration, property)
 
-  - [ ] All Python CLI flags, features, tests ported and passing
+  - [ ] All Python public-interface behaviors ported and passing
+    (CLI flags for CLI apps; equivalent API/service interfaces otherwise)
 
   - [ ] Every original Python test replicated with exact behavior
 

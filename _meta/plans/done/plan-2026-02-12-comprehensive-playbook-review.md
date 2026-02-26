@@ -1,13 +1,13 @@
 # Feature: Comprehensive Playbook Review — Full Structural, Factual, and Engineering Pass
 
-**Date:** 2026-02-12 (last updated 2026-02-12)
+**Date:** 2026-02-12 (last updated 2026-02-26)
 
 **Author:** Senior Engineering Review
 
-**Status:** Draft
+**Status:** Superseded and archived (scope absorbed by later gap-map and case-study sync plans)
 
-**Prior review:** `_meta/plans/done/plan-2026-02-08-playbook-review-fixes.md` (22 beads, all closed —
-focused on specific factual fixes).
+**Prior review:** `_meta/plans/done/plan-2026-02-08-playbook-review-fixes.md` (22 beads,
+all closed — focused on specific factual fixes).
 This new review is a broader, document-by-document pass covering structural quality,
 factual accuracy, engineering depth, cross-document consistency, and completeness.
 
@@ -106,12 +106,12 @@ Core playbook and reference material — the most critical documents.
   categories, items, severity levels
 - [ ] Review `playbooks/python-to-rust-test-coverage-playbook.md` (312 lines) — pre-port
   test strategy, coverage tooling, gap analysis
-- [ ] Review `playbooks/port-checklist-initial-template.md` (546 lines) — 10-phase
-  checklist template with completion gates
+- [ ] Review `playbooks/port-checklist-initial-template.md` (546 lines) — expanded
+  execution checklist template with completion gates
 - [ ] Review `playbooks/port-checklist-update-template.md` (379 lines) — ongoing sync
   checklist for tracking Python upstream changes
-- [ ] Review `_meta/meta-improving-this-playbook.md` (236 lines) — meta-process for
-  case study feedback integration
+- [ ] Review `_meta/meta-improving-this-playbook.md` (236 lines) — meta-process for case
+  study feedback integration
 - [ ] Review `_meta/case-study-observations-template.md` (252 lines) — observation
   recording template for ports
 - [ ] Review `_meta/case-study-improvement-triage-template.md` (148 lines) — triage
@@ -195,8 +195,6 @@ Reviews can be performed and committed independently per-phase:
 
 ## References
 
-- Prior review spec:
-  `_meta/plans/done/plan-2026-02-08-playbook-review-fixes.md`
-- Meta-playbook spec:
-  `_meta/plans/done/plan-2026-02-09-meta-playbook-improvement.md`
+- Prior review spec: `_meta/plans/done/plan-2026-02-08-playbook-review-fixes.md`
+- Meta-playbook spec: `_meta/plans/done/plan-2026-02-09-meta-playbook-improvement.md`
 - All playbook content: `playbooks/`, `guidelines/`, `case-studies/flowmark/`

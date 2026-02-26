@@ -169,7 +169,7 @@ Each gap entry includes:
 - `_meta/case-study-improvement-triage-template.md`
 - `_meta/playbook-improvement-log.md`
 - `_meta/plans/done/plan-2026-02-09-meta-playbook-improvement.md`
-- `_meta/plans/active/plan-2026-02-12-comprehensive-playbook-review.md`
+- `_meta/plans/done/plan-2026-02-12-comprehensive-playbook-review.md`
 - `_meta/plans/done/plan-2026-02-25-flowmark-case-study-sync-and-readme-highlight.md`
 - `_meta/plans/done/plan-2026-02-08-playbook-review-fixes.md`
 - `playbooks/port-checklist-update-template.md`

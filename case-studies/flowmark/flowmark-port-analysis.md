@@ -68,7 +68,8 @@ Not the source code.
 With 100% passing tests, the Rust implementation is correct by definition.
 Without tests, you’re guessing.
 
-**Implication:** Before porting any Python app, invest in maximizing test coverage.
+**Implication:** Before porting a complex Python app (especially CLI tools), invest in
+maximizing test coverage.
 Every untested code path is a potential bug in the Rust version.
 
 ### 3. Post-Processing Pipeline
