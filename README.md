@@ -2,8 +2,8 @@
 
 A comprehensive, step-by-step **agent playbook** for **automated porting** of
 applications to Rust.
-It is a collecction of **20 in-depth** docs to guide the porting process that an agent
-should use.
+It is a collecction of **20 in-depth docs** (about 300 pages!), all agent written but
+pretty carefully curated, to guide the porting process that an agent should use.
 
 I suggest using the playbook with a strong model (I’ve used Opus 4.6 or Codex 5.3 Extra
 High), and beads (I use my own [tbd](https://github.com/jlevy/tbd) but
