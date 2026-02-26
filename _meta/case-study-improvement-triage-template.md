@@ -40,7 +40,7 @@ Copy this file and fill it in during Phase B of the meta-playbook process.
 [Phase N from observations] **Severity:** [High / Medium / Low] **Impact:**
 [How many future ports affected — All / Most / Some / Niche]
 
-**Target file:** `[e.g., reference/python-to-rust-playbook.md]` **Section:**
+**Target file:** `[e.g., playbooks/python-to-rust-playbook.md]` **Section:**
 [Section heading]
 
 **Current text:**
@@ -79,7 +79,7 @@ Copy this file and fill it in during Phase B of the meta-playbook process.
 [Phase N from observations] **Severity:** [High / Medium / Low] **Impact:**
 [How many future ports affected — All / Most / Some / Niche]
 
-**Target file:** `[e.g., reference/python-to-rust-mapping-reference.md]` **Section:**
+**Target file:** `[e.g., playbooks/python-to-rust-mapping-reference.md]` **Section:**
 [Section heading]
 
 **Current text:**
@@ -146,11 +146,34 @@ If not, identify which observations were not triaged and explain why.
 
 Rank all FIX, ADD, CLARIFY, and GENERALIZE items by priority for implementation:
 
-| # | ID | Category | Title | Severity | Impact | Target file |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 |  |  |  |  |  |  |
-| 2 |  |  |  |  |  |  |
-| 3 |  |  |  |  |  |  |
+### Priority Matrix (Severity x Impact)
+
+Use this rubric to assign implementation priority:
+
+| Severity \\ Impact | All | Most | Some | Niche |
+| --- | --- | --- | --- | --- |
+| High | P0 | P1 | P1 | P2 |
+| Medium | P1 | P1 | P2 | P3 |
+| Low | P2 | P2 | P3 | P3 |
+
+Rule:
+- `P0`/`P1`: implement in the next active plan cycle
+- `P2`: schedule after high-priority closures
+- `P3`: batch with related doc cleanups
+
+| # | ID | Category | Title | Severity | Impact | Priority | Target file |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 |  |  |  |  |  |  |  |
+| 2 |  |  |  |  |  |  |  |
+| 3 |  |  |  |  |  |  |  |
+
+## Closure Tracking
+
+Track each approved item through merge and logging:
+
+| ID | Approved? | Target PR/Commit | Merged date | Improvement log updated? |
+| --- | --- | --- | --- | --- |
+|  |  |  |  |  |
 
 * * *
 

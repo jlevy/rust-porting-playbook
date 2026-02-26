@@ -1,13 +1,13 @@
 # Feature: Comprehensive Playbook Review — Full Structural, Factual, and Engineering Pass
 
-**Date:** 2026-02-12 (last updated 2026-02-12)
+**Date:** 2026-02-12 (last updated 2026-02-26)
 
 **Author:** Senior Engineering Review
 
-**Status:** Draft
+**Status:** Superseded and archived (scope absorbed by later gap-map and case-study sync plans)
 
-**Prior review:** `plan-2026-02-08-playbook-review-fixes.md` (22 beads, all closed —
-focused on specific factual fixes).
+**Prior review:** `_meta/plans/done/plan-2026-02-08-playbook-review-fixes.md` (22 beads,
+all closed — focused on specific factual fixes).
 This new review is a broader, document-by-document pass covering structural quality,
 factual accuracy, engineering depth, cross-document consistency, and completeness.
 
@@ -57,7 +57,7 @@ Additionally, several cross-cutting reviews cover the playbook as a whole:
 
 The playbook contains 24 content files across 3 directories (~12,450 lines total):
 
-- **`reference/`** (11 files, ~5,289 lines) — The core playbook, mapping reference,
+- **`playbooks/`** (11 files, ~5,289 lines) — The core playbook, mapping reference,
   porting guide, CLI best practices, code review checklist, test coverage playbook,
   templates, and meta-improvement docs
 - **`guidelines/`** (6 files, ~2,246 lines) — Compact rules optimized for AI agent
@@ -94,27 +94,27 @@ Each document review produces:
 
 Core playbook and reference material — the most critical documents.
 
-- [ ] Review `reference/python-to-rust-playbook.md` (619 lines) — the primary document;
+- [ ] Review `playbooks/python-to-rust-playbook.md` (619 lines) — the primary document;
   8-phase process, effort estimates, dependency tables, phase gate criteria
-- [ ] Review `reference/python-to-rust-mapping-reference.md` (788 lines) — type
+- [ ] Review `playbooks/python-to-rust-mapping-reference.md` (788 lines) — type
   mappings, control flow, error handling, classes, testing, project setup, dependencies
-- [ ] Review `reference/python-to-rust-porting-guide.md` (807 lines) — detailed
+- [ ] Review `playbooks/python-to-rust-porting-guide.md` (807 lines) — detailed
   methodology, automation scripts, version tracking, pitfalls, cross-validation
-- [ ] Review `reference/rust-cli-best-practices.md` (832 lines) — CI/CD, linting,
+- [ ] Review `playbooks/rust-cli-best-practices.md` (832 lines) — CI/CD, linting,
   releases, tooling, GitHub Actions workflows
-- [ ] Review `reference/rust-code-review-checklist.md` (285 lines) — review checklist
+- [ ] Review `playbooks/rust-code-review-checklist.md` (285 lines) — review checklist
   categories, items, severity levels
-- [ ] Review `reference/python-to-rust-test-coverage-playbook.md` (312 lines) — pre-port
+- [ ] Review `playbooks/python-to-rust-test-coverage-playbook.md` (312 lines) — pre-port
   test strategy, coverage tooling, gap analysis
-- [ ] Review `reference/port-checklist-initial-template.md` (546 lines) — 10-phase
-  checklist template with completion gates
-- [ ] Review `reference/port-checklist-update-template.md` (379 lines) — ongoing sync
+- [ ] Review `playbooks/port-checklist-initial-template.md` (546 lines) — expanded
+  execution checklist template with completion gates
+- [ ] Review `playbooks/port-checklist-update-template.md` (379 lines) — ongoing sync
   checklist for tracking Python upstream changes
-- [ ] Review `reference/meta-improving-this-playbook.md` (236 lines) — meta-process for
-  case study feedback integration
-- [ ] Review `reference/case-study-observations-template.md` (252 lines) — observation
+- [ ] Review `_meta/meta-improving-this-playbook.md` (236 lines) — meta-process for case
+  study feedback integration
+- [ ] Review `_meta/case-study-observations-template.md` (252 lines) — observation
   recording template for ports
-- [ ] Review `reference/case-study-improvement-triage-template.md` (148 lines) — triage
+- [ ] Review `_meta/case-study-improvement-triage-template.md` (148 lines) — triage
   template for converting observations to playbook changes
 
 ### Phase 2: Guidelines Review (6 files)
@@ -195,8 +195,6 @@ Reviews can be performed and committed independently per-phase:
 
 ## References
 
-- Prior review spec:
-  `docs/project/specs/active/plan-2026-02-08-playbook-review-fixes.md`
-- Meta-playbook spec:
-  `docs/project/specs/active/plan-2026-02-09-meta-playbook-improvement.md`
-- All playbook content: `reference/`, `guidelines/`, `case-studies/flowmark/`
+- Prior review spec: `_meta/plans/done/plan-2026-02-08-playbook-review-fixes.md`
+- Meta-playbook spec: `_meta/plans/done/plan-2026-02-09-meta-playbook-improvement.md`
+- All playbook content: `playbooks/`, `guidelines/`, `case-studies/flowmark/`

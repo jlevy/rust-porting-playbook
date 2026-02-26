@@ -6,7 +6,7 @@ High pre-port coverage means the Rust implementation has a precise specification
 match against.
 
 **Related:** [Python-to-Rust Porting Guide](python-to-rust-porting-guide.md) |
-[Test Coverage for Porting](guidelines/test-coverage-for-porting.md) |
+[Test Coverage for Porting](../guidelines/test-coverage-for-porting.md) |
 `tbd guidelines golden-testing-guidelines`
 
 **Last update:** 2026-02-12

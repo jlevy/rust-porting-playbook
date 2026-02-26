@@ -8,12 +8,12 @@ Rules and patterns for systematically porting Python applications to Rust.
 Focuses on maintaining exact behavioral parity through test-driven porting.
 
 **Read first:**
-[Porting Principles and Anti-Patterns](guidelines/porting-principles-and-antipatterns.md)
+[Porting Principles and Anti-Patterns](porting-principles-and-antipatterns.md)
 — non-negotiable principles that override all other guidance.
 
-See also: [CLI-Specific Porting Patterns](guidelines/python-to-rust-cli-porting.md),
-[Rust General Rules](guidelines/rust-general-rules.md),
-[Test Coverage for Porting](guidelines/test-coverage-for-porting.md).
+See also: [CLI-Specific Porting Patterns](python-to-rust-cli-porting.md),
+[Rust General Rules](rust-general-rules.md),
+[Test Coverage for Porting](test-coverage-for-porting.md).
 For Python rules, see `tbd guidelines python-rules`.
 
 ## Core Principles
@@ -372,7 +372,7 @@ stale as the Rust code evolves independently. Schedule a cleanup pass:
 
 After porting is complete, audit `pub` visibility. During porting, agents tend to make
 everything `pub` for convenience. Convert internal-only items to `pub(crate)`. See
-[Code Review Checklist](reference/rust-code-review-checklist.md) for details.
+[Code Review Checklist](../playbooks/rust-code-review-checklist.md) for details.
 
 ## Acceptance Criteria
 
@@ -391,9 +391,9 @@ everything `pub` for convenience. Convert internal-only items to `pub(crate)`. S
 
 ## Related Guidelines
 
-- [CLI-Specific Porting](guidelines/python-to-rust-cli-porting.md)
-- [Rust General Rules](guidelines/rust-general-rules.md)
-- [Test Coverage for Porting](guidelines/test-coverage-for-porting.md)
+- [CLI-Specific Porting](python-to-rust-cli-porting.md)
+- [Rust General Rules](rust-general-rules.md)
+- [Test Coverage for Porting](test-coverage-for-porting.md)
 - For Python rules, see `tbd guidelines python-rules`
 - For golden testing, see `tbd guidelines golden-testing-guidelines`
 - For TDD methodology, see `tbd guidelines general-tdd-guidelines`

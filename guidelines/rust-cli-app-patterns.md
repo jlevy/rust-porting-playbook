@@ -8,8 +8,8 @@ Patterns and conventions for building professional Rust CLI applications.
 Covers project structure, argument parsing, I/O handling, error reporting, and
 distribution.
 
-See also: [Rust General Rules](guidelines/rust-general-rules.md),
-[Rust Project Setup](guidelines/rust-project-setup.md).
+See also: [Rust General Rules](rust-general-rules.md),
+[Rust Project Setup](rust-project-setup.md).
 For Python CLI patterns (useful when porting), see `tbd guidelines python-cli-patterns`.
 
 ## Project Structure
@@ -437,7 +437,7 @@ This allows `flowmark` to be used as a library without pulling in CLI dependenci
 
 When the Rust CLI is a port of a Python CLI, show both versions:
 ```rust
-// PYTHON_SOURCE_VERSION set by build.rs -- see reference/python-to-rust-porting-guide.md
+// PYTHON_SOURCE_VERSION set by build.rs -- see playbooks/python-to-rust-porting-guide.md
 const VERSION_INFO: &str = concat!(
     env!("CARGO_PKG_VERSION"),
     " (port of python-project ",
@@ -452,7 +452,7 @@ struct Args { /* ... */ }
 
 > **Important:** `env!("PYTHON_SOURCE_VERSION")` will fail to compile unless a
 > `build.rs` script sets this variable via `cargo:rustc-env=PYTHON_SOURCE_VERSION=...`.
-> See [Python-to-Rust Porting Guide](reference/python-to-rust-porting-guide.md) for
+> See [Python-to-Rust Porting Guide](../playbooks/python-to-rust-porting-guide.md) for
 > complete `build.rs` examples that extract the version from a Python submodule, a
 > VERSION file, or `git describe`.
 > 
@@ -533,8 +533,8 @@ See the [clap_complete documentation](https://docs.rs/clap_complete) for details
 
 ## Related Guidelines
 
-- [Rust General Rules](guidelines/rust-general-rules.md)
-- [Rust Project Setup](guidelines/rust-project-setup.md)
+- [Rust General Rules](rust-general-rules.md)
+- [Rust Project Setup](rust-project-setup.md)
 - For Python CLI patterns (porting source), see `tbd guidelines python-cli-patterns`
 - For TypeScript CLI patterns (parallel reference), see
   `tbd guidelines typescript-cli-tool-rules`

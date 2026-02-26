@@ -5,14 +5,15 @@ for automation, and future research directions.
 
 **Related:** [Library Choices](flowmark-port-library-choices.md) |
 [Decision Log](flowmark-port-decision-log.md) |
+[Metrics Source of Truth](flowmark-port-metrics.md) |
 [Migration Plan](flowmark-port-migration-plan.md) |
 [Cross-Validation](flowmark-port-cross-validation.md) |
 [Comrak Bug](flowmark-port-comrak-bug.md) |
 [Wrapping Solution](flowmark-port-wrapping-solution.md) |
-[Python-to-Rust Porting Guide](../../reference/python-to-rust-porting-guide.md) |
-[Improving This Playbook](../../reference/meta-improving-this-playbook.md)
+[Python-to-Rust Porting Guide](../../playbooks/python-to-rust-porting-guide.md) |
+[Improving This Playbook](../../_meta/meta-improving-this-playbook.md)
 
-**Last update:** 2026-02-08
+**Last update:** 2026-02-25
 
 ## What Could Be Automated
 
@@ -67,7 +68,8 @@ Not the source code.
 With 100% passing tests, the Rust implementation is correct by definition.
 Without tests, you’re guessing.
 
-**Implication:** Before porting any Python app, invest in maximizing test coverage.
+**Implication:** Before porting a complex Python app (especially CLI tools), invest in
+maximizing test coverage.
 Every untested code path is a potential bug in the Rust version.
 
 ### 3. Post-Processing Pipeline
@@ -103,8 +105,11 @@ third-party library behavior.
 ## Empirical Data from the Flowmark Port
 
 The following data comes from the actual flowmark port, verified against the source
-repos. The initial port (v1, Python v0.5.5 → Rust v0.1.3) is documented below, with
-v2 current metrics in the update section.
+repos.
+Canonical current metrics are maintained in
+[flowmark-port-metrics.md](flowmark-port-metrics.md).
+The initial port (v1, Python v0.5.5 -> Rust v0.1.3) is documented below as historical
+baseline context.
 
 ### Code Metrics (v1 Initial Port)
 
@@ -118,7 +123,7 @@ v2 current metrics in the update section.
 The 6 doctests run on large real documents with various formatting flags, providing
 significant end-to-end coverage beyond their line count.
 
-### Code Metrics (v2 Current)
+### Code Metrics (v2 Current, canonical)
 
 | Metric | Python | Rust |
 | --- | --- | --- |
@@ -194,7 +199,7 @@ From the author’s account (source:
 ### The Ideal Agent-Driven Workflow
 
 1. **Agent reads guidelines**
-   ([Python-to-Rust Porting Rules](guidelines/python-to-rust-porting-rules.md), etc.)
+   ([Python-to-Rust Porting Rules](../../guidelines/python-to-rust-porting-rules.md), etc.)
 2. **Agent sets up project** using templates and checklists
 3. **Agent evaluates libraries** using the evaluation framework
 4. **Agent ports tests first** (mechanical translation with type mapping)

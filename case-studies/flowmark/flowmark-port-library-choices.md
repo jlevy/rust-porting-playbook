@@ -7,12 +7,13 @@ implemented, and alternative parser options.
 
 **Related:** [Decision Log](flowmark-port-decision-log.md) |
 [Analysis](flowmark-port-analysis.md) |
+[Metrics Source of Truth](flowmark-port-metrics.md) |
 [Migration Plan](flowmark-port-migration-plan.md) |
 [Cross-Validation](flowmark-port-cross-validation.md) |
 [Comrak Bug](flowmark-port-comrak-bug.md) |
 [Wrapping Solution](flowmark-port-wrapping-solution.md)
 
-**Last update:** 2026-02-08
+**Last update:** 2026-02-25
 
 ## Why Library Choice Matters
 

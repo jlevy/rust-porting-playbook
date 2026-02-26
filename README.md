@@ -6,6 +6,19 @@ Built from real-world experience porting production software with AI coding agen
 Currently focused on **Python-to-Rust** porting.
 Future editions may cover TypeScript and other source languages.
 
+## Proven in Practice
+
+This playbook has already been used to port a complex, production-style Python CLI app
+to Rust and keep it synchronized over time:
+
+- Source project: [flowmark (Python)](https://github.com/jlevy/flowmark)
+- Ported project: [flowmark-rs (Rust)](https://github.com/jlevy/flowmark-rs)
+- Full write-up: [Flowmark case study](case-studies/flowmark/)
+- Detailed methodology and lessons: [flowmark-port-analysis.md](case-studies/flowmark/flowmark-port-analysis.md)
+
+The result demonstrates full-port execution plus ongoing upstream sync discipline using
+Claude Code workflows (including Opus 4.6-era runs) with human review gates.
+
 ## Who This Is For
 
 - **AI coding agents** performing ports with human oversight
@@ -14,17 +27,42 @@ Future editions may cover TypeScript and other source languages.
 
 ## Quick Start
 
-**Read one document:**
-[`reference/python-to-rust-playbook.md`](reference/python-to-rust-playbook.md) -- the
-complete 8-phase process from project assessment through ongoing sync.
-Everything else in this repo is supporting material referenced from the playbook.
+Choose the correct entry point:
+
+- **Initial port (new Rust implementation):**
+  [`playbooks/python-to-rust-playbook.md`](playbooks/python-to-rust-playbook.md)
+- **Auto-sync update (existing Rust port, new upstream release):**
+  [`playbooks/port-checklist-update-template.md`](playbooks/port-checklist-update-template.md)
+  + [`playbooks/auto-sync-agent-prompt-template.md`](playbooks/auto-sync-agent-prompt-template.md)
+
+Everything else in this repo is supporting material referenced from these entry points.
+
+## Featured Example
+
+[Flowmark case study](case-studies/flowmark/) remains the primary end-to-end reference
+for this playbook:
+
+- Full Python→Rust lifecycle, including post-port synchronization
+- Decision logs, library tradeoffs, discrepancy handling, and cross-validation
+- Strongest concrete “start here” example:
+  [flowmark-port-analysis.md](case-studies/flowmark/flowmark-port-analysis.md)
 
 ## How This Repo Is Organized
 
 ```
 rust-porting-playbook/
 ├── README.md                  # You are here
-├── reference/                 # Comprehensive reference docs
+├── _meta/                     # Meta-process docs for improving the playbook
+│   ├── README.md
+│   ├── meta-improving-this-playbook.md
+│   ├── case-study-observations-template.md
+│   ├── case-study-improvement-triage-template.md
+│   ├── playbook-improvement-log.md
+│   └── plans/
+│       ├── README.md
+│       ├── active/
+│       └── done/
+├── playbooks/                 # Core playbook and detailed reference docs
 │   ├── python-to-rust-playbook.md        ** START HERE **
 │   ├── python-to-rust-mapping-reference.md
 │   ├── python-to-rust-porting-guide.md
@@ -34,41 +72,50 @@ rust-porting-playbook/
 │   ├── python-to-rust-test-coverage-playbook.md
 │   ├── port-checklist-initial-template.md
 │   ├── port-checklist-update-template.md
-│   ├── meta-improving-this-playbook.md
-│   ├── case-study-observations-template.md
-│   └── case-study-improvement-triage-template.md
+│   └── auto-sync-agent-prompt-template.md
 ├── guidelines/                # Compact rules for AI agent context (~2-3k tokens each)
 │   ├── python-to-rust-porting-rules.md
 │   ├── python-to-rust-cli-porting.md
 │   ├── rust-general-rules.md
 │   ├── rust-cli-app-patterns.md
 │   ├── rust-project-setup.md
-│   └── test-coverage-for-porting.md
-├── guidelines/                # Compact rules for AI agent context (~2-3k tokens each)
-│   ├── porting-principles-and-antipatterns.md   # 9 principles + anti-patterns
+│   ├── test-coverage-for-porting.md
+│   ├── porting-principles-and-antipatterns.md
 │   └── ...
 └── case-studies/              # Real-world porting examples
     └── flowmark/              # Python Markdown formatter → Rust
+        ├── README.md
         ├── flowmark-port-library-choices.md
         ├── flowmark-port-decision-log.md
         ├── flowmark-port-analysis.md
+        ├── flowmark-port-metrics.md
         ├── flowmark-port-migration-plan.md
         ├── flowmark-port-cross-validation.md
         ├── flowmark-port-comrak-bug.md
         └── flowmark-port-wrapping-solution.md
 ```
 
-### Three layers of documentation
+### Four layers of documentation
 
 | Layer | Directory | Purpose | When to use |
 | --- | --- | --- | --- |
-| **Playbook + Reference** | `reference/` | Step-by-step process, detailed mappings, checklists | Start here. The playbook is the primary doc. |
+| **Playbook + Reference** | `playbooks/` | Step-by-step process, detailed mappings, checklists | Start here. The playbook is the primary doc. |
 | **Guidelines** | `guidelines/` | Compact rules optimized for AI agent context windows | Load into agent context before porting |
 | **Case Studies** | `case-studies/` | Real-world examples with decisions, metrics, lessons | When you hit a specific problem and want to see how it was handled |
+| **Meta Process** | `_meta/` | How to improve the playbook itself via case studies | Use when contributing playbook improvements |
+
+### Documentation Taxonomy
+
+- **Playbook:** normative end-to-end process (what to do, in order)
+- **Guide:** deep explanatory detail and implementation patterns
+- **Checklist template:** copy-and-fill execution checklist for a run
+- **Guideline:** compact high-signal rules for agent context windows
+- **Case study:** empirical evidence from a real port
+- **Meta plan:** backlog/planning artifact for improving the docs themselves
 
 ## The Porting Process (Summary)
 
-The [playbook](reference/python-to-rust-playbook.md) covers 8 phases:
+The [playbook](playbooks/python-to-rust-playbook.md) covers these core phases:
 
 | Phase | What happens | Key output |
 | --- | --- | --- |
@@ -108,17 +155,16 @@ prompt or context.
 The `case-studies/flowmark/` directory documents the port of
 [flowmark](https://github.com/jlevy/flowmark) (a Python Markdown formatter) to
 [flowmark-rs](https://github.com/jlevy/flowmark-rs).
-Key stats (v2, current):
+Current outcomes include:
 
-- Python: ~4,400 lines app code, 292 tests
-- Rust: ~6,000 lines app code, 442 tests
-- Rust/Python ratio: ~1.36x app code
-- 292/292 Python tests mapped (100% coverage)
-- 65 library workaround comments (`COMRAK-WORKAROUND`/`FIXME:`)
-- 20-40x performance improvement
-- Cross-language test mapping with CI enforcement
+- A non-trivial Python CLI codebase successfully ported to Rust
+- Full Python test-to-Rust mapping discipline
+- Cross-language parity validation and CI enforcement
+- Documented workaround tracking and ongoing upstream sync workflow
 
-(See `case-studies/flowmark/` for detailed metrics and methodology.)
+(See `case-studies/flowmark/` for detailed methodology.
+Canonical metrics are in
+[`case-studies/flowmark/flowmark-port-metrics.md`](case-studies/flowmark/flowmark-port-metrics.md).)
 
 The case study covers library evaluation methodology, all technical decisions,
 workaround strategies, and a meta-analysis of what can be automated in porting
@@ -128,18 +174,27 @@ workflows.
 
 | Document | What it covers |
 | --- | --- |
-| [python-to-rust-playbook.md](reference/python-to-rust-playbook.md) | The complete 8-phase porting process |
-| [python-to-rust-mapping-reference.md](reference/python-to-rust-mapping-reference.md) | Type mappings, project setup equivalences, dependency tables |
-| [python-to-rust-porting-guide.md](reference/python-to-rust-porting-guide.md) | Detailed methodology with pitfalls and automation scripts |
-| [rust-cli-best-practices.md](reference/rust-cli-best-practices.md) | Modern Rust CLI project setup (CI, linting, releases, tooling) |
-| [rust-code-review-checklist.md](reference/rust-code-review-checklist.md) | Code review checklist for Rust ports |
-| [cross-language-test-mapping.md](reference/cross-language-test-mapping.md) | YAML-based test mapping with CI enforcement |
-| [python-to-rust-test-coverage-playbook.md](reference/python-to-rust-test-coverage-playbook.md) | Pre-port test coverage strategy and tooling |
-| [port-checklist-initial-template.md](reference/port-checklist-initial-template.md) | 10-phase checklist template (copy and fill in) |
-| [port-checklist-update-template.md](reference/port-checklist-update-template.md) | Ongoing sync checklist template |
-| [meta-improving-this-playbook.md](reference/meta-improving-this-playbook.md) | Process for improving the playbook through case studies |
-| [case-study-observations-template.md](reference/case-study-observations-template.md) | Template for recording observations during a port |
-| [case-study-improvement-triage-template.md](reference/case-study-improvement-triage-template.md) | Template for triaging observations into playbook changes |
+| [python-to-rust-playbook.md](playbooks/python-to-rust-playbook.md) | The complete phased porting process |
+| [python-to-rust-mapping-reference.md](playbooks/python-to-rust-mapping-reference.md) | Type mappings, project setup equivalences, dependency tables |
+| [python-to-rust-porting-guide.md](playbooks/python-to-rust-porting-guide.md) | Detailed methodology with pitfalls and automation scripts |
+| [rust-cli-best-practices.md](playbooks/rust-cli-best-practices.md) | Modern Rust CLI project setup (CI, linting, releases, tooling) |
+| [rust-code-review-checklist.md](playbooks/rust-code-review-checklist.md) | Code review checklist for Rust ports |
+| [cross-language-test-mapping.md](playbooks/cross-language-test-mapping.md) | YAML-based test mapping with CI enforcement |
+| [python-to-rust-test-coverage-playbook.md](playbooks/python-to-rust-test-coverage-playbook.md) | Pre-port test coverage strategy and tooling |
+| [port-checklist-initial-template.md](playbooks/port-checklist-initial-template.md) | Expanded execution checklist template (copy and fill in) |
+| [port-checklist-update-template.md](playbooks/port-checklist-update-template.md) | Ongoing sync checklist template |
+| [auto-sync-agent-prompt-template.md](playbooks/auto-sync-agent-prompt-template.md) | Canonical prompt for syncing existing Rust ports to new upstream Python releases |
+
+## Meta Docs
+
+| Document | What it covers |
+| --- | --- |
+| [meta-improving-this-playbook.md](_meta/meta-improving-this-playbook.md) | Process for improving the playbook through case studies |
+| [case-study-observations-template.md](_meta/case-study-observations-template.md) | Template for recording observations during a port |
+| [case-study-improvement-triage-template.md](_meta/case-study-improvement-triage-template.md) | Template for triaging observations into playbook changes |
+| [playbook-improvement-log.md](_meta/playbook-improvement-log.md) | Chronological log of playbook and meta-process improvements |
+| [plans/done/plan-2026-02-25-playbook-meta-gap-map-and-structure.md](_meta/plans/done/plan-2026-02-25-playbook-meta-gap-map-and-structure.md) | Consolidated gap map and implementation plan for playbook improvements |
+| [plans/done/plan-2026-02-25-flowmark-case-study-sync-and-readme-highlight.md](_meta/plans/done/plan-2026-02-25-flowmark-case-study-sync-and-readme-highlight.md) | Completed plan to synchronize Flowmark case-study docs and improve top-level summary |
 
 ## Improving This Playbook
 
@@ -148,14 +203,14 @@ Each port conducted using the playbook generates structured feedback that is int
 back into the playbook, making it more accurate and complete with every case study.
 
 See
-[`reference/meta-improving-this-playbook.md`](reference/meta-improving-this-playbook.md)
+[`_meta/meta-improving-this-playbook.md`](_meta/meta-improving-this-playbook.md)
 for the full process.
 
 ### How to contribute a case study
 
 1. Pick a Python project to port (ideally 500+ lines with good test coverage)
 2. Follow the playbook end-to-end, recording observations using the
-   [observation template](reference/case-study-observations-template.md)
+   [observation template](_meta/case-study-observations-template.md)
 3. Submit a PR with your case study in `case-studies/<project-name>/`
 4. The observations will be triaged and integrated into the playbook
 
@@ -163,7 +218,7 @@ for the full process.
 
 | Project | Size | Domain | Key learnings |
 | --- | --- | --- | --- |
-| [flowmark](case-studies/flowmark/) | ~4,400 lines Python → ~6,000 lines Rust | Markdown formatting CLI | Parser workarounds dominate effort; cross-language test mapping as CI gate; 9 porting principles distilled |
+| [flowmark](case-studies/flowmark/) | Complex multi-thousand-line Python app ported to Rust | Markdown formatting CLI | Parser workarounds dominate effort; cross-language test mapping as CI gate; porting principles distilled |
 
 ## Contributing
 

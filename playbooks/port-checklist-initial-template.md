@@ -1,16 +1,21 @@
 # Python→Rust Initial Port Checklist
 
 **Reference:** This checklist implements the process described in the
-[Python-to-Rust Playbook](python-to-rust-playbook.md) (8-phase process) and the
+[Python-to-Rust Playbook](python-to-rust-playbook.md) (core phase process) and the
 [Python to Rust CLI Porting Guide](python-to-rust-porting-guide.md).
 See those guides for detailed explanations, pitfalls, and patterns.
+
+**Applicability profile:** This is an expanded execution checklist.
+The core parity/testing/dependency workflow applies broadly to complex Python apps.
+CLI-specific sections are required for CLI ports and can be marked **N/A** for
+library/service ports with equivalent interface checks substituted.
 
 **Instructions:** Copy this document to port-checklist-initial-202Y-MM-DD.md (filling in
 the date as appropriate).
 Use a copy so this original template is not altered.
 (But only one copy should be needed per project.)
 
-**Related:** [Subsequent Update Checklist](port-checklist-update.md) |
+**Related:** [Subsequent Update Checklist](port-checklist-update-template.md) |
 [Rust CLI Best Practices](rust-cli-best-practices.md)
 
 * * *
@@ -34,6 +39,8 @@ Use a copy so this original template is not altered.
 > All exceptions must be recorded with rationale.
 
 ## Phase 1: Assess the Original Project
+
+- [ ] **Case-study mode only:** Record `OBS-N` for this phase in your copy of [`../_meta/case-study-observations-template.md`](../_meta/case-study-observations-template.md) before proceeding.
 
 *(Corresponds to
 [Playbook Phase 1](python-to-rust-playbook.md#phase-1-assess-the-original-project))*
@@ -79,6 +86,8 @@ Use a copy so this original template is not altered.
 
 ## Phase 2: Research and Library Evaluation
 
+- [ ] **Case-study mode only:** Record `OBS-N` for this phase in your copy of [`../_meta/case-study-observations-template.md`](../_meta/case-study-observations-template.md) before proceeding.
+
 *(Corresponds to
 [Playbook Phase 2](python-to-rust-playbook.md#phase-2-research-and-library-evaluation))*
 
@@ -106,6 +115,8 @@ Use a copy so this original template is not altered.
 > rationale. High-risk dependencies validated with proof-of-concept tests.
 
 ## Phase 3: Plan the Port
+
+- [ ] **Case-study mode only:** Record `OBS-N` for this phase in your copy of [`../_meta/case-study-observations-template.md`](../_meta/case-study-observations-template.md) before proceeding.
 
 *(Corresponds to [Playbook Phase 3](python-to-rust-playbook.md#phase-3-plan-the-port))*
 
@@ -138,6 +149,8 @@ Use a copy so this original template is not altered.
 
 ## Phase 4: Project Setup
 
+- [ ] **Case-study mode only:** Record `OBS-N` for this phase in your copy of [`../_meta/case-study-observations-template.md`](../_meta/case-study-observations-template.md) before proceeding.
+
 *(Corresponds to
 [Playbook Phase 4](python-to-rust-playbook.md#phase-4-set-up-the-rust-project))*
 
@@ -159,7 +172,7 @@ Use a copy so this original template is not altered.
 
     - [ ] Library crate: `project-core` or `project` (no `-rs` suffix)
 
-    - [ ] Binary crate: `project-cli` or `project`
+    - [ ] Binary crate (if CLI): `project-cli` or `project`
 
   - [ ] Set edition to `2024` (Rust 1.85+) or `2021` for compatibility and declare
     `rust-version` (MSRV) explicitly
@@ -233,6 +246,8 @@ Use a copy so this original template is not altered.
 
 ## Phase 5: Dependencies & Core Setup
 
+- [ ] **Case-study mode only:** Record `OBS-N` for this phase in your copy of [`../_meta/case-study-observations-template.md`](../_meta/case-study-observations-template.md) before proceeding.
+
 *(Corresponds to
 [Playbook Phase 4](python-to-rust-playbook.md#phase-4-set-up-the-rust-project),
 continued)*
@@ -267,6 +282,8 @@ continued)*
 > `cargo test` runs (even if tests are stubs).
 
 ## Phase 6: Porting Process
+
+- [ ] **Case-study mode only:** Record `OBS-N` for this phase in your copy of [`../_meta/case-study-observations-template.md`](../_meta/case-study-observations-template.md) before proceeding.
 
 *(Corresponds to [Playbook Phase 5](python-to-rust-playbook.md#phase-5-port-the-code))*
 
@@ -336,6 +353,8 @@ continued)*
 
 ## Phase 7: Handle Library Differences
 
+- [ ] **Case-study mode only:** Record `OBS-N` for this phase in your copy of [`../_meta/case-study-observations-template.md`](../_meta/case-study-observations-template.md) before proceeding.
+
 *(Corresponds to
 [Playbook Phase 6](python-to-rust-playbook.md#phase-6-handle-library-differences))*
 
@@ -379,7 +398,13 @@ continued)*
 > **Completion Gate:** All cross-validation differences are categorized and resolved.
 > Remaining differences are documented as intentional divergences with rationale.
 
-## Phase 8: CLI Implementation
+## Phase 8: Interface Layer (CLI if applicable)
+
+- [ ] **Case-study mode only:** Record `OBS-N` for this phase in your copy of [`../_meta/case-study-observations-template.md`](../_meta/case-study-observations-template.md) before proceeding.
+
+- [ ] **Applicability gate:** If this project does not expose a CLI, mark CLI items in
+  this phase **N/A** and define equivalent interface-parity checks for your public API
+  surface.
 
 - [ ] **CLI Parity Requirements**
 
@@ -421,6 +446,8 @@ continued)*
     - [ ] Verify exit codes match (0 success, 1 errors, 2 usage)
 
 ## Phase 9: Testing & Validation
+
+- [ ] **Case-study mode only:** Record `OBS-N` for this phase in your copy of [`../_meta/case-study-observations-template.md`](../_meta/case-study-observations-template.md) before proceeding.
 
 *(Corresponds to
 [Playbook Phase 7](python-to-rust-playbook.md#phase-7-finalize-and-validate))*
@@ -476,6 +503,8 @@ continued)*
 
 ## Phase 10: Performance & Optimization
 
+- [ ] **Case-study mode only:** Record `OBS-N` for this phase in your copy of [`../_meta/case-study-observations-template.md`](../_meta/case-study-observations-template.md) before proceeding.
+
 - [ ] **Performance Targets**
 
   - [ ] Binary size < 10MB (release build, stripped; use `cargo-bloat` to identify size
@@ -497,6 +526,8 @@ continued)*
   - [ ] Consider `rayon` for parallel processing if applicable
 
 ## Phase 11: Documentation
+
+- [ ] **Case-study mode only:** Record `OBS-N` for this phase in your copy of [`../_meta/case-study-observations-template.md`](../_meta/case-study-observations-template.md) before proceeding.
 
 - [ ] **Code Documentation**
 
@@ -521,6 +552,8 @@ continued)*
   - [ ] Create `docs/python-sync-log.md` for tracking updates
 
 ## Phase 12: CI/CD Setup
+
+- [ ] **Case-study mode only:** Record `OBS-N` for this phase in your copy of [`../_meta/case-study-observations-template.md`](../_meta/case-study-observations-template.md) before proceeding.
 
 - [ ] **Essential CI Checks (Tier 1)**
 
@@ -564,6 +597,8 @@ continued)*
 
 ## Phase 13: Scripts & Automation
 
+- [ ] **Case-study mode only:** Record `OBS-N` for this phase in your copy of [`../_meta/case-study-observations-template.md`](../_meta/case-study-observations-template.md) before proceeding.
+
 *(Corresponds to
 [Playbook Phase 8](python-to-rust-playbook.md#phase-8-ongoing-synchronization))*
 
@@ -606,7 +641,7 @@ continued)*
 
   - [ ] Comments at top of every major function indicating source Python function
 
-### CLI Parity (Mandatory)
+### CLI Parity (Mandatory for CLI applications)
 
 - [ ] **Interface Compatibility** *(Zero unexplained diffs required)*
 
@@ -634,7 +669,8 @@ continued)*
 
   - [ ] 100% of Rust tests pass (unit, integration, property)
 
-  - [ ] All Python CLI flags, features, tests ported and passing
+  - [ ] All Python public-interface behaviors ported and passing
+    (CLI flags for CLI apps; equivalent API/service interfaces otherwise)
 
   - [ ] Every original Python test replicated with exact behavior
 
@@ -735,18 +771,18 @@ Record all byte-for-byte matching exceptions here with rationale:
 Categories: **Python bug** (Rust is correct), **cosmetic** (both outputs valid),
 **intentional improvement** (documented enhancement)
 
-### Case Study Observations (Optional)
+### Case Study Observation Completion (Required in case-study mode)
 
-If conducting this port as a case study to improve the playbook:
+If this port is being run as a case study to improve the playbook:
 
 - [ ] Observations recorded for each phase using the
-  [observation template](case-study-observations-template.md)
+  [observation template](../_meta/case-study-observations-template.md)
 - [ ] Final metrics summary completed (LOC, tests, time, dependency comparison)
 - [ ] Playbook issues triaged using the
-  [improvement triage template](case-study-improvement-triage-template.md)
+  [improvement triage template](../_meta/case-study-improvement-triage-template.md)
 - [ ] Case study artifacts placed in `case-studies/<project-name>/`
 
-See the [meta-playbook](meta-improving-this-playbook.md) for the full process.
+See the [meta-playbook](../_meta/meta-improving-this-playbook.md) for the full process.
 
 **Port is complete when ALL mandatory items above are checked.
 Zero unexplained failures accepted.

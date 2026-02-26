@@ -5,13 +5,13 @@ Designed for AI coding agents with human oversight at key decision points.
 Built from the experience of porting [flowmark](https://github.com/jlevy/flowmark) and
 validated against the full knowledge base.
 
-**Scope:** Any Python application with a test suite.
-Emphasis on CLI tools but the process applies to libraries, services, and other
-application types.
+**Scope:** Complex Python applications with a test suite, especially CLI tools.
+The process can still be adapted to libraries, services, and other application types,
+but this playbook is validated most strongly on CLI-heavy projects.
 
 **Effort profile:** Roughly half of total effort goes to library workarounds and
 cross-validation (Phases 5-6), not initial implementation.
-Expect 2-3 human review points regardless of project size.
+Expect a few human review points regardless of project size.
 
 **Key principle:** Tests are the specification.
 The Python test suite defines what the Rust port must do.
@@ -21,7 +21,7 @@ With them, 100% passing tests equals correctness by definition.
 For detailed reference on any step, see the companion docs listed in the
 [README](../README.md).
 To improve this playbook through your port, see the
-[meta-playbook](meta-improving-this-playbook.md).
+[meta-playbook](../_meta/meta-improving-this-playbook.md).
 
 * * *
 
@@ -168,8 +168,8 @@ application type. Document: recommended libraries, project setup patterns, CI
 configuration, release workflow.
 This prevents rework from poor initial choices.
 
-See [Rust Project Setup](guidelines/rust-project-setup.md) and
-[Rust CLI Best Practices](reference/rust-cli-best-practices.md) for CLI projects.
+See [Rust Project Setup](../guidelines/rust-project-setup.md) and
+[Rust CLI Best Practices](rust-cli-best-practices.md) for CLI projects.
 
 * * *
 
@@ -289,7 +289,7 @@ must_use_candidate = "allow"
 unsafe_code = "forbid"
 ```
 
-See [Rust Project Setup](guidelines/rust-project-setup.md) for complete configuration
+See [Rust Project Setup](../guidelines/rust-project-setup.md) for complete configuration
 including release profile, deny.toml, release.toml, and justfile.
 
 ### 4.3 Include the Python source as a submodule
@@ -320,7 +320,7 @@ done
 ### 4.5 Set up CI
 
 Create GitHub Actions with 7 parallel jobs: format, clippy, test, MSRV, audit, deny,
-docs. See [Rust Project Setup](guidelines/rust-project-setup.md) for the complete
+docs. See [Rust Project Setup](../guidelines/rust-project-setup.md) for the complete
 workflow.
 
 ### 4.6 Track version correspondence
@@ -383,7 +383,7 @@ that tracks:
 - **Exact parity definition** (what "parity" means for this project)
 - **Current status** (mapped tests, passing tests, known gaps)
 - **All known discrepancies** with status (fixed, accepted, open)
-- **Test mapping coverage** (see [Cross-Language Test Mapping](reference/cross-language-test-mapping.md))
+- **Test mapping coverage** (see [Cross-Language Test Mapping](cross-language-test-mapping.md))
 
 This document serves as the single source of truth for the porting effort's progress and
 prevents drift across multiple agent sessions. Update it after every significant
@@ -528,7 +528,7 @@ For argument mapping from Python to Rust:
 - Enable clap’s `cargo` feature for automatic `--version` from Cargo.toml
 - Use `color-eyre` for rich error display
 
-See [CLI-Specific Porting Patterns](guidelines/python-to-rust-cli-porting.md) for
+See [CLI-Specific Porting Patterns](../guidelines/python-to-rust-cli-porting.md) for
 detailed argument mapping tables.
 
 ### 7.3 CI verification
@@ -553,7 +553,7 @@ All CI jobs must pass:
 ### 7.5 Release configuration
 
 Set up `release.toml` for cargo-release and a release CI workflow for cross-platform
-binary builds. See [Rust Project Setup](guidelines/rust-project-setup.md) for templates.
+binary builds. See [Rust Project Setup](../guidelines/rust-project-setup.md) for templates.
 
 * * *
 

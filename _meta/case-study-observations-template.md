@@ -32,7 +32,10 @@ categories as follows:
 | Project name |  |
 | Source repo |  |
 | Rust repo |  |
+| Run mode | `initial-port` / `auto-sync-update` |
 | Python version |  |
+| Baseline Python version/tag (sync mode) |  |
+| Target Python version/tag (sync mode) |  |
 | Python LOC (app) |  |
 | Python LOC (tests) |  |
 | Domain |  |
@@ -42,17 +45,48 @@ categories as follows:
 
 * * *
 
+## Sync Update Context (auto-sync mode only)
+
+Complete this section only when the run mode is `auto-sync-update`.
+
+| Field | Value |
+| --- | --- |
+| Baseline Python commit/tag |  |
+| Target Python commit/tag |  |
+| Upstream diff artifact path |  |
+| Python commit log artifact path |  |
+| Accepted pre-existing divergences |  |
+| Newly introduced intentional divergences |  |
+
+For sync-mode observations, each affected phase should explicitly answer:
+
+- Which upstream diff item(s) this phase implemented
+- Whether changed upstream tests were ported or deferred (with rationale)
+- What parity evidence was captured after the update
+
+* * *
+
 ## Phase 1: Assess the Original Project
 
 ### Observation ID: OBS-[N]
 
 ### What the playbook said
 
-> [Quote from `reference/python-to-rust-playbook.md`, Phase 1, with section reference]
+> [Quote from `playbooks/python-to-rust-playbook.md`, Phase 1, with section reference]
 
 ### What actually happened
 
 [Description of actual experience during assessment]
+
+### Evidence
+
+- Commands run:
+
+- Output/artifact paths:
+
+- Source commit/tag examined:
+
+- Rust commit/branch evaluated:
 
 ### Playbook assessment
 
@@ -65,7 +99,7 @@ categories as follows:
 
 ### Suggested playbook change
 
-**File:** [e.g., `reference/python-to-rust-playbook.md` section "Phase 1"] **Change:**
+**File:** [e.g., `playbooks/python-to-rust-playbook.md` section "Phase 1"] **Change:**
 [Specific text change or addition, or "None"]
 
 ### Difficulty
@@ -91,6 +125,16 @@ Easy / Moderate / Hard — and why]
 
 [Description]
 
+### Evidence
+
+- Commands run:
+
+- Output/artifact paths:
+
+- Source commit/tag examined:
+
+- Rust commit/branch evaluated:
+
 ### Playbook assessment
 
 - [ ] Helpful → `VALIDATE`
@@ -101,7 +145,7 @@ Easy / Moderate / Hard — and why]
 
 ### Suggested playbook change
 
-**File:** [e.g., `reference/python-to-rust-playbook.md` section "Phase 2"] **Change:**
+**File:** [e.g., `playbooks/python-to-rust-playbook.md` section "Phase 2"] **Change:**
 [Specific text change or addition, or "None"]
 
 ### Difficulty
@@ -124,6 +168,16 @@ Easy / Moderate / Hard — and why]
 
 [Description]
 
+### Evidence
+
+- Commands run:
+
+- Output/artifact paths:
+
+- Source commit/tag examined:
+
+- Rust commit/branch evaluated:
+
 ### Playbook assessment
 
 - [ ] Helpful → `VALIDATE`
@@ -134,7 +188,7 @@ Easy / Moderate / Hard — and why]
 
 ### Suggested playbook change
 
-**File:** [e.g., `reference/python-to-rust-playbook.md` section "Phase 3"] **Change:**
+**File:** [e.g., `playbooks/python-to-rust-playbook.md` section "Phase 3"] **Change:**
 [Specific text change or addition, or "None"]
 
 ### Difficulty
@@ -157,6 +211,16 @@ Easy / Moderate / Hard — and why]
 
 [Description]
 
+### Evidence
+
+- Commands run:
+
+- Output/artifact paths:
+
+- Source commit/tag examined:
+
+- Rust commit/branch evaluated:
+
 ### Playbook assessment
 
 - [ ] Helpful → `VALIDATE`
@@ -168,7 +232,7 @@ Easy / Moderate / Hard — and why]
 ### Suggested playbook change
 
 **File:**
-[e.g., `guidelines/rust-project-setup.md` or `reference/python-to-rust-playbook.md` section "Phase 4"]
+[e.g., `guidelines/rust-project-setup.md` or `playbooks/python-to-rust-playbook.md` section "Phase 4"]
 **Change:** [Specific text change or addition, or "None"]
 
 ### Difficulty
@@ -191,6 +255,16 @@ Easy / Moderate / Hard — and why]
 
 [Description]
 
+### Evidence
+
+- Commands run:
+
+- Output/artifact paths:
+
+- Source commit/tag examined:
+
+- Rust commit/branch evaluated:
+
 ### Playbook assessment
 
 - [ ] Helpful → `VALIDATE`
@@ -202,7 +276,7 @@ Easy / Moderate / Hard — and why]
 ### Suggested playbook change
 
 **File:**
-[e.g., `reference/python-to-rust-playbook.md` section “Phase 5” or `guidelines/python-to-rust-porting-rules.md`]
+[e.g., `playbooks/python-to-rust-playbook.md` section “Phase 5” or `guidelines/python-to-rust-porting-rules.md`]
 **Change:** [Specific text change or addition, or "None"]
 
 ### Difficulty
@@ -225,6 +299,16 @@ Easy / Moderate / Hard — and why]
 
 [Description]
 
+### Evidence
+
+- Commands run:
+
+- Output/artifact paths:
+
+- Source commit/tag examined:
+
+- Rust commit/branch evaluated:
+
 ### Playbook assessment
 
 - [ ] Helpful → `VALIDATE`
@@ -235,7 +319,7 @@ Easy / Moderate / Hard — and why]
 
 ### Suggested playbook change
 
-**File:** [e.g., `reference/python-to-rust-playbook.md` section "Phase 6"] **Change:**
+**File:** [e.g., `playbooks/python-to-rust-playbook.md` section "Phase 6"] **Change:**
 [Specific text change or addition, or "None"]
 
 ### Difficulty
@@ -258,6 +342,16 @@ Easy / Moderate / Hard — and why]
 
 [Description]
 
+### Evidence
+
+- Commands run:
+
+- Output/artifact paths:
+
+- Source commit/tag examined:
+
+- Rust commit/branch evaluated:
+
 ### Playbook assessment
 
 - [ ] Helpful → `VALIDATE`
@@ -269,7 +363,7 @@ Easy / Moderate / Hard — and why]
 ### Suggested playbook change
 
 **File:**
-[e.g., `reference/python-to-rust-playbook.md` section “Phase 7” or `reference/rust-cli-best-practices.md`]
+[e.g., `playbooks/python-to-rust-playbook.md` section “Phase 7” or `playbooks/rust-cli-best-practices.md`]
 **Change:** [Specific text change or addition, or "None"]
 
 ### Difficulty
@@ -292,6 +386,16 @@ Easy / Moderate / Hard — and why]
 
 [Description — note: if the Python project has not been updated since the port, record “Not applicable yet” and describe whether the playbook’s sync guidance seems sufficient based on the project’s structure]
 
+### Evidence
+
+- Commands run:
+
+- Output/artifact paths:
+
+- Source commit/tag examined:
+
+- Rust commit/branch evaluated:
+
 ### Playbook assessment
 
 - [ ] Helpful → `VALIDATE`
@@ -303,7 +407,7 @@ Easy / Moderate / Hard — and why]
 
 ### Suggested playbook change
 
-**File:** [e.g., `reference/python-to-rust-playbook.md` section "Phase 8"] **Change:**
+**File:** [e.g., `playbooks/python-to-rust-playbook.md` section "Phase 8"] **Change:**
 [Specific text change or addition, or "None"]
 
 ### Difficulty

@@ -13,6 +13,11 @@ cycle.
 **Related:** [Initial Port Checklist](port-checklist-initial-template.md) |
 [Rust CLI Best Practices](rust-cli-best-practices.md)
 
+**Applicability profile:** This checklist is CLI-forward because flowmark is a CLI case
+study.
+For non-CLI ports, mark CLI-only items as **N/A** and substitute equivalent interface
+parity checks for your public API/service surface.
+
 * * *
 
 > **Completion Gate:** Acceptance requires exact 100% passing of every test, exact 100%
@@ -71,6 +76,11 @@ These are optional but strongly recommended for projects with active Python upst
 
   - [ ] Categorize each change as: bug fix, new feature, test addition, or refactor
 
+  - [ ] Save a baseline->target diff summary artifact (example:
+    `docs/sync-artifacts/<YYYY-MM-DD>-upstream-diff-summary.md`) listing:
+    changed modules/functions, changed tests, CLI/interface changes, and dependency
+    changes
+
 - [ ] **Update Version Tracking**
 
   - [ ] Verify `[package.metadata.python_source]` in `Cargo.toml` was updated by sync
@@ -88,6 +98,9 @@ These are optional but strongly recommended for projects with active Python upst
   - [ ] List Rust updates required
 
   - [ ] Mark status as “In progress”
+
+> **Completion Gate (Do not start Phase 2):** Baseline and target versions are recorded,
+> the upstream diff artifact is saved, and every upstream change is categorized.
 
 ## Phase 2: Port Changes to Rust
 
@@ -296,7 +309,7 @@ These are optional but strongly recommended for projects with active Python upst
 
   - [ ] `include_str!()` used for any new fixtures
 
-### CLI Parity (Mandatory)
+### CLI Parity (Mandatory for CLI applications)
 
 - [ ] **Interface Compatibility** *(Zero diffs required)*
 
