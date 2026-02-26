@@ -5,6 +5,12 @@
 Ongoing Synchronization of Python Code Changes).
 See that guide for detailed explanations and handling strategies.
 
+**Scope note:** This checklist is for **upstream sync releases** where the Python
+baseline changes. If you are cutting a Rust release while keeping the same Python
+baseline, use
+[python-to-rust-sync-release-workflow.md](python-to-rust-sync-release-workflow.md) Mode
+A (Rust-only stabilization release).
+
 **Instructions:** Copy this document to `port-checklist-update-YYYY-MM-DD.md` (filling
 in the date of the sync).
 Then fill in the copy, so that this template can be reused for each subsequent sync
@@ -14,9 +20,8 @@ cycle.
 [Rust CLI Best Practices](rust-cli-best-practices.md)
 
 **Applicability profile:** This checklist is CLI-forward because flowmark is a CLI case
-study.
-For non-CLI ports, mark CLI-only items as **N/A** and substitute equivalent interface
-parity checks for your public API/service surface.
+study. For non-CLI ports, mark CLI-only items as **N/A** and substitute equivalent
+interface parity checks for your public API/service surface.
 
 * * *
 
@@ -50,6 +55,13 @@ polling:
 
 These are optional but strongly recommended for projects with active Python upstreams.
 
+## Preflight: Confirm Release Mode
+
+- [ ] Confirm this run changes the Python baseline version/tag/commit.
+- [ ] If baseline is unchanged, stop and use
+  [python-to-rust-sync-release-workflow.md](python-to-rust-sync-release-workflow.md)
+  Mode A instead of this checklist.
+
 ## Phase 1: Sync Python Changes
 
 - [ ] **Update Submodule**
@@ -77,9 +89,8 @@ These are optional but strongly recommended for projects with active Python upst
   - [ ] Categorize each change as: bug fix, new feature, test addition, or refactor
 
   - [ ] Save a baseline->target diff summary artifact (example:
-    `docs/sync-artifacts/<YYYY-MM-DD>-upstream-diff-summary.md`) listing:
-    changed modules/functions, changed tests, CLI/interface changes, and dependency
-    changes
+    `docs/sync-artifacts/<YYYY-MM-DD>-upstream-diff-summary.md`) listing: changed
+    modules/functions, changed tests, CLI/interface changes, and dependency changes
 
 - [ ] **Update Version Tracking**
 

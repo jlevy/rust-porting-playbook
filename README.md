@@ -14,7 +14,8 @@ to Rust and keep it synchronized over time:
 - Source project: [flowmark (Python)](https://github.com/jlevy/flowmark)
 - Ported project: [flowmark-rs (Rust)](https://github.com/jlevy/flowmark-rs)
 - Full write-up: [Flowmark case study](case-studies/flowmark/)
-- Detailed methodology and lessons: [flowmark-port-analysis.md](case-studies/flowmark/flowmark-port-analysis.md)
+- Detailed methodology and lessons:
+  [flowmark-port-analysis.md](case-studies/flowmark/flowmark-port-analysis.md)
 
 The result demonstrates full-port execution plus ongoing upstream sync discipline using
 Claude Code workflows (including Opus 4.6-era runs) with human review gates.
@@ -72,7 +73,8 @@ rust-porting-playbook/
 │   ├── python-to-rust-test-coverage-playbook.md
 │   ├── port-checklist-initial-template.md
 │   ├── port-checklist-update-template.md
-│   └── auto-sync-agent-prompt-template.md
+│   ├── auto-sync-agent-prompt-template.md
+│   └── python-to-rust-sync-release-workflow.md
 ├── guidelines/                # Compact rules for AI agent context (~2-3k tokens each)
 │   ├── python-to-rust-porting-rules.md
 │   ├── python-to-rust-cli-porting.md
@@ -184,6 +186,7 @@ workflows.
 | [port-checklist-initial-template.md](playbooks/port-checklist-initial-template.md) | Expanded execution checklist template (copy and fill in) |
 | [port-checklist-update-template.md](playbooks/port-checklist-update-template.md) | Ongoing sync checklist template |
 | [auto-sync-agent-prompt-template.md](playbooks/auto-sync-agent-prompt-template.md) | Canonical prompt for syncing existing Rust ports to new upstream Python releases |
+| [python-to-rust-sync-release-workflow.md](playbooks/python-to-rust-sync-release-workflow.md) | Two-stage release-refresh workflow: Rust-only stabilization release, then upstream sync release |
 
 ## Meta Docs
 
@@ -202,9 +205,8 @@ This playbook improves through real-world case studies.
 Each port conducted using the playbook generates structured feedback that is integrated
 back into the playbook, making it more accurate and complete with every case study.
 
-See
-[`_meta/meta-improving-this-playbook.md`](_meta/meta-improving-this-playbook.md)
-for the full process.
+See [`_meta/meta-improving-this-playbook.md`](_meta/meta-improving-this-playbook.md) for
+the full process.
 
 ### How to contribute a case study
 

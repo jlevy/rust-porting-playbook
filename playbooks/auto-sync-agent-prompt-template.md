@@ -3,7 +3,12 @@
 Use this prompt when the Rust port already exists and upstream Python has released a new
 version.
 
-**Use this first for sync work:** [`port-checklist-update-template.md`](port-checklist-update-template.md)
+**Use this first for sync work:**
+[`port-checklist-update-template.md`](port-checklist-update-template.md).
+
+For two-stage release planning (Rust-only stabilization release first, then upstream
+sync), see
+[`python-to-rust-sync-release-workflow.md`](python-to-rust-sync-release-workflow.md).
 
 **Related:** [Meta Playbook](../_meta/meta-improving-this-playbook.md) |
 [Playbook Phase 8](python-to-rust-playbook.md#phase-8-ongoing-synchronization) |
@@ -72,3 +77,24 @@ Hard requirements:
 - Sync report (`docs/python-sync-log.md` or project equivalent)
 - Updated version correspondence metadata
 - Test and parity validation evidence
+
+## Minimal Prompt (Copy/Paste)
+
+```text
+Update this existing Rust port to match a newer upstream Python release.
+
+Inputs:
+- Rust repo path: <RUST_REPO_PATH>
+- Python source path: <PYTHON_REPO_PATH>
+- Current Python baseline in Rust: <CURRENT_PYTHON_VERSION>
+- Target upstream Python release/commit: <TARGET_RELEASE_OR_COMMIT>
+- Known accepted divergences: <NONE_OR_LIST>
+
+Required:
+1. Diff baseline -> target first and summarize changed modules/tests/interfaces/dependencies.
+2. Follow playbooks/port-checklist-update-template.md end-to-end.
+3. Port changed behavior tests-first; do not skip changed upstream tests.
+4. Run full validation gates (tests, parity, lint/format/docs/CI checks).
+5. Update version correspondence metadata and sync log.
+6. Return a concise sync report with what changed, validation evidence, and any blockers.
+```
