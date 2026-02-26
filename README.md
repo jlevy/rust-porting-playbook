@@ -21,16 +21,20 @@ improve as we do more ports.
 If you do a port, have it track a case study, using my last port as an example, and then
 the meta playbook will help improve the overall porting playbook!
 
-Caveats:
+Notes and caveats:
 
 - Currently focused on **Python-to-Rust** porting.
   (But a lot is reusable so future editions may cover TypeScript and other source
   languages.)
 
 - This requires **thoroughly testable** Python apps where all features can be mapped to
-  Rust. So libraries and CLI applications are great.
-  (You don’t need prefect tests to begin with, as long as the agent can add them and
-  write equivalent tests in Rust.)
+  Rust. (You don’t need prefect tests to begin with, as long as the agent can add them
+  and write equivalent tests in Rust.)
+
+- Ports of libraries and CLI applications are great if they can have
+  [golden session tests](https://github.com/jlevy/tbd/blob/main/packages/tbd/docs/guidelines/golden-testing-guidelines.md).
+  See my [tryscript](https://github.com/jlevy/tryscript) CLI to make thorough testing
+  scripts easy for CLI apps.
 
 The idea is
 - Increasing test coverage (if needed) on the original app
@@ -42,7 +46,9 @@ The idea is
 
 ## Case Study: Flowmark
 
-Here’s the first nontrivial use of this playbook:
+Here’s the first nontrivial use of this playbook.
+The result demonstrates full-port execution plus ongoing upstream sync discipline.
+It was mostly Opus 4.6.
 
 - Source project: [flowmark (Python)](https://github.com/jlevy/flowmark)
 
@@ -54,9 +60,6 @@ This is packaged here as a [case study](case-studies/flowmark/) with
 - Full Python→Rust lifecycle, including post-port synchronization
 
 - Decision logs, library tradeoffs, discrepancy handling, and cross-validation
-
-The result demonstrates full-port execution plus ongoing upstream sync discipline.
-It was mostly Opus 4.6.
 
 All this is docs that help an agent make better Rust ports!
 The case studies can be reused for helping agents on the meta-process of playbook
