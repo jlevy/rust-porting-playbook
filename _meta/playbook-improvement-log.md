@@ -7,8 +7,10 @@ Chronological log of improvements to the Rust Porting Playbook and its meta-proc
 ### Scope and claim calibration
 
 - Tightened primary scope language to avoid over-claiming universality.
-- Reframed top-level messaging around complex Python apps, especially CLI-oriented ports.
-- Replaced brittle count-driven wording in top-level summaries with stable outcome framing.
+- Reframed top-level messaging around complex Python apps, especially CLI-oriented
+  ports.
+- Replaced brittle count-driven wording in top-level summaries with stable outcome
+  framing.
 
 ### Checklist applicability and phase-consistency hardening
 
@@ -23,13 +25,27 @@ Chronological log of improvements to the Rust Porting Playbook and its meta-proc
 
 - Added `case-studies/flowmark/README.md` as a local index/start-here entry point.
 - Added reproducibility/evidence protocol to
-  `case-studies/flowmark/flowmark-port-metrics.md` (commit+command+artifact expectations).
+  `case-studies/flowmark/flowmark-port-metrics.md` (commit+command+artifact
+  expectations).
 
 ### Meta plan hygiene
 
 - Archived `_meta/plans/active/plan-2026-02-12-comprehensive-playbook-review.md` to
   `_meta/plans/done/` as superseded.
 - Updated historical references to the new archived plan location.
+
+### Sync-release workflow codification
+
+- Added `playbooks/python-to-rust-sync-release-workflow.md` to codify two release modes
+  for existing ports:
+  - Mode A: Rust-only stabilization release (same Python baseline)
+  - Mode B: Upstream sync release (new Python baseline)
+- Updated `playbooks/port-checklist-update-template.md` with explicit scope guard so it
+  is used only for upstream baseline changes.
+- Expanded `playbooks/auto-sync-agent-prompt-template.md` with a minimal copy-paste sync
+  prompt and cross-links to the two-mode workflow.
+- Added cross-links from `README.md` and `playbooks/python-to-rust-playbook.md` to keep
+  the sync-release process discoverable from primary entry points.
 
 ## 2026-02-25
 
@@ -52,8 +68,8 @@ Chronological log of improvements to the Rust Porting Playbook and its meta-proc
 
 ### Auto-sync update clarity
 
-- Added `playbooks/auto-sync-agent-prompt-template.md` as a canonical prompt for syncing an
-  existing Rust port to a new upstream Python release.
+- Added `playbooks/auto-sync-agent-prompt-template.md` as a canonical prompt for syncing
+  an existing Rust port to a new upstream Python release.
 - Updated `_meta/meta-improving-this-playbook.md` with explicit dual-mode entry points:
   initial port vs auto-sync update.
 - Expanded the active gap-map plan to include auto-sync-specific clarity and process
@@ -64,9 +80,8 @@ Chronological log of improvements to the Rust Porting Playbook and its meta-proc
 - Renamed `reference/` to `playbooks/` to make operational playbook docs easier to find.
 - Renamed `meta/` to `_meta/` so meta-process docs sort to the top.
 - Updated markdown links across the repo to the new `playbooks/` and `_meta/` paths.
-- Fixed README structure map:
-  removed duplicate `guidelines/` block and moved `auto-sync-agent-prompt-template.md`
-  under `playbooks/`.
+- Fixed README structure map: removed duplicate `guidelines/` block and moved
+  `auto-sync-agent-prompt-template.md` under `playbooks/`.
 
 ### Flowmark case-study planning and README signal
 
@@ -85,8 +100,7 @@ Chronological log of improvements to the Rust Porting Playbook and its meta-proc
   - `port-checklist-initial.md` -> `port-checklist-initial-template.md`
   - `port-checklist-update.md` -> `port-checklist-update-template.md`
 - Completed a core-doc link sweep and resolved broken relative paths.
-- Updated gap-map statuses to reflect completed items:
-  G02, G06, G16, G17, G20, and G22.
+- Updated gap-map statuses to reflect completed items: G02, G06, G16, G17, G20, and G22.
 
 ### Meta gap-closure pass (framework hardening)
 
@@ -103,8 +117,7 @@ Chronological log of improvements to the Rust Porting Playbook and its meta-proc
 
 ### Flowmark case-study sync completion
 
-- Added canonical metrics source file:
-  `case-studies/flowmark/flowmark-port-metrics.md`.
+- Added canonical metrics source file: `case-studies/flowmark/flowmark-port-metrics.md`.
 - Updated Flowmark case-study docs to reference canonical metrics and clearly separate:
   historical baseline (2025) vs current v2 metrics.
 - Added/updated review timestamps and historical-artifact notes across Flowmark docs.

@@ -378,16 +378,17 @@ For each module, in dependency order:
 
 ### 5.4 Maintain a parity tracking spec
 
-For non-trivial ports, maintain a structured "parity spec" document alongside the code
+For non-trivial ports, maintain a structured “parity spec” document alongside the code
 that tracks:
-- **Exact parity definition** (what "parity" means for this project)
+- **Exact parity definition** (what “parity” means for this project)
 - **Current status** (mapped tests, passing tests, known gaps)
 - **All known discrepancies** with status (fixed, accepted, open)
-- **Test mapping coverage** (see [Cross-Language Test Mapping](cross-language-test-mapping.md))
+- **Test mapping coverage** (see
+  [Cross-Language Test Mapping](cross-language-test-mapping.md))
 
-This document serves as the single source of truth for the porting effort's progress and
-prevents drift across multiple agent sessions. Update it after every significant
-milestone.
+This document serves as the single source of truth for the porting effort’s progress and
+prevents drift across multiple agent sessions.
+Update it after every significant milestone.
 
 ### 5.5 Key pitfalls to watch for
 
@@ -553,7 +554,8 @@ All CI jobs must pass:
 ### 7.5 Release configuration
 
 Set up `release.toml` for cargo-release and a release CI workflow for cross-platform
-binary builds. See [Rust Project Setup](../guidelines/rust-project-setup.md) for templates.
+binary builds. See [Rust Project Setup](../guidelines/rust-project-setup.md) for
+templates.
 
 * * *
 
@@ -563,6 +565,20 @@ binary builds. See [Rust Project Setup](../guidelines/rust-project-setup.md) for
 
 **Time:** Ongoing; each sync cycle takes 30-120 minutes depending on scope of Python
 changes.
+
+### 8.0 Recommended release cadence for mature ports
+
+For active projects, treat maintenance as two explicit release modes:
+
+1. **Rust-only stabilization release** (same upstream Python baseline): internal
+   cleanups, docs, build/release hardening, and parity fixes that do not change the
+   Python baseline.
+2. **Upstream sync release** (new upstream Python baseline): port changes from the next
+   upstream Python release.
+
+This reduces release risk and keeps version correspondence clear.
+See [python-to-rust-sync-release-workflow.md](python-to-rust-sync-release-workflow.md)
+for the full sequence and agent prompts.
 
 ### 8.1 When Python updates
 
@@ -664,6 +680,8 @@ FINALIZE
 ☐ Release workflow configured
 
 SYNC (ongoing)
+☐ Choose release mode: stabilization (same baseline) vs upstream sync (new baseline)
+☐ If stabilization mode, follow python-to-rust-sync-release-workflow.md Mode A
 ☐ Update git submodule to new Python version
 ☐ Regenerate expected test fixtures
 ☐ Run cross-validation, categorize differences
