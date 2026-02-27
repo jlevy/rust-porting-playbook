@@ -13,9 +13,11 @@ match against.
 
 ## Overview
 
-This playbook covers six phases of test coverage work:
+This playbook covers seven phases of test coverage work:
 
-1. **Measure** -- Understand current coverage
+0. **Assess & Enhance** -- Evaluate whether existing Python tests are sufficient to
+   serve as a specification; enhance them if not
+1. **Measure** -- Understand current coverage quantitatively
 2. **Expand** -- Write tests for uncovered code
 3. **Golden** -- Create golden/snapshot tests for CLI behavior
 4. **Document** -- Record what can’t be automated
@@ -24,6 +26,108 @@ This playbook covers six phases of test coverage work:
 
 Each phase builds on the previous one.
 Complete them in order.
+
+## Phase 0: Assess Test Sufficiency and Enhance
+
+**Goal:** Before measuring coverage or beginning the Rust port, determine whether the
+existing Python test suite is comprehensive enough to serve as the *specification* for
+the port. If not, enhance it first.
+
+This phase is critical. If the Python tests are thin, the Rust port will have no
+reliable source of truth to match against, and cross-validation will be meaningless.
+
+### 0.1 Test Sufficiency Gate
+
+Answer these questions. If any answer is "no," enhancement is required before proceeding
+to Phase 1.
+
+- [ ] Does every public CLI option / flag have at least one test exercising it?
+- [ ] Does every major feature (not just happy path) have test coverage?
+- [ ] Are error paths tested (invalid input, missing files, bad arguments)?
+- [ ] Are edge cases covered (empty input, Unicode, very large input)?
+- [ ] Is the test suite runnable with a single command (e.g., `make test`)?
+- [ ] If golden/integration tests exist, do they cover the full CLI surface area?
+
+### 0.2 Systematic Gap Identification
+
+Run the test suite and check coverage:
+
+```bash
+uv run pytest --cov=myproject --cov-branch --cov-report=term-missing
+```
+
+Then review each uncovered function/branch and ask: "Would a Rust port need to replicate
+this behavior?" If yes, write a test for it now.
+
+Common gap categories:
+- **CLI argument combinations** -- mutually exclusive flags, default values
+- **File I/O edge cases** -- permissions, missing files, empty files, binary files
+- **Unicode and encoding** -- CJK, emoji, mixed scripts, invalid UTF-8
+- **Platform differences** -- line endings, path separators, symlinks
+- **Error handling** -- every error message the user can see should have a test
+
+### 0.3 Migrate Legacy Test Formats
+
+If the project uses ad-hoc shell scripts for integration testing (common for CLIs), this
+is the time to migrate them to tryscript or a structured testing framework.
+
+**When to migrate to tryscript:**
+- Existing bash golden tests capture CLI output and compare against a baseline
+- Tests rely on output normalization (stripping timestamps, line numbers, paths)
+- Tests use `set -e` + `diff` for pass/fail determination
+- The test harness is hard to extend with new test cases
+
+**Tryscript format reference:**
+
+```markdown
+---
+sandbox: true
+env:
+  NO_COLOR: "1"
+path:
+  - $TRYSCRIPT_GIT_ROOT/.venv/bin
+patterns:
+  VERSION: ‘v\d+\.\d+\.\S+’
+  TIMESTAMP: ‘\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}’
+before: |
+  mkdir -p test-dir
+  printf ‘test content\n’ > test-dir/file.txt
+---
+
+# CLI Golden Tests
+
+## Basic usage
+
+\`\`\`console
+$ mytool --flag test-dir/file.txt
+expected output here
+\`\`\`
+
+## Error: missing file
+
+\`\`\`console
+$ mytool nonexistent.txt 2>&1
+Error: file not found: nonexistent.txt
+? 1
+\`\`\`
+```
+
+**Migration steps:**
+1. Read each test scenario in the existing bash script
+2. Create a `.tryscript.md` file grouped by feature area
+3. Add `patterns:` frontmatter for output normalization (replaces perl/sed filters)
+4. Add `before:` block for fixture setup (replaces `cp -a` setup)
+5. Translate `expect_error` patterns to tryscript’s `? N` exit code syntax
+6. Run `tryscript test` to verify the migration produces identical results
+7. Organize into multiple files by feature area for maintainability
+
+### 0.4 Establish the Baseline
+
+Once enhancement is complete:
+- Run the full test suite and confirm 100% pass rate
+- Record the final coverage numbers (target: ≥90% line, ≥80% branch on core library)
+- Commit all new tests, fixtures, and tryscript files
+- This test suite is now the **specification** for the Rust port
 
 ## Phase 1: Measure Current Coverage
 
