@@ -351,14 +351,85 @@ This is directly informed by RepRen's migration from `golden-tests.sh` to tryscr
 #### 5.3 Filesystem-Heavy CLI Patterns (ADD)
 
 The Flowmark case study was "read → transform → write." RepRen is
-"read → transform → write + rename + backup + undo." The playbook should add guidance
-for porting filesystem-mutation-heavy CLIs:
+"read → transform → write + rename + backup + undo." The playbook needs significantly
+more guidance for porting filesystem-mutation-heavy CLIs.
 
-- Rust patterns for atomic file operations (`tempfile` crate + `std::fs::rename`)
-- Backup management patterns in Rust
-- Path manipulation: `std::path::Path` vs Python's `pathlib`
-- Cross-platform path handling considerations
-- Testing filesystem mutations (tempdir-based test isolation)
+**What the playbook already has:**
+
+- `guidelines/rust-cli-app-patterns.md` lines 148-173: A minimal `atomic_write()` example
+  using `tempfile::NamedTempFile` + `persist()`, and a `write_with_backup()` snippet
+  using `std::fs::copy` + `path.with_extension()`. These are the right primitives but
+  cover only the simplest scenario (one file, one backup extension).
+- `playbooks/python-to-rust-mapping-reference.md` lines 225-238: Basic I/O mapping table
+  (`open(path).read()` → `std::fs::read_to_string()`, `os.path.join` → `path.join()`,
+  etc.). Only covers read/write/exists/parent/join — five operations total.
+- `playbooks/rust-cli-best-practices.md` line 230: mentions `walkdir` and `tempfile` in a
+  dependency list, no usage patterns.
+
+**What's missing — the gap is large:**
+
+A comprehensive filesystem operations mapping reference should cover all of the following.
+Very little of this is in the playbook today:
+
+**a) Python → Rust filesystem operation mapping (exhaustive)**
+
+| Python | Rust | Pitfalls |
+| --- | --- | --- |
+| `os.walk(dir)` | `walkdir::WalkDir::new(dir)` | Ordering differs; Python yields `(dirpath, dirnames, filenames)`, walkdir yields `DirEntry`; filtering must happen differently |
+| `os.rename(src, dst)` | `std::fs::rename(src, dst)?` | Cross-device moves fail in both; Python's `shutil.move()` handles this, Rust needs manual copy+delete fallback |
+| `shutil.copy2(src, dst)` | `std::fs::copy(src, dst)?` | Rust `copy` only copies content + permissions, not timestamps; need `filetime` crate for full metadata preservation |
+| `shutil.rmtree(path)` | `std::fs::remove_dir_all(path)?` | Direct equivalent but no trash/recycle bin support |
+| `os.makedirs(path, exist_ok=True)` | `std::fs::create_dir_all(path)?` | Direct equivalent |
+| `os.path.exists(path)` | `path.exists()` | Race condition in both; prefer `try` operations |
+| `os.path.isfile(path)` | `path.is_file()` | Follows symlinks in both |
+| `os.path.isdir(path)` | `path.is_dir()` | Follows symlinks in both |
+| `os.path.islink(path)` | `path.is_symlink()` | Does NOT follow symlinks |
+| `os.listdir(path)` | `std::fs::read_dir(path)?` | Rust returns `Result<DirEntry>` iterator |
+| `os.path.getsize(path)` | `path.metadata()?.len()` | Follows symlinks; use `symlink_metadata()` for symlinks |
+| `os.stat(path)` | `std::fs::metadata(path)?` | Different field names, platform-specific extensions |
+| `os.chmod(path, mode)` | `std::fs::set_permissions(path, perms)?` | Unix-only for mode bits; need `std::os::unix::fs::PermissionsExt` |
+| `tempfile.NamedTemporaryFile()` | `tempfile::NamedTempFile::new()?` | Rust version doesn't auto-delete on drop by default (use `tempfile()` for that) |
+| `os.path.abspath(path)` | `std::fs::canonicalize(path)?` | Rust resolves symlinks too! Use `std::path::absolute()` (nightly) or manual resolution for no-symlink-resolve |
+| `os.path.relpath(path, base)` | `pathdiff::diff_paths(path, base)` | Not in stdlib; need `pathdiff` crate |
+| `os.path.expanduser("~")` | `dirs::home_dir()` | Need `dirs` crate |
+| `glob.glob("*.md")` | `glob::glob("*.md")?` | Need `glob` crate |
+
+**b) Atomic file operation patterns beyond the basics**
+
+- Atomic write-to-temp-then-rename with permission preservation
+- Atomic rename with collision detection and numeric suffix generation
+  (RepRen's `_rename_file()` does `foo.txt` → `foo.txt.1` → `foo.txt.2`)
+- Backup-then-modify with configurable suffix
+- Undo: restore from backup with reverse rename
+- Clean: find and remove backup files matching a suffix pattern
+- Directory creation as side-effect of rename (creating parent dirs)
+
+**c) Path manipulation patterns**
+
+- `Path` vs `PathBuf` ownership (when to use which, borrowing patterns)
+- Component-level path manipulation (replacing directory prefixes, which RepRen
+  does for rename-based file moves)
+- Cross-platform path separator handling
+- Extension manipulation (`.with_extension()` only replaces the last extension;
+  `.orig` appended to `foo.tar.gz` needs manual handling)
+- Path comparison and canonicalization gotchas
+
+**d) Directory walking patterns**
+
+- Filtering during walk (vs filtering after collecting) — `walkdir` filter_entry
+- Excluding patterns (dotfiles, backup files, specific directories)
+- Preserving walk order for deterministic output
+- Handling symlinks during walk (follow vs skip)
+- Concurrency-safe walking (files may appear/disappear)
+
+**e) Testing filesystem mutations**
+
+- `tempfile::TempDir` for test isolation (auto-cleanup)
+- Asserting file contents, permissions, and existence after operations
+- Testing atomic write behavior (verify no partial writes on error)
+- Testing rename collision behavior
+- Testing backup/undo round-trips
+- Snapshot-testing directory trees (listing + contents)
 
 #### 5.4 Zero-Dependency Ports (CLARIFY)
 
@@ -382,16 +453,110 @@ The observations template should include:
 
 #### 5.6 Regex Behavior Mapping (ADD)
 
-The `python-to-rust-mapping-reference.md` covers types, control flow, and error handling
-but doesn't cover regex behavior differences. RepRen will surface these directly. A new
-section should cover:
+**What the playbook already has:**
 
-- Python `re` → Rust `regex` behavioral differences
-- Unicode handling differences
-- Flag mapping (`re.IGNORECASE` → `(?i)`, `re.DOTALL` → `(?s)`)
-- Capturing group syntax differences
-- Lookahead/lookbehind availability differences
-- Named groups syntax
+The playbook has decent but shallow regex coverage spread across three files:
+
+- `playbooks/python-to-rust-mapping-reference.md` lines 261-278: A function mapping
+  table (`re.compile` → `Regex::new`, `re.match` → anchored `Regex`, etc.) with seven
+  entries, plus the critical `re.match()` anchoring warning. Also mentions `fancy-regex`
+  for look-ahead/behind.
+- `guidelines/python-to-rust-porting-rules.md` lines 197-219: Repeats the anchoring
+  pitfall with code examples for `re.match`, `re.search`, `re.fullmatch`.
+- `guidelines/rust-general-rules.md` lines 141-160: `LazyLock` for compiled regex,
+  anchoring warning, and "use `fancy-regex` only when needed."
+- `playbooks/python-to-rust-porting-guide.md` lines 592-596: Two sentences noting
+  look-around and backreference differences.
+
+**What's missing — the gap is moderate but important for regex-heavy projects:**
+
+The playbook covers the "top 3 pitfalls" (anchoring, look-arounds, static compilation)
+but is missing the full behavioral mapping that a regex-centric port like RepRen needs.
+The ideal reference would additionally cover:
+
+**a) Flag mapping (comprehensive)**
+
+| Python | Rust (`regex` crate) | Notes |
+| --- | --- | --- |
+| `re.IGNORECASE` / `re.I` | `(?i)` inline or `RegexBuilder::case_insensitive(true)` | Equivalent |
+| `re.DOTALL` / `re.S` | `(?s)` inline or `RegexBuilder::dot_matches_new_line(true)` | Equivalent |
+| `re.MULTILINE` / `re.M` | `(?m)` inline or `RegexBuilder::multi_line(true)` | Equivalent — `^`/`$` match line boundaries |
+| `re.VERBOSE` / `re.X` | `(?x)` inline or `RegexBuilder::ignore_whitespace(true)` | Equivalent |
+| `re.ASCII` / `re.A` | Default behavior in `regex` crate | Rust `regex` is Unicode-aware by default; use `(?-u)` to disable |
+| `re.UNICODE` / `re.U` | Default behavior | `regex` crate is Unicode by default |
+| Combined flags `re.I \| re.S` | `(?is)` inline or chain builder methods | |
+
+**Not in playbook at all today.**
+
+**b) Unicode behavior differences**
+
+- Python `\w` matches `[a-zA-Z0-9_]` by default (ASCII), or Unicode with `re.UNICODE`
+  (default in Python 3). Rust `regex` `\w` matches Unicode by default. This is the same
+  default, but the ASCII-only mode differs: Python uses `re.ASCII`, Rust uses `(?-u)`.
+- Python `\b` is Unicode-aware by default. Rust `\b` is also Unicode-aware by default.
+  But when porting patterns that were specifically ASCII-only (`re.ASCII`), need `(?-u)\b`.
+- `\d` — Python: `[0-9]` with `re.ASCII`, Unicode digits otherwise. Rust: Unicode
+  digits by default, `(?-u)\d` for ASCII-only.
+
+**Not in playbook at all today.**
+
+**c) Replacement string syntax differences**
+
+| Feature | Python `re.sub` | Rust `regex` `replace` |
+| --- | --- | --- |
+| Numbered backreference | `\1`, `\2` | `$1`, `$2` |
+| Named backreference | `\g<name>` | `$name` or `${name}` |
+| Literal `$` in replacement | N/A | `$$` |
+| Literal `\` in replacement | `\\` | `\` (no special meaning) |
+| Whole match | `\g<0>` | `$0` |
+| Empty capture fallback | Empty string | Empty string |
+
+**This is critical for RepRen** since it uses `\1`, `\2` backreferences extensively.
+The port must translate all replacement strings from `\N` to `$N` syntax.
+**Not in playbook at all today.**
+
+**d) Capturing group differences**
+
+- Python: `(?P<name>...)` for named groups. Rust: `(?P<name>...)` (same!) or
+  `(?<name>...)` (shorter form).
+- Python: `match.group(0)` for whole match, `match.group(1)` for first capture.
+  Rust: `caps.get(0)` / `caps.get(1)` returning `Option<Match>`.
+- Python: `re.findall()` with groups returns list of group tuples.
+  Rust: `regex.captures_iter()` returns `Captures` objects (different API shape).
+
+**Partially in playbook** (mapping reference has `match.group(0)` → `m.as_str()`,
+`match.group(1)` → `caps.get(1).map(|m| m.as_str())`), but missing the `findall`
+with groups behavior difference and named group syntax.
+
+**e) Feature availability differences**
+
+| Feature | Python `re` | Rust `regex` | Rust `fancy-regex` |
+| --- | --- | --- | --- |
+| Positive lookahead `(?=...)` | Yes | No | Yes |
+| Negative lookahead `(?!...)` | Yes | No | Yes |
+| Positive lookbehind `(?<=...)` | Yes (fixed-width) | No | Yes |
+| Negative lookbehind `(?<!...)` | Yes (fixed-width) | No | Yes |
+| Backreferences `\1` in pattern | Yes | No | Yes |
+| Atomic groups `(?>...)` | No | Yes | Yes |
+| Possessive quantifiers `a++` | No | Yes | Yes |
+| Conditional patterns `(?(id)yes\|no)` | Yes | No | No |
+
+**Partially in playbook** (mentions look-arounds and `fancy-regex` but not the full
+matrix or the availability of conditional patterns).
+
+**f) Performance and compilation differences**
+
+- Python: regex compilation is relatively slow; common to pre-compile with
+  `re.compile()`. Rust `regex`: compilation is also expensive; use `LazyLock` for statics
+  (covered in playbook).
+- Python: no compilation size limits. Rust `regex`: has a default size limit
+  (`RegexBuilder::size_limit()`). Complex patterns may hit this.
+- Python: backtracking engine (can have catastrophic backtracking). Rust `regex`:
+  Thompson NFA (guaranteed linear time, but some patterns are unsupported).
+  Rust `fancy-regex`: backtracking (can have catastrophic backtracking, like Python).
+
+**Partially in playbook** (`LazyLock` covered), but the size limit and
+linear-time-vs-backtracking distinction is not mentioned anywhere.
 
 ---
 
@@ -451,30 +616,75 @@ Will apply once RepRen's Python codebase is updated post-port.
 
 ---
 
-## 7. Playbook Structure: Proposed Changes
+## 7. Playbook Gap Summary and Proposed Changes
 
-Based on this analysis, the playbook should evolve as follows:
+### Current state of coverage, by topic
 
-### Additions
+| Topic | Already in playbook | Gap size | Priority |
+| --- | --- | --- | --- |
+| **Regex: anchoring pitfall** | Good (3 files cover it) | None | — |
+| **Regex: LazyLock compilation** | Good | None | — |
+| **Regex: fancy-regex mention** | Adequate (mentioned in 3 places) | Small | Low |
+| **Regex: flag mapping** | Not covered at all | **Large** | High |
+| **Regex: replacement syntax (`\1` → `$1`)** | Not covered at all | **Large** | **Critical** for RepRen |
+| **Regex: Unicode behavior diffs** | Not covered at all | **Large** | High |
+| **Regex: feature availability matrix** | Partial (look-arounds mentioned) | Medium | Medium |
+| **Regex: perf model (NFA vs backtracking)** | Not covered | Medium | Medium |
+| **Filesystem: basic I/O mapping** | 5 operations in mapping ref | Medium | Medium |
+| **Filesystem: exhaustive operation mapping** | Not covered (~20 operations missing) | **Large** | High |
+| **Filesystem: atomic write pattern** | One minimal example | Medium | High |
+| **Filesystem: backup/undo/collision patterns** | Not covered | **Large** | **Critical** for RepRen |
+| **Filesystem: directory walking patterns** | `walkdir` mentioned, no patterns | **Large** | High |
+| **Filesystem: path manipulation patterns** | 3 operations, no ownership guidance | **Large** | High |
+| **Filesystem: testing mutations** | Not covered | **Large** | High |
+| **Pre-port test enhancement phase** | Implied but not formalized | **Large** | High |
+| **Tryscript migration from bash golden tests** | Not covered | Medium | Medium |
 
-1. **New section in playbook Phase 1:** "Pre-Port Test Enhancement" — guidance for
-   enhancing Python tests before porting, including tryscript migration
-2. **New reference doc:** `playbooks/regex-behavior-mapping.md` — Python re vs Rust
-   regex behavioral differences
-3. **New guideline:** `guidelines/filesystem-heavy-cli-porting.md` — patterns for
-   porting CLIs that heavily mutate the filesystem
-4. **New case study:** `case-studies/repren/` — full artifact set mirroring Flowmark's
-   structure
+### Proposed additions to the playbook
 
-### Modifications
+**1. Expand existing: `playbooks/python-to-rust-mapping-reference.md`**
 
-1. **`playbooks/python-to-rust-playbook.md`** — Phase 2 needs a "low-dependency
-   fast-path" variant
-2. **`playbooks/python-to-rust-test-coverage-playbook.md`** — add tryscript migration
-   guidance, expand pre-port enhancement section
-3. **`guidelines/test-coverage-for-porting.md`** — add tryscript migration patterns
-4. **`_meta/case-study-observations-template.md`** — add pre-port test enhancement
-   section
+The Regex section (currently 15 lines) should be expanded to ~80 lines covering:
+- Flag mapping table (6 flags)
+- Replacement string syntax differences (critical: `\1` → `$1`)
+- Unicode behavior differences (`\w`, `\b`, `\d` defaults)
+- Feature availability matrix (which features need `fancy-regex`)
+- Compilation/performance model differences
+
+The I/O section (currently 10 lines) should be expanded to ~60 lines covering:
+- Full filesystem operation mapping (~20 operations)
+- Path manipulation patterns with ownership guidance
+- Missing crate recommendations (`walkdir`, `pathdiff`, `dirs`, `filetime`)
+
+**2. New guideline: `guidelines/filesystem-heavy-cli-porting.md`**
+
+Compact (~2-3k tokens) guideline focused on patterns for porting CLIs that heavily
+mutate the filesystem. Should cover:
+- Atomic write patterns (beyond the single existing example)
+- Backup management (create, find, restore, clean)
+- Rename with collision handling
+- Directory walking with filtering
+- Testing filesystem mutations (tempdir isolation, assertions)
+- Cross-platform considerations (permissions, symlinks, line endings)
+
+**3. Expand existing: `playbooks/python-to-rust-test-coverage-playbook.md`**
+
+Add a section on pre-port test enhancement (Phase 0 concept):
+- When existing Python test coverage is insufficient
+- How to identify and fill gaps before porting
+- Tryscript migration from bash golden tests (when applicable)
+
+**4. Expand existing: `playbooks/python-to-rust-playbook.md`**
+
+Phase 1 (Assess) should include an explicit gate: "Is the Python test coverage sufficient
+to serve as a specification? If not, enhance before proceeding."
+
+Phase 2 (Research) should include a "fast-path" for low-dependency projects where library
+evaluation is minimal.
+
+**5. Case study: `case-studies/repren/`**
+
+Full artifact set mirroring Flowmark's structure.
 
 ### Validation
 
@@ -484,6 +694,7 @@ The RepRen case study will validate:
 - Whether tryscript migration guidance is generalizable
 - Whether the playbook's library-evaluation-heavy approach needs rebalancing for simple
   dependency profiles
+- Whether the regex and filesystem mapping expansions are sufficient
 
 ---
 
