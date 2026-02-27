@@ -70,8 +70,21 @@ uv run pytest --cov=myproject --cov-branch --cov-report=term-missing
 | CLI wrapper | 60% | 80%+ |
 | Error paths | 50% | 70%+ |
 
-If coverage is below these thresholds, **stop and write more tests first.** Every
-untested code path is a potential bug in the Rust version that you won’t catch.
+If coverage is below these thresholds, **stop and enhance tests first** — follow
+[Phase 0 of the Test Coverage Playbook](python-to-rust-test-coverage-playbook.md) to
+systematically identify gaps and build out the test suite. Every untested code path is a
+potential bug in the Rust version that you won’t catch.
+
+**Test sufficiency gate (beyond coverage numbers):**
+
+Coverage numbers alone are insufficient. Also verify:
+- [ ] Every public CLI option/flag has at least one test exercising it
+- [ ] Error paths are tested (invalid input, missing files, bad arguments)
+- [ ] Edge cases are covered (empty input, Unicode, very large input)
+- [ ] If the project has bash-based golden tests, consider migrating them to
+  [tryscript](https://github.com/jlevy/tryscript) for better maintainability
+  (see Phase 0 of the Test Coverage Playbook for migration guidance)
+
 Test coverage investment before porting pays for itself many times over.
 
 ### 1.4 Identify areas to clarify
@@ -108,7 +121,20 @@ expected and valuable.
 Library choices made here predetermine how much time you’ll spend in Phase 6 (typically
 30-50% of total effort).
 
-**Time:** 30-60 minutes.
+**Time:** 30-60 minutes for complex dependency profiles. For projects with zero or
+minimal runtime dependencies, this phase can be completed in 10-15 minutes — see the
+fast-path below.
+
+**Fast-path for low-dependency projects:** If the Python project has zero or few runtime
+dependencies (stdlib only, or only well-established libraries like `re`, `json`,
+`argparse`), the library risk is low and this phase is short. Map each to the standard
+Rust equivalent (`regex`, `serde_json`, `clap`) — these are mature and well-documented.
+Skip the multi-candidate evaluation process and proceed to creating a quick proof of
+concept that verifies behavioral equivalence on your project’s actual inputs. Focus the
+saved time on test coverage (Phase 1.3) and edge-case testing instead.
+
+For filesystem-heavy CLIs, also load the
+[Filesystem-Heavy CLI Porting guideline](../guidelines/filesystem-heavy-cli-porting.md).
 
 ### 2.1 Evaluate candidates for every high-risk dependency
 

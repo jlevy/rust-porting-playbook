@@ -224,20 +224,142 @@ fn process(path: &Path) -> Result<Data> {
 
 ## I/O
 
+### Basic I/O
+
 | Python | Rust | Notes |
 | --- | --- | --- |
 | `open(path).read()` | `std::fs::read_to_string(path)?` |  |
+| `open(path, 'rb').read()` | `std::fs::read(path)?` | Returns `Vec<u8>` |
 | `open(path, 'w').write(data)` | `std::fs::write(path, data)?` |  |
-| `Path(path).exists()` | `Path::new(path).exists()` |  |
-| `Path(path).parent` | `path.parent()` | Returns `Option<&Path>` |
-| `os.path.join(a, b)` | `path.join(b)` |  |
 | `sys.stdin.read()` | `std::io::stdin().read_to_string(&mut buf)?` |  |
 | `print(x)` | `println!("{x}")` |  |
 | `print(x, file=sys.stderr)` | `eprintln!("{x}")` |  |
-| `glob.glob("*.md")` | `glob::glob("*.md")?` (glob crate) |  |
 | `logging.info(msg)` | `tracing::info!(msg)` or `log::info!(msg)` | `tracing` crate preferred; `log` crate for simple cases |
 | `json.dumps(obj)` | `serde_json::to_string(&obj)?` | Requires `#[derive(Serialize)]` |
 | `json.loads(s)` | `serde_json::from_str(s)?` | Requires `#[derive(Deserialize)]` |
+
+**Tip:** Consider `fs_err` 3.x as a drop-in replacement for `std::fs` in applications.
+It wraps every function to include the file path in error messages:
+`use fs_err as fs;` then use `fs::read_to_string(path)?` normally.
+
+### Path Operations
+
+`Path` (borrowed) / `PathBuf` (owned) are analogous to `str` / `String`.
+Accept `impl AsRef<Path>` for read-only access; accept `impl Into<PathBuf>` when storing.
+
+| Python | Rust | Notes |
+| --- | --- | --- |
+| `Path(path).exists()` | `path.exists()` | Follows symlinks; converts I/O errors to `false` (can hide permission errors). Prefer `fs::exists(path)?` (stable since Rust 1.81) for explicit error handling |
+| `Path(path).is_file()` | `path.is_file()` | Follows symlinks |
+| `Path(path).is_dir()` | `path.is_dir()` | Follows symlinks |
+| `os.path.islink(path)` | `path.is_symlink()` | Does NOT follow symlinks |
+| `Path(path).parent` | `path.parent()` | Returns `Option<&Path>` |
+| `os.path.join(a, b)` | `path.join(b)` | Returns `PathBuf` |
+| `os.path.basename(path)` | `path.file_name()` | Returns `Option<&OsStr>` |
+| `os.path.splitext(path)` | `path.file_stem()` + `path.extension()` | Each returns `Option<&OsStr>` |
+| `os.path.abspath(path)` | `std::path::absolute(path)?` | Stable since Rust 1.79. Does NOT resolve symlinks (unlike `canonicalize`) |
+| `os.path.realpath(path)` | `std::fs::canonicalize(path)?` | Resolves all symlinks and `..` components; path must exist |
+| `os.path.relpath(path, base)` | `pathdiff::diff_paths(path, base)` | Need `pathdiff` 0.2 crate |
+| `os.path.expanduser("~")` | `dirs::home_dir()` | Need `dirs` 6.x crate |
+| `str(path)` | `path.display()` or `path.to_string_lossy()` | Paths are NOT guaranteed UTF-8 in Rust |
+
+**Extension manipulation pitfall:** `path.with_extension("orig")` replaces the last
+extension, so `foo.tar.gz` becomes `foo.tar.orig`. To append an extension (like `.orig`
+for backups), use:
+
+```rust
+let backup = PathBuf::from(format!("{}.orig", path.display()));
+// or: let mut backup = path.to_path_buf(); backup.as_mut_os_string().push(".orig");
+```
+
+### Filesystem Operations
+
+| Python | Rust | Notes |
+| --- | --- | --- |
+| `os.rename(src, dst)` | `std::fs::rename(src, dst)?` | **Fails across filesystems** (EXDEV). Fallback: copy + delete. See `fs_extra` crate for cross-device moves |
+| `shutil.copy2(src, dst)` | `std::fs::copy(src, dst)?` | Copies content + permissions only, NOT timestamps. Need `filetime` 0.2 crate for full metadata preservation |
+| `shutil.rmtree(path)` | `std::fs::remove_dir_all(path)?` | Direct equivalent |
+| `os.remove(path)` | `std::fs::remove_file(path)?` | Rust 1.86+: removes read-only files on Windows |
+| `os.makedirs(path, exist_ok=True)` | `std::fs::create_dir_all(path)?` | Direct equivalent |
+| `os.listdir(path)` | `std::fs::read_dir(path)?` | Returns `Result<DirEntry>` iterator, not a `Vec` |
+| `os.stat(path)` | `std::fs::metadata(path)?` | Use `symlink_metadata()` to not follow symlinks |
+| `os.path.getsize(path)` | `path.metadata()?.len()` |  |
+| `os.chmod(path, mode)` | `std::fs::set_permissions(path, perms)?` | Unix-only mode bits: need `use std::os::unix::fs::PermissionsExt` |
+| `open(path, 'x')` (exclusive create) | `File::create_new(path)?` | Stable since Rust 1.77. Atomic; avoids TOCTOU race |
+| `fcntl.flock(f, LOCK_EX)` | `file.lock()?` | Stable since Rust 1.89. Also: `lock_shared()`, `try_lock()`, `unlock()` |
+| `tempfile.NamedTemporaryFile()` | `tempfile::NamedTempFile::new()?` | 3.x crate. Auto-deletes on drop by default. Use `persist()` / `keep()` to retain |
+| `tempfile.mkdtemp()` | `tempfile::TempDir::new()?` | Recursively deleted on drop |
+| `glob.glob("*.md")` | `glob::glob("*.md")?` | 0.3 crate. For `{a,b}` patterns or richer matching, use `globset` 0.4 |
+
+### Directory Walking
+
+| Python | Rust | Notes |
+| --- | --- | --- |
+| `os.walk(dir)` | `walkdir::WalkDir::new(dir)` | `walkdir` 2.5 crate. Yields `DirEntry`; Python yields `(dirpath, dirnames, filenames)` tuples — API shape differs significantly |
+
+**`walkdir` builder pattern:**
+
+```rust
+use walkdir::WalkDir;
+
+// Basic: iterate all entries recursively
+for entry in WalkDir::new(root) {
+    let entry = entry?;
+    println!("{}", entry.path().display());
+}
+
+// With filtering: filter_entry prunes traversal (skips entire subtrees)
+let walker = WalkDir::new(root).into_iter()
+    .filter_entry(|e| !is_hidden(e));  // skips descending into hidden dirs
+
+// With options
+WalkDir::new(root)
+    .follow_links(false)          // default: don't follow symlinks
+    .max_depth(10)                // limit recursion
+    .sort_by_file_name()          // deterministic output
+    .into_iter()
+    .filter_entry(|e| !is_excluded(e))
+```
+
+**Key difference from Python `os.walk`:** `filter_entry()` prunes the traversal tree
+(skips descending into non-matching directories). Standard `.filter()` does NOT prune —
+it still descends into filtered-out directories. Always use `filter_entry()` for
+exclude-pattern logic.
+
+### Atomic File Operations
+
+For safe in-place file modification, use `tempfile::NamedTempFile` + `persist()`:
+
+```rust
+use std::io::Write;
+use tempfile::NamedTempFile;
+
+fn atomic_write(path: &Path, content: &str) -> anyhow::Result<()> {
+    // MUST create temp file on same filesystem as target
+    let dir = path.parent().unwrap_or(Path::new("."));
+    let mut tmp = NamedTempFile::new_in(dir)?;
+    tmp.write_all(content.as_bytes())?;
+    tmp.as_file().sync_all()?;  // flush to disk for crash safety
+    tmp.persist(path)?;          // atomic rename
+    Ok(())
+}
+```
+
+**`persist()` atomically replaces the target.** If it fails, the `PersistError`
+contains the original `NamedTempFile` for recovery.
+Use `persist_noclobber()` to fail instead of replace if the target exists.
+
+### Recommended Crates Summary
+
+| Crate | Version | Purpose | When to use |
+| --- | --- | --- | --- |
+| `walkdir` | 2.5 | Recursive directory traversal | Any directory walking; prefer over manual `read_dir` recursion |
+| `tempfile` | 3.26 | Secure temp files and dirs | Atomic writes, test isolation |
+| `dirs` | 6.0 | Platform directory locations | Home dir, config dir, etc. (`dirs-next` is abandoned — use `dirs`) |
+| `pathdiff` | 0.2 | Compute relative paths | When you need `os.path.relpath` equivalent |
+| `filetime` | 0.2 | Read/write file timestamps | Preserving timestamps across copy. For simple cases, `std::fs::File::set_times()` (stable since Rust 1.75) may suffice |
+| `glob` | 0.3 | Simple glob matching | Basic `*`, `?`, `[...]` patterns. For `{a,b}` or multi-pattern, use `globset` 0.4 |
+| `fs-err` | 3.1 | Better filesystem error messages | Drop-in `std::fs` replacement for applications; adds file paths to errors |
 
 ## String Operations
 
@@ -260,22 +382,131 @@ fn process(path: &Path) -> Result<Data> {
 
 ## Regex
 
+Crate: `regex` 1.12+ (Thompson NFA engine, guaranteed linear time).
+
+### Core API Mapping
+
 | Python | Rust | Notes |
 | --- | --- | --- |
 | `re.compile(pattern)` | `Regex::new(pattern)?` | Use `LazyLock` for statics |
 | `re.match(pattern, s)` | `Regex::new(&format!("^(?:{pattern})"))` | **Must add `^` anchor** -- Rust has no start-anchored match. Use `captures()` for groups, `is_match()` for bool |
 | `re.search(pattern, s)` | `regex.find(s)` | Direct equivalent; matches anywhere |
 | `re.fullmatch(pattern, s)` | `regex.is_match(s)` with `^...$` | Wrap pattern: `format!("^(?:{pattern})$")` |
-| `re.sub(pattern, repl, s)` | `regex.replace_all(s, repl)` | Use `regex.replace()` for `count=1` |
+| `re.sub(pattern, repl, s)` | `regex.replace_all(s, repl)` | Use `regex.replace()` for `count=1`. **Replacement syntax differs -- see below** |
+| `re.sub(pattern, repl, s, count=1)` | `regex.replace(s, repl)` | Replaces only first match |
 | `re.findall(pattern, s)` | `regex.find_iter(s).map(\|m\| m.as_str()).collect::<Vec<_>>()` | `find_iter()` returns `Match` objects, not strings |
+| `re.findall(pattern, s)` (with groups) | `regex.captures_iter(s)` | Returns `Captures` objects; Python returns list of group tuples, API shape differs |
 | `re.split(pattern, s)` | `regex.split(s).collect::<Vec<_>>()` |  |
-| `match.group(0)` | `m.as_str()` |  |
+| `match.group(0)` | `m.as_str()` or `caps.get_match()` | `get_match()` added in regex 1.12 |
 | `match.group(1)` | `caps.get(1).map(\|m\| m.as_str())` |  |
-| Look-ahead/behind | Use `fancy-regex` crate | Not in standard `regex` |
+| `match.group("name")` | `caps.name("name").map(\|m\| m.as_str())` |  |
+| Look-ahead/behind | Use `fancy-regex` 0.17+ | Not in standard `regex`; never will be (by design) |
+| Backreferences in pattern (`\1`) | Use `fancy-regex` 0.17+ | Not in standard `regex` |
 
 **Critical difference:** Python `re.match()` anchors to string start.
 Rust `is_match()` matches anywhere.
 Always add `^` for patterns that were used with `re.match()`.
+
+### Replacement String Syntax
+
+**This is a common source of bugs.** Python and Rust use different backreference syntax
+in replacement strings:
+
+| Feature | Python `re.sub` | Rust `regex` `replace` |
+| --- | --- | --- |
+| Numbered backreference | `\1`, `\2` | `$1`, `$2` |
+| Named backreference | `\g<name>` | `$name` or `${name}` |
+| Whole match | `\g<0>` | `$0` |
+| Literal `$` in replacement | `$` (no escaping needed) | `$$` |
+| Literal `\` in replacement | `\\` | `\` (no special meaning in Rust replacements) |
+| Disable all expansion | N/A | `regex::NoExpand("literal $1")` |
+
+```python
+# Python
+re.sub(r"figure (\d+)", r"Figure \1", text)
+re.sub(r"(?P<y>\d{4})-(?P<m>\d{2})", r"\g<m>/\g<y>", text)
+```
+
+```rust
+// Rust -- note $1 not \1, $name not \g<name>
+regex.replace_all(text, "Figure $1");
+regex.replace_all(text, "$m/$y");
+// Use ${1} to disambiguate: "${1}st" means group 1 + "st"
+regex.replace_all(text, "${1}st");
+```
+
+When porting, mechanically translate all `\N` to `$N` and all `\g<name>` to `$name`
+in replacement strings.
+
+### Flag Mapping
+
+| Python | Rust inline | `RegexBuilder` method | Notes |
+| --- | --- | --- | --- |
+| `re.IGNORECASE` / `re.I` | `(?i)` | `.case_insensitive(true)` | Equivalent |
+| `re.DOTALL` / `re.S` | `(?s)` | `.dot_matches_new_line(true)` | Equivalent |
+| `re.MULTILINE` / `re.M` | `(?m)` | `.multi_line(true)` | `^`/`$` match line boundaries |
+| `re.VERBOSE` / `re.X` | `(?x)` | `.ignore_whitespace(true)` | Equivalent |
+| `re.ASCII` / `re.A` | `(?-u)` | `.unicode(false)` | Rust is Unicode by default; disable with `(?-u)` |
+| `re.UNICODE` / `re.U` | (default) | (default) | Rust `regex` is Unicode-aware by default |
+| Combined `re.I \| re.S` | `(?is)` | Chain builder methods | |
+| N/A | `(?U)` | `.swap_greed(true)` | Swap greedy/lazy (Rust-only) |
+| N/A | `(?R)` | `.crlf(true)` | CRLF line terminator mode (Rust-only) |
+
+Flags can be scoped: `(?i:pattern)` applies case-insensitive only to `pattern`.
+Flags can be negated: `(?-i)` disables case-insensitive matching.
+
+### Unicode Behavior
+
+Both Python 3 and Rust `regex` default to Unicode-aware matching, but the opt-out
+mechanisms differ:
+
+| Class | Python 3 default | Rust `regex` default | ASCII-only (Python) | ASCII-only (Rust) |
+| --- | --- | --- | --- | --- |
+| `\w` | Unicode letters+digits+`_` | Unicode letters+digits+`_` | `re.ASCII` → `[a-zA-Z0-9_]` | `(?-u:\w)` → `[a-zA-Z0-9_]` |
+| `\d` | Unicode digits | Unicode digits (`\p{Nd}`) | `re.ASCII` → `[0-9]` | `(?-u:\d)` → `[0-9]` |
+| `\s` | Unicode whitespace | Unicode whitespace | `re.ASCII` → `[\t\n\r\f\v ]` | `(?-u:\s)` → ASCII whitespace |
+| `\b` | Unicode word boundary | Unicode word boundary | `re.ASCII` → ASCII boundary | `(?-u:\b)` → ASCII boundary |
+| `.` | Any char except `\n` | Any Unicode scalar except `\n` | Same | Same |
+
+**Key difference:** Python uses `re.ASCII` flag (global), Rust uses `(?-u)` (can be
+scoped to subexpressions). Disabling Unicode globally via `RegexBuilder::unicode(false)`
+changes `.` to match any single byte -- use `regex::bytes::Regex` if needed.
+
+Named groups: Python `(?P<name>...)` works in Rust too (both `(?P<name>...)` and the
+shorter `(?<name>...)` are supported).
+
+### Feature Availability
+
+The `regex` crate deliberately omits features that would break linear-time guarantees.
+Use `fancy-regex` 0.17+ for these:
+
+| Feature | Python `re` | Rust `regex` | Rust `fancy-regex` |
+| --- | --- | --- | --- |
+| Positive lookahead `(?=...)` | Yes | **No** | Yes |
+| Negative lookahead `(?!...)` | Yes | **No** | Yes |
+| Positive lookbehind `(?<=...)` | Yes (fixed-width) | **No** | Yes (variable-width) |
+| Negative lookbehind `(?<!...)` | Yes (fixed-width) | **No** | Yes (variable-width) |
+| Backreferences `\1` in pattern | Yes | **No** | Yes |
+| Atomic groups `(?>...)` | Yes (3.11+) | **No** | Yes |
+| Possessive quantifiers `a++` | Yes (3.11+) | Yes | Yes |
+| Conditional `(?(id)yes\|no)` | Yes | **No** | Partial (group-based only) |
+
+`fancy-regex` delegates simple patterns to `regex` (linear time) and uses backtracking
+only for fancy features (potentially exponential -- catastrophic backtracking possible,
+same as Python).
+
+### Performance and Compilation
+
+| Aspect | Python `re` | Rust `regex` | Rust `fancy-regex` |
+| --- | --- | --- | --- |
+| Engine | Backtracking | Thompson NFA | Hybrid (NFA + backtracking) |
+| Worst-case time | Exponential | **O(m × n)** guaranteed | Exponential (fancy features only) |
+| Compilation cost | Moderate | Expensive (use `LazyLock`) | Expensive (use `LazyLock`) |
+| Size limits | None | Default ~10 MB (`RegexBuilder::size_limit()`) | None |
+| Untrusted patterns | Vulnerable to ReDoS | **Safe** (linear time) | Vulnerable to ReDoS (fancy features) |
+
+For untrusted patterns, use `RegexBuilder::size_limit()` and `dfa_size_limit()` to
+bound resource usage. Increase `size_limit()` if known-large patterns fail to compile.
 
 ## Classes to Structs
 
@@ -810,7 +1041,8 @@ Rust distributes config across separate files (`rustfmt.toml`, `deny.toml`,
 | marko (Markdown) | comrak 0.50+ | Good with workarounds | 12/15 differences worked around; check for API changes in 0.50+ |
 | argparse | clap 4.5 (derive) | Excellent | Perfect mapping |
 | PyYAML | serde_yaml_ng 0.10+ | Good | serde_yaml is archived |
-| re (regex) | regex 1.10 | Excellent | Different anchoring! |
+| re (regex) | regex 1.12+ | Excellent | Different anchoring and replacement syntax! See Regex section above |
+| re (look-arounds, backrefs) | fancy-regex 0.17+ | Good | Backtracking engine; only use when needed |
 | textwrap | textwrap (crate) | Good | Also rolled custom for special cases |
 | pytest | cargo test (built-in) | Excellent |  |
 | (dataclasses) | serde Serialize/Deserialize | Excellent |  |
