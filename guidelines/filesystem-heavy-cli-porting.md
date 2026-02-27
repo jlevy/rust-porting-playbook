@@ -169,7 +169,7 @@ use std::sync::LazyLock;
 use walkdir::WalkDir;
 
 static EXCLUDE: LazyLock<Regex> = LazyLock::new(||
-    Regex::new(r"^\\.").unwrap()  // skip dotfiles/dotdirs
+    Regex::new(r"^\.").unwrap()  // skip dotfiles/dotdirs
 );
 
 fn walk_filtered(root: &Path, exclude: &Regex) -> Vec<PathBuf> {
@@ -178,7 +178,7 @@ fn walk_filtered(root: &Path, exclude: &Regex) -> Vec<PathBuf> {
         .filter_entry(|e| {
             e.file_name().to_str()
                 .map(|name| !exclude.is_match(name))
-                .unwrap_or(false)
+                .unwrap_or(true)
         })
         .filter_map(|e| e.ok())
         .filter(|e| e.file_type().is_file())
@@ -309,22 +309,34 @@ fn test_file_move() -> anyhow::Result<()> {
 
 ### Testing Atomic Write Safety
 
-Verify no partial writes by checking file content is either fully old or fully new:
+A post-success check (`old || new`) does not prove atomicity.
+Instead, simulate a failure *before* `persist()` and verify the original file is unchanged:
 
 ```rust
+fn atomic_write_maybe_fail(
+    path: &Path, content: &[u8], fail_before_persist: bool
+) -> anyhow::Result<()> {
+    let dir = path.parent().unwrap_or(Path::new("."));
+    let mut tmp = NamedTempFile::new_in(dir)?;
+    tmp.write_all(content)?;
+    tmp.as_file().sync_all()?;
+    if fail_before_persist {
+        anyhow::bail!("simulated failure before persist");
+    }
+    tmp.persist(path)?;
+    Ok(())
+}
+
 #[test]
-fn test_atomic_write_no_partial() -> anyhow::Result<()> {
+fn test_failure_before_persist_keeps_original() -> anyhow::Result<()> {
     let dir = TempDir::new()?;
     let file = dir.path().join("test.txt");
     fs::write(&file, "original")?;
 
-    atomic_write(&file, b"replacement")?;
+    let err = atomic_write_maybe_fail(&file, b"replacement", true).unwrap_err();
+    assert!(err.to_string().contains("simulated failure"));
 
-    let content = fs::read_to_string(&file)?;
-    assert!(
-        content == "original" || content == "replacement",
-        "file has unexpected content: {content}"
-    );
+    assert_eq!(fs::read_to_string(&file)?, "original");
     Ok(())
 }
 ```
@@ -361,6 +373,7 @@ set -euo pipefail
 for fixture in test-fixtures/*/; do
     name="$(basename "$fixture")"
     echo "=== $name ==="
+    rm -rf "/tmp/py-$name" "/tmp/rs-$name"
 
     # Run Python
     cp -a "$fixture" "/tmp/py-$name"

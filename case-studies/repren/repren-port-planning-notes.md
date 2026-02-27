@@ -1,4 +1,4 @@
-# RepRen Case Study: Planning Notes
+# repren Case Study: Planning Notes
 
 Planning notes for the second major case study of the Rust Porting Playbook: porting
 [repren](https://github.com/jlevy/repren) (a bulk search/replace and file-rename CLI
@@ -11,7 +11,7 @@ tool) from Python to Rust.
 # Part 1: Generic Playbook Improvements
 
 These improvements apply to **any** Python-to-Rust porting effort. They should be
-implemented in the playbook before beginning the RepRen port itself.
+implemented in the playbook before beginning the repren port itself.
 
 ## 1. Playbook Gap Summary
 
@@ -99,9 +99,9 @@ but is missing the full behavioral mapping that any regex-heavy port needs:
 | Positive lookbehind `(?<=...)` | Yes (fixed-width) | No | Yes |
 | Negative lookbehind `(?<!...)` | Yes (fixed-width) | No | Yes |
 | Backreferences `\1` in pattern | Yes | No | Yes |
-| Atomic groups `(?>...)` | No | Yes | Yes |
-| Possessive quantifiers `a++` | No | Yes | Yes |
-| Conditional patterns `(?(id)yes\|no)` | Yes | No | No |
+| Atomic groups `(?>...)` | Yes (3.11+) | No | Yes |
+| Possessive quantifiers `a++` | Yes (3.11+) | Yes | Yes |
+| Conditional patterns `(?(id)yes\|no)` | Yes | No | Partial (group-based only) |
 
 **e) Performance and compilation differences**
 
@@ -224,11 +224,11 @@ library evaluation is minimal (zero runtime deps means no library risk to evalua
 
 ---
 
-# Part 2: RepRen-Specific Case Study Material
+# Part 2: repren-Specific Case Study Material
 
-## 7. RepRen: What It Is
+## 7. repren: What It Is
 
-RepRen is a powerful CLI tool for bulk string replacement and file/directory renaming.
+repren is a powerful CLI tool for bulk string replacement and file/directory renaming.
 It's more sophisticated than `sed` or `perl -pie`:
 
 - **Multi-pattern simultaneous replacement** — applies multiple patterns at once without
@@ -321,7 +321,7 @@ error cases, skill installation, and file collision handling.
 
 ## 9. Comparison with Flowmark Case Study
 
-| Aspect | Flowmark | RepRen |
+| Aspect | Flowmark | repren |
 | --- | --- | --- |
 | **Type** | CLI tool | CLI tool |
 | **Python LOC** | ~4,400 app code | ~1,980 app code |
@@ -337,7 +337,7 @@ but are more tractable than parser differences.
 
 ---
 
-## 10. RepRen Phased Implementation Plan
+## 10. repren Phased Implementation Plan
 
 ### Phase 0: Test Enhancement
 

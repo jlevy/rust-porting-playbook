@@ -87,11 +87,11 @@ env:
 path:
   - $TRYSCRIPT_GIT_ROOT/.venv/bin
 patterns:
-  VERSION: ‘v\d+\.\d+\.\S+’
-  TIMESTAMP: ‘\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}’
+  VERSION: 'v\d+\.\d+\.\S+'
+  TIMESTAMP: '\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}'
 before: |
   mkdir -p test-dir
-  printf ‘test content\n’ > test-dir/file.txt
+  printf 'test content\n' > test-dir/file.txt
 ---
 
 # CLI Golden Tests

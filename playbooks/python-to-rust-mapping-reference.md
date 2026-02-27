@@ -249,7 +249,7 @@ Accept `impl AsRef<Path>` for read-only access; accept `impl Into<PathBuf>` when
 
 | Python | Rust | Notes |
 | --- | --- | --- |
-| `Path(path).exists()` | `path.exists()` | Follows symlinks; can panic on permission errors. Prefer `fs::exists(path)?` (stable since Rust 1.81) for error handling |
+| `Path(path).exists()` | `path.exists()` | Follows symlinks; converts I/O errors to `false` (can hide permission errors). Prefer `fs::exists(path)?` (stable since Rust 1.81) for explicit error handling |
 | `Path(path).is_file()` | `path.is_file()` | Follows symlinks |
 | `Path(path).is_dir()` | `path.is_dir()` | Follows symlinks |
 | `os.path.islink(path)` | `path.is_symlink()` | Does NOT follow symlinks |
@@ -287,7 +287,7 @@ let backup = PathBuf::from(format!("{}.orig", path.display()));
 | `os.chmod(path, mode)` | `std::fs::set_permissions(path, perms)?` | Unix-only mode bits: need `use std::os::unix::fs::PermissionsExt` |
 | `open(path, 'x')` (exclusive create) | `File::create_new(path)?` | Stable since Rust 1.77. Atomic; avoids TOCTOU race |
 | `fcntl.flock(f, LOCK_EX)` | `file.lock()?` | Stable since Rust 1.89. Also: `lock_shared()`, `try_lock()`, `unlock()` |
-| `tempfile.NamedTemporaryFile()` | `tempfile::NamedTempFile::new()?` | 3.x crate. Does NOT auto-delete on drop. Use `tempfile::tempfile()` for unnamed auto-cleanup |
+| `tempfile.NamedTemporaryFile()` | `tempfile::NamedTempFile::new()?` | 3.x crate. Auto-deletes on drop by default. Use `persist()` / `keep()` to retain |
 | `tempfile.mkdtemp()` | `tempfile::TempDir::new()?` | Recursively deleted on drop |
 | `glob.glob("*.md")` | `glob::glob("*.md")?` | 0.3 crate. For `{a,b}` patterns or richer matching, use `globset` 0.4 |
 
@@ -487,9 +487,9 @@ Use `fancy-regex` 0.17+ for these:
 | Positive lookbehind `(?<=...)` | Yes (fixed-width) | **No** | Yes (variable-width) |
 | Negative lookbehind `(?<!...)` | Yes (fixed-width) | **No** | Yes (variable-width) |
 | Backreferences `\1` in pattern | Yes | **No** | Yes |
-| Atomic groups `(?>...)` | No | Yes | Yes |
-| Possessive quantifiers `a++` | No | Yes | Yes |
-| Conditional `(?(id)yes\|no)` | Yes | **No** | Yes |
+| Atomic groups `(?>...)` | Yes (3.11+) | **No** | Yes |
+| Possessive quantifiers `a++` | Yes (3.11+) | Yes | Yes |
+| Conditional `(?(id)yes\|no)` | Yes | **No** | Partial (group-based only) |
 
 `fancy-regex` delegates simple patterns to `regex` (linear time) and uses backtracking
 only for fancy features (potentially exponential -- catastrophic backtracking possible,
