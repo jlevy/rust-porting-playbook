@@ -370,8 +370,14 @@ fn main() {
 
 ```
 $ project --version
-project 0.1.0 (port of python-project 0.5.5)
+project 0.1.0-dev.12+ga1b2c3d (Rust port of python-project 0.5.5; base v0.1.0)
 ```
+
+Required fields in Rust `--version` output:
+- Rust package version
+- Dev revision (commits ahead of latest Rust release tag)
+- Git hash
+- Python source version used for parity
 
 ### Version Correspondence Table
 

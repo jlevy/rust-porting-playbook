@@ -30,9 +30,19 @@ patterns for any general and non-obvious porting situations.
 
 ### Version Display Format
 
-The Rust CLI `--version` output MUST show both versions:
+The Rust CLI `--version` output MUST include:
+
+- Rust package version
+- Dev revision (`commits ahead of latest Rust release tag`)
+- Git hash
+- Python source version used for parity
+
+Slightly different semver encodings are fine, but all four pieces must be
+present.
+
+Example:
 ```
-project-cli 0.1.0 (port of python-project 0.5.5)
+project-cli 0.1.0-dev.12+ga1b2c3d (Rust port of python-project 0.5.5; base v0.1.0)
 ```
 
 ### Implementation
@@ -55,11 +65,17 @@ use clap::Parser;
 
 // concat!() only accepts literals and macro invocations (like env!()),
 // not const variables. env!() reads an environment variable at compile time.
-// CARGO_PKG_VERSION is set by Cargo; PYTHON_SOURCE_VERSION is set by build.rs.
+// CARGO_PKG_VERSION is set by Cargo; the others are set by build.rs.
 const VERSION_INFO: &str = concat!(
     env!("CARGO_PKG_VERSION"),
-    " (port of python-project ",
+    "-dev.",
+    env!("GIT_COMMITS_AHEAD"),
+    "+g",
+    env!("GIT_SHORT_HASH"),
+    " (Rust port of python-project ",
     env!("PYTHON_SOURCE_VERSION"),
+    "; base ",
+    env!("RUST_BASE_TAG"),
     ")"
 );
 
@@ -70,8 +86,8 @@ struct Cli {
 }
 ```
 
-Use a `build.rs` script to set the custom `PYTHON_SOURCE_VERSION` env var at compile
-time:
+Use a `build.rs` script to set `PYTHON_SOURCE_VERSION` and git-derived metadata
+env vars at compile time:
 
 **`build.rs`**:
 ```rust
@@ -79,10 +95,13 @@ time:
 use std::process::Command;
 
 fn main() {
-    // Re-run if the Python source changes
+    // Re-run if Python source or git metadata changes.
     println!("cargo:rerun-if-changed=python-source");
+    println!("cargo:rerun-if-changed=.git/HEAD");
+    println!("cargo:rerun-if-changed=.git/refs");
+    println!("cargo:rerun-if-changed=.git/packed-refs");
 
-    let version = Command::new("python3")
+    let python_version = Command::new("python3")
         .args(["-c", "import myproject; print(myproject.__version__)"])
         .output()
         .ok()
@@ -94,7 +113,37 @@ fn main() {
         .map(|s| s.trim().to_string())
         .unwrap_or_else(|| "unknown".to_string());
 
-    println!("cargo:rustc-env=PYTHON_SOURCE_VERSION={version}");
+    let base_tag = Command::new("git")
+        .args(["describe", "--tags", "--abbrev=0", "--match", "v[0-9]*"])
+        .output()
+        .ok()
+        .and_then(|o| String::from_utf8(o.stdout).ok())
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "v0.0.0".to_string());
+
+    let commits_ahead = Command::new("git")
+        .args(["rev-list", "--count", &format!("{base_tag}..HEAD")])
+        .output()
+        .ok()
+        .and_then(|o| String::from_utf8(o.stdout).ok())
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    let git_hash = Command::new("git")
+        .args(["rev-parse", "--short=10", "HEAD"])
+        .output()
+        .ok()
+        .and_then(|o| String::from_utf8(o.stdout).ok())
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    println!("cargo:rustc-env=PYTHON_SOURCE_VERSION={python_version}");
+    println!("cargo:rustc-env=RUST_BASE_TAG={base_tag}");
+    println!("cargo:rustc-env=GIT_COMMITS_AHEAD={commits_ahead}");
+    println!("cargo:rustc-env=GIT_SHORT_HASH={git_hash}");
 }
 ```
 

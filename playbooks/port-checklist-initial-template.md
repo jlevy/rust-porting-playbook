@@ -189,11 +189,12 @@ Use a copy so this original template is not altered.
 
     - [ ] `version` = Python project version (version tag identifies the commit)
 
-  - [ ] Create `build.rs` to extract Python version from submodule for `--version`
-    display
+  - [ ] Create `build.rs` to extract Python source version and git metadata
+    (`base tag`, `commits ahead`, `git hash`) for `--version` display
 
-  - [ ] Update CLI to show both versions:
-    `project-cli 0.1.0 (port of python-project 0.5.5)`
+  - [ ] Update CLI `--version` to always include all of:
+    Rust version, dev revision, git hash, Python source version
+    (example: `project-cli 0.1.0-dev.12+ga1b2c3d (Rust port of python-project 0.5.5; base v0.1.0)`)
 
   - [ ] Create `docs/version-history.md` with table tracking version correspondence:
     ```markdown

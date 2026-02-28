@@ -526,7 +526,10 @@ If porting a CLI tool, verify:
 
 For argument mapping from Python to Rust:
 - `argparse` / `click` / `typer` all map to `clap` with derive API
-- Enable clap’s `cargo` feature for automatic `--version` from Cargo.toml
+- Enable clap’s `cargo` feature, but do not rely on Cargo version alone for
+  `--version` output
+- Use `build.rs` + `long_version` to include: Rust version, commits-ahead,
+  git hash, and Python source version
 - Use `color-eyre` for rich error display
 
 See [CLI-Specific Porting Patterns](../guidelines/python-to-rust-cli-porting.md) for
@@ -547,7 +550,8 @@ All CI jobs must pass:
 ### 7.4 Documentation
 
 - README with installation, usage, and comparison to Python version
-- `--version` output showing both Rust and Python source versions
+- `--version` output showing Rust version + commits-ahead + git hash + Python
+  source version
 - CHANGELOG documenting the port
 - All intentional divergences from Python documented
 
