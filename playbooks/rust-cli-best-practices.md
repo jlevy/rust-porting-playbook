@@ -994,16 +994,49 @@ The flowmark-rs project provides a proven template: three coordinated channels
 
 | Channel | Audience | Install command | Mechanism |
 | --- | --- | --- | --- |
+| **PyPI via uv** | General users (recommended) | `uvx <name>` / `uv tool install <name>` / `pip install <name>` | maturin `bindings = "bin"` — packages Rust binary into Python wheel |
 | **crates.io** | Rust developers | `cargo install <name>` / `cargo binstall <name>` | `cargo publish` with OIDC trusted publisher |
-| **PyPI** | Python/general users | `uvx <name>` / `uv tool install <name>` / `pip install <name>` | maturin `bindings = "bin"` — packages Rust binary into Python wheel |
 | **Homebrew** | macOS users | `brew install <tap>/<name>` | Personal tap with SHA256-pinned formula |
 | **GitHub Releases** | Direct downloads | Browser / curl | Binary archives (.tar.gz, .zip) + SHA256SUMS |
 
+#### Why PyPI/uv Is the Recommended Distribution Channel
+
+**PyPI via uv is the recommended primary distribution channel for Rust CLI binaries**
+that target a broad audience, not just Rust developers. The reasons:
+
+1. **Zero bootstrapping:** uv is now standard in modern Python environments. Most
+   developer machines already have uv or pip installed. In contrast, `cargo binstall`
+   requires a Rust toolchain or a separate install step.
+
+2. **Cross-platform out of the box:** `uvx <tool>` works on Linux, macOS, and Windows
+   with the same command. Platform selection is automatic via wheel tags.
+
+3. **Instant ephemeral execution:** `uvx <tool>` downloads and runs the binary in a
+   single command with no persistent install needed. There is no cargo equivalent to
+   this — `cargo install` compiles from source (takes minutes) and requires a full Rust
+   toolchain, while `cargo binstall` requires installing a separate tool first and has
+   no ephemeral run mode. `uvx` is the closest thing Rust CLIs have to `npx` — and it
+   works without any Rust infrastructure.
+
+4. **Established pattern:** This is how **ruff**, **uv**, and **maturin** itself are
+   distributed. These are among the most-installed Rust CLI tools in the world.
+
+5. **No Rust toolchain required:** Users do not need `rustc`, `cargo`, or any Rust
+   infrastructure. The binary is pre-compiled and packaged into a Python wheel.
+
+6. **Familiar to the Python ecosystem:** For Python-to-Rust ports, this preserves the
+   exact install experience that existing users expect (`pip install <tool>` or
+   `uvx <tool>`).
+
+For Rust developers, crates.io (`cargo install` / `cargo binstall`) remains the natural
+channel. For macOS power users, a Homebrew tap provides `brew install` convenience.
+But for general distribution, PyPI via uv has the broadest reach with the least friction.
+
 #### PyPI Distribution via Maturin
 
-Distributing Rust CLI binaries on PyPI via maturin is an increasingly important channel.
-It is the pattern used by **ruff**, **uv**, and **maturin** itself.
-The key advantage: `uvx <tool>` gives users instant access without installing Rust.
+Distributing Rust CLI binaries on PyPI via maturin packages the compiled binary into
+a Python wheel. This is the mechanism behind `uvx <tool>`, `uv tool install <tool>`,
+and `pip install <tool>` for Rust CLIs.
 
 **Minimal `pyproject.toml`** (at repo root, alongside `Cargo.toml`):
 ```toml

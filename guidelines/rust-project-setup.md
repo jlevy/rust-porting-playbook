@@ -484,7 +484,13 @@ channels for broader reach. See
 [Rust CLI Best Practices](../playbooks/rust-cli-best-practices.md#65-multi-channel-distribution)
 for full workflow templates.
 
-**PyPI via maturin** (`uvx <tool>`, `pip install <tool>`):
+**PyPI via maturin is the recommended primary distribution channel** for Rust CLI
+binaries targeting a broad audience. `uvx <tool>` provides instant ephemeral execution
+with no Rust toolchain required — there is no cargo equivalent to this (`cargo install`
+compiles from source; `cargo binstall` requires a separate install and has no ephemeral
+mode). uv is now standard in modern Python environments, making PyPI the
+lowest-friction cross-platform distribution channel for Rust CLIs.
+
 Add `pyproject.toml` at repo root with `[tool.maturin] bindings = "bin"` and
 `dynamic = ["version"]` (reads from `Cargo.toml`). Build cross-platform wheels with
 `PyO3/maturin-action` in CI; publish with `uv publish --trusted-publishing always`.
