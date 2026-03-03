@@ -6,7 +6,7 @@
 [Initial Port Checklist](port-checklist-initial-template.md) |
 [Update Checklist](port-checklist-update-template.md)
 
-Version: 1.2 | Last Updated: 2026-02-12
+Version: 1.3 | Last Updated: 2026-03-03
 
 Cross-referenced against real-world projects: flowmark-rs, ripgrep, bat, fd, jj.
 
@@ -1237,6 +1237,35 @@ cargo release patch --execute
      with:
        publish: ${{ needs.plan.outputs.publish_channels == 'true' }}
    ```
+
+#### References (Multi-Channel Distribution)
+
+**Maturin and PyPI distribution:**
+- [Maturin User Guide — Distribution](https://www.maturin.rs/distribution.html)
+- [Maturin — Bindings](https://www.maturin.rs/bindings) (`bin` mode for CLI binaries)
+- [PyO3/maturin-action](https://github.com/PyO3/maturin-action) (GitHub Actions)
+- [PyPI Trusted Publishers](https://docs.pypi.org/trusted-publishers/) (OIDC setup)
+
+**Real-world examples (Rust CLIs distributed via PyPI):**
+- [astral-sh/ruff](https://github.com/astral-sh/ruff) — pyproject.toml, CI workflows
+- [astral-sh/uv](https://github.com/astral-sh/uv) — pyproject.toml, CI workflows
+- [jlevy/flowmark-rs](https://github.com/jlevy/flowmark-rs) — multi-channel publishing
+
+**GitHub Actions used in workflows:**
+- [actions/checkout@v6](https://github.com/actions/checkout)
+- [dtolnay/rust-toolchain](https://github.com/dtolnay/rust-toolchain)
+- [Swatinem/rust-cache@v2](https://github.com/Swatinem/rust-cache)
+- [softprops/action-gh-release@v2](https://github.com/softprops/action-gh-release)
+- [EmbarkStudios/cargo-deny-action@v2](https://github.com/EmbarkStudios/cargo-deny-action)
+- [obi1kenobi/cargo-semver-checks-action@v2](https://github.com/obi1kenobi/cargo-semver-checks-action)
+- [taiki-e/install-action](https://github.com/taiki-e/install-action) (cargo-llvm-cov)
+- [codecov/codecov-action@v5](https://github.com/codecov/codecov-action)
+- [rust-lang/crates-io-auth-action@v1](https://github.com/rust-lang/crates-io-auth-action) (OIDC)
+
+**Platform tags and wheel specifications:**
+- [PEP 600 — Future manylinux](https://peps.python.org/pep-0600/)
+- [PEP 656 — musllinux](https://peps.python.org/pep-0656/)
+- [Python Packaging: Platform Compatibility Tags](https://packaging.python.org/specifications/platform-compatibility-tags/)
 
 ## 7. Continuous Integration
 
