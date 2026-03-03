@@ -693,94 +693,294 @@ convention over configuration.
 
 ### 6.4 Release CI Workflow
 
-A tag-triggered workflow that builds cross-platform binaries and creates a GitHub
-Release. Uses `softprops/action-gh-release@v2` (the standard action for GitHub Releases;
-`actions/create-release@v1` is archived and should not be used):
+A tag-triggered orchestrator workflow that builds cross-platform binaries, generates
+checksums, and creates a GitHub Release. Optionally invokes channel workflows for
+crates.io and PyPI publishing.
+
+**Design principles** (learned from flowmark-rs production release system):
+- Use `fail-fast: false` in the build matrix so one target failure doesn't cancel others
+- Use `+crt-static` for static linking on musl targets
+- Cross-compile Linux ARM64 via apt-get packages + RUSTFLAGS linker overrides (simpler
+  and more transparent than `cross` Docker containers)
+- Generate SHA256SUMS for all release artifacts
+- Use concurrency control to prevent parallel releases of the same tag
+- Authenticate with crates.io via OIDC (`rust-lang/crates-io-auth-action@v1`) instead
+  of long-lived `CARGO_REGISTRY_TOKEN` secrets
 
 ```yaml
 name: Release
 on:
   push:
-    tags: ["v*"]
+    tags: ["*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v0.2.5). Use dry-run for validation-only."
+        required: true
+        type: string
+        default: dry-run
+      publish:
+        description: "Publish channels + create GitHub Release"
+        type: boolean
+        default: false
 
-permissions:
-  contents: write
+defaults:
+  run:
+    shell: bash
 
 env:
   CARGO_TERM_COLOR: always
 
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref_name || inputs.tag || github.run_id }}
+  cancel-in-progress: false
+
 jobs:
-  build:
-    name: Build (${{ matrix.target }})
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.plan.outputs.release_tag }}
+      artifact_tag: ${{ steps.plan.outputs.artifact_tag }}
+      prerelease: ${{ steps.plan.outputs.prerelease }}
+      publish: ${{ steps.plan.outputs.publish }}
+      publish_channels: ${{ steps.plan.outputs.publish_channels }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Resolve release mode
+        id: plan
+        run: python3 ./scripts/resolve_release_plan.py ...
+        # See "Release Automation Scripts" section below for the script
+
+  package:
+    needs: [plan]
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
+        target:
+          - aarch64-apple-darwin
+          - aarch64-unknown-linux-musl
+          - x86_64-apple-darwin
+          - x86_64-pc-windows-msvc
+          - x86_64-unknown-linux-musl
         include:
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-          - target: x86_64-unknown-linux-musl
-            os: ubuntu-latest
-          - target: aarch64-unknown-linux-gnu
-            os: ubuntu-latest
-          - target: x86_64-apple-darwin
-            os: macos-latest
-          - target: aarch64-apple-darwin
-            os: macos-latest
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
+          - { target: aarch64-apple-darwin, os: macos-latest, target_rustflags: "" }
+          - { target: aarch64-unknown-linux-musl, os: ubuntu-latest,
+              target_rustflags: "--codegen linker=aarch64-linux-gnu-gcc" }
+          - { target: x86_64-apple-darwin, os: macos-latest, target_rustflags: "" }
+          - { target: x86_64-pc-windows-msvc, os: windows-latest, target_rustflags: "" }
+          - { target: x86_64-unknown-linux-musl, os: ubuntu-latest, target_rustflags: "" }
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
-      - name: Install cross (Linux cross-compilation)
-        if: matrix.target == 'aarch64-unknown-linux-gnu' || matrix.target == 'x86_64-unknown-linux-musl'
-        run: cargo install cross --locked
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install Linux ARM64 musl deps
+        if: matrix.target == 'aarch64-unknown-linux-musl'
+        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu musl-tools
+
+      - name: Install Linux x86_64 musl deps
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
+      - name: Add Rust target
+        run: rustup target add ${{ matrix.target }}
+
       - name: Build
-        run: |
-          if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]] || \
-             [[ "${{ matrix.target }}" == "x86_64-unknown-linux-musl" ]]; then
-            cross build --release --locked --target ${{ matrix.target }}
-          else
-            cargo build --release --locked --target ${{ matrix.target }}
-          fi
-        shell: bash
-      - name: Package
-        run: |
-          cd target/${{ matrix.target }}/release
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            7z a ../../../myproject-${{ matrix.target }}.zip myproject.exe
-          else
-            tar czf ../../../myproject-${{ matrix.target }}.tar.gz myproject
-          fi
-        shell: bash
+        run: >-
+          RUSTFLAGS="--deny warnings --codegen target-feature=+crt-static
+          ${{ matrix.target_rustflags }}"
+          cargo build --release --locked --target ${{ matrix.target }}
+
+      - name: Package archive
+        id: package
+        run: python3 ./scripts/package_release_archive.py
+          --artifact-tag "${{ needs.plan.outputs.artifact_tag }}"
+          --target "${{ matrix.target }}"
+          --runner-os "${{ matrix.os }}"
+          --github-output "$GITHUB_OUTPUT"
+
       - uses: actions/upload-artifact@v4
         with:
-          name: myproject-${{ matrix.target }}
-          path: myproject-${{ matrix.target }}.*
+          name: release-archives-${{ matrix.target }}
+          path: ${{ steps.package.outputs.archive }}
 
-  release:
-    name: Create Release
-    needs: build
+  checksum:
+    needs: [plan, package]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
       - uses: actions/download-artifact@v4
         with:
+          pattern: release-archives-*
           merge-multiple: true
+          path: release
+      - run: (cd release && shasum -a 256 * > ../SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-checksums
+          path: SHA256SUMS
+
+  # Invoke reusable channel workflows (see Multi-Channel Distribution)
+  crates:
+    needs: [plan, package, checksum]
+    uses: ./.github/workflows/publish.yml
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      publish: ${{ needs.plan.outputs.publish_channels == 'true' }}
+
+  pypi:
+    needs: [plan, package, checksum]
+    uses: ./.github/workflows/pypi.yml
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      publish: ${{ needs.plan.outputs.publish_channels == 'true' }}
+
+  announce:
+    needs: [plan, checksum, crates, pypi]
+    if: needs.plan.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: release
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.plan.outputs.release_tag }}
+          prerelease: ${{ needs.plan.outputs.prerelease == 'true' }}
+          files: release/*
           generate_release_notes: true
-          files: myproject-*
+          fail_on_unmatched_files: true
 ```
 
 **Key points:**
 - Use `softprops/action-gh-release@v2` for creating GitHub Releases (not the archived
-  `actions/create-release@v1`)
-- Use `cross` for Linux targets that need cross-compilation (musl, aarch64)
+  `actions/create-release@v1`) with `fail_on_unmatched_files: true`
+- Cross-compile Linux ARM64 via `gcc-aarch64-linux-gnu` + RUSTFLAGS linker override
+  (no Docker containers needed). This is simpler and more transparent than `cross`.
+- Static linking with `--codegen target-feature=+crt-static` for musl targets
 - Use `actions/upload-artifact@v4` and `actions/download-artifact@v4` (current versions)
-- Set `permissions: contents: write` for release creation
-- The `generate_release_notes: true` option auto-generates notes from commits
+  with `merge-multiple: true` for collecting artifacts from matrix jobs
+- SHA256SUMS file generated from all release archives
+- `concurrency` block prevents parallel releases of the same tag
+- `plan` job with script-driven logic resolves dry-run vs. publish mode
+- Channel workflows (`publish.yml`, `pypi.yml`) invoked as reusable `workflow_call`
+  workflows with conditional gating
+- `permissions: contents: read` at workflow level (least-privilege); `contents: write`
+  only on the `announce` job that creates the GitHub Release
+
+**crates.io authentication:** Use OIDC trusted publishing via
+`rust-lang/crates-io-auth-action@v1` instead of long-lived `CARGO_REGISTRY_TOKEN`
+secrets. This is the same approach used for PyPI trusted publishing — no secrets to
+rotate, no tokens to leak.
+
+```yaml
+# In publish.yml (crates.io channel)
+permissions:
+  id-token: write
+  contents: read
+
+steps:
+  - uses: rust-lang/crates-io-auth-action@v1
+    id: auth
+  - run: cargo publish --locked
+    if: steps.crate.outputs.already_published != 'true'
+    env:
+      CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+```
+
+### Release Automation Scripts
+
+Complex release workflow logic should live in testable Python scripts, not inline YAML
+bash. This is a key pattern from the flowmark-rs project that dramatically improves
+maintainability and debuggability of release workflows.
+
+**Why scripts, not YAML:**
+- YAML doesn't support conditionals, error handling, or structured output cleanly
+- Inline bash in YAML is hard to test, hard to read, and hard to debug
+- Python scripts can be unit-tested locally with `unittest`
+- Scripts produce structured `$GITHUB_OUTPUT` key-value pairs
+- Each script has a clear, single responsibility
+
+**Recommended scripts** (`scripts/` directory):
+
+| Script | Purpose | Key outputs |
+| --- | --- | --- |
+| `resolve_release_plan.py` | Determine release mode (dry-run vs. publish, stable vs. pre-release) from event type, tag, and inputs | `release_tag`, `artifact_tag`, `prerelease`, `publish`, `publish_channels` |
+| `package_release_archive.py` | Create platform-specific archives (.tar.gz/.zip) with LICENSE and README | `archive` (filename) |
+| `resolve_crate_metadata.py` | Extract name/version from Cargo.toml, query crates.io API to detect already-published versions | `crate_name`, `crate_version`, `already_published` |
+| `validate_wheel_entrypoints.py` | Verify expected binaries exist in all built wheels | (exits non-zero on failure) |
+| `pypi_smoke_test.py` | Install wheel, run `--version` check; auto-skip cross-compiled targets | (exits non-zero on failure) |
+
+**Common patterns in these scripts:**
+
+1. **GitHub Actions output:** All scripts write to `$GITHUB_OUTPUT` via a shared helper:
+   ```python
+   def _write_outputs(outputs: dict[str, str], github_output_path: str | None) -> None:
+       lines = [f"{key}={value}" for key, value in outputs.items()]
+       for line in lines:
+           print(line)
+       if github_output_path:
+           with Path(github_output_path).open("a") as f:
+               for line in lines:
+                   f.write(f"{line}\n")
+   ```
+
+2. **Idempotency detection:** The crate metadata script queries the registry API to
+   check if a version already exists before publishing:
+   ```python
+   def _crate_version_exists(registry_url: str, name: str, version: str) -> bool:
+       url = f"{registry_url.rstrip('/')}/{name}/{version}"
+       try:
+           urllib.request.urlopen(url, timeout=10)
+           return True
+       except urllib.error.HTTPError as exc:
+           if exc.code == 404:
+               return False
+           raise
+   ```
+
+3. **Platform-aware smoke testing:** The PyPI smoke test detects the runner's OS and
+   architecture, then skips tests for cross-compiled targets that can't run natively:
+   ```python
+   def _skip_reason(target: str, runner_os: str, runner_arch: str) -> str | None:
+       target_os, target_arch = _target_os_and_arch(target)
+       if target_os != runner_os:
+           return f"target OS {target_os} != runner OS {runner_os}"
+       if target_arch != runner_arch:
+           return f"target arch {target_arch} != runner arch {runner_arch}"
+       return None
+   ```
+
+4. **Unit tests for all scripts:** Each script has tests in `scripts/tests/`:
+   ```
+   scripts/
+   ├── resolve_release_plan.py
+   ├── package_release_archive.py
+   ├── resolve_crate_metadata.py
+   ├── validate_wheel_entrypoints.py
+   ├── pypi_smoke_test.py
+   └── tests/
+       ├── test_resolve_release_plan.py
+       ├── test_package_release_archive.py
+       ├── test_resolve_crate_metadata.py
+       └── test_validate_wheel_entrypoints.py
+   ```
+   Run in CI with: `python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v`
+
+**Archive naming convention** (compatible with `cargo-binstall`):
+`<project>-v<version>-<target>.tar.gz` (Unix) or `.zip` (Windows).
+Each archive includes the binary, LICENSE, and README.
 
 **Versioning**: Follow [Semantic Versioning](https://semver.org/) (semver)
 
@@ -1012,15 +1212,17 @@ cargo release patch --execute
 **Tier 1 (Required for all commits)**:
 ```yaml
 - cargo fmt --all -- --check
-- cargo clippy --all-targets --all-features -- -D warnings
-- cargo test --workspace
-- cargo audit
+- cargo clippy --locked --all-targets --all-features -- -D warnings
+- cargo test --all-features --workspace --locked
+- cargo deny check
 ```
 
 **Tier 2 (Required before release)**:
 ```yaml
-- cargo deny check
-- cargo doc --no-deps
+- cargo doc --locked --no-deps --all-features   # with RUSTDOCFLAGS="-D warnings"
+- MSRV check (cargo check with pinned toolchain)
+- cargo-semver-checks (on PRs)
+- Code coverage (cargo-llvm-cov + Codecov)
 ```
 
 **Tier 3 (Optional, run periodically)**:
@@ -1032,26 +1234,38 @@ cargo release patch --execute
 ### 7.2 GitHub Actions (Modern Pattern)
 
 Split CI into independent parallel jobs for fast feedback.
-This is the pattern used by flowmark-rs, jj, and delta.
-See [Rust Project Setup](../guidelines/rust-project-setup.md) for the full recommended
-workflow with all 7 jobs.
+This is the pattern used by flowmark-rs (13 jobs), jj, and delta.
+See [Rust Project Setup](../guidelines/rust-project-setup.md) for the condensed version.
 
-**Key patterns from real-world projects:**
+**CI environment variables** — set globally for all jobs:
+```yaml
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0            # Faster CI builds (no incremental overhead)
+  CARGO_PROFILE_TEST_DEBUG: 0     # Smaller test binaries, faster CI
+```
+
+These speed up CI builds significantly. `CARGO_INCREMENTAL: 0` disables incremental
+compilation (useless in CI where each build starts fresh) and
+`CARGO_PROFILE_TEST_DEBUG: 0` skips debug info for test binaries.
+
+**Complete CI workflow** (13 jobs from flowmark-rs production setup):
 
 ```yaml
 name: CI
 on:
   push:
-    branches: ["*"]
-  pull_request:
     branches: [main]
+  pull_request:
 
 env:
   CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_TEST_DEBUG: 0
 
 jobs:
   fmt:
-    name: Format Check
+    name: Format check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -1061,7 +1275,7 @@ jobs:
       - run: cargo fmt --all -- --check
 
   clippy:
-    name: Clippy
+    name: Clippy lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -1069,10 +1283,10 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy --all-targets --all-features -- -D warnings
+      - run: cargo clippy --locked --all-targets --all-features -- -D warnings
 
   test:
-    name: Tests (${{ matrix.os }})
+    name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -1081,31 +1295,32 @@ jobs:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: "ci-${{ matrix.os }}"
-      - run: cargo test --all-features --workspace --locked
-      - run: cargo test --no-default-features --workspace --locked
+      - run: cargo test --locked --all-features
+        env:
+          RUSTFLAGS: "-D warnings"
+
+  test-lib-only:
+    name: Test library (no default features)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --locked --no-default-features
+        env:
+          RUSTFLAGS: "-D warnings"
 
   msrv:
-    name: MSRV Check
+    name: MSRV check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@1.85
+      - uses: dtolnay/rust-toolchain@1.85    # Pin to declared rust-version
       - uses: Swatinem/rust-cache@v2
-      - run: cargo test --all-features --workspace --locked
-
-  audit:
-    name: Security Audit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: rustsec/audit-check@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - run: cargo check --locked --all-features
 
   deny:
-    name: Dependency Check
+    name: Dependency audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -1118,21 +1333,67 @@ jobs:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - run: cargo doc --no-deps --all-features
+      - run: cargo doc --locked --no-deps --all-features
         env:
           RUSTDOCFLAGS: "-D warnings"
+
+  coverage:
+    name: Code coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@cargo-llvm-cov
+      - run: cargo llvm-cov --locked --all-features --lcov --output-path lcov.info
+        env:
+          RUSTFLAGS: "-D warnings"
+      - uses: codecov/codecov-action@v5
+        with:
+          files: lcov.info
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  semver-checks:
+    name: Semver compatibility
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: obi1kenobi/cargo-semver-checks-action@v2
+
+  workflow-scripts:
+    name: Workflow script tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v
 ```
 
 **Key points:**
 - Use `actions/checkout@v6` (current), `dtolnay/rust-toolchain` (not deprecated
   `actions-rs`)
-- `Swatinem/rust-cache@v2` with `shared-key` per job type for cache isolation
-- `--locked` in test/build to enforce Cargo.lock reproducibility
-- Test with `--no-default-features` to verify library builds without CLI deps
-- MSRV job should run `cargo test`, not just `cargo check` (catches runtime issues)
-- Use `rustsec/audit-check@v2` action, not `cargo install cargo-audit` (faster)
+- `Swatinem/rust-cache@v2` for build caching across jobs
+- `--locked` on all cargo commands enforces Cargo.lock reproducibility
+- `RUSTFLAGS: "-D warnings"` in test/build jobs treats warnings as errors
+- `test-lib-only` verifies library builds without CLI feature deps
+- `coverage` uses `cargo-llvm-cov` with `taiki-e/install-action` (faster than
+  `cargo install`) and reports to Codecov
+- `semver-checks` runs only on PRs (needs `fetch-depth: 0` for baseline comparison)
+  to catch API-breaking changes before merge
+- `workflow-scripts` validates the testable release automation scripts
+  (see [Release Automation Scripts](#release-automation-scripts) below)
 - Use `EmbarkStudios/cargo-deny-action@v2` (no manual install needed)
 - Doc build with `-D warnings` catches broken doc links and missing docs
+- Set `CARGO_INCREMENTAL: 0` and `CARGO_PROFILE_TEST_DEBUG: 0` globally for faster
+  CI builds
 
 ### 7.3 Parity Drift Detection for Ports
 

@@ -184,27 +184,27 @@ local iteration while maintaining strict quality gates in CI.
 ### Recommended: Separate Jobs (Modern Pattern)
 
 Split CI into independent parallel jobs for fast feedback.
-This is what flowmark-rs, jj, and delta do.
+This is what flowmark-rs (13 jobs), jj, and delta do.
 Format and clippy fail fast; test and audit run in parallel.
 
 ```yaml
 name: CI
 on:
   push:
-    branches: ["*"]
-  pull_request:
     branches: [main]
+  pull_request:
 
 permissions:
   contents: read
 
 env:
   CARGO_TERM_COLOR: always
-  CARGO_INCREMENTAL: 0           # Faster CI builds, better cache reuse
+  CARGO_INCREMENTAL: 0             # Faster CI (no incremental overhead)
+  CARGO_PROFILE_TEST_DEBUG: 0      # Smaller test binaries
 
 jobs:
   fmt:
-    name: Format Check
+    name: Format check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -214,7 +214,7 @@ jobs:
       - run: cargo fmt --all -- --check
 
   clippy:
-    name: Clippy
+    name: Clippy lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -222,10 +222,10 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - run: cargo clippy --locked --all-targets --all-features -- -D warnings
 
   test:
-    name: Tests (${{ matrix.os }})
+    name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -234,31 +234,32 @@ jobs:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: "ci-${{ matrix.os }}"
-      - run: cargo test --workspace --all-features --locked
-      - run: cargo test --workspace --no-default-features --locked  # Verify library builds alone
+      - run: cargo test --locked --all-features
+        env:
+          RUSTFLAGS: "-D warnings"
+
+  test-lib-only:
+    name: Test library (no default features)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --locked --no-default-features
+        env:
+          RUSTFLAGS: "-D warnings"
 
   msrv:
-    name: MSRV Check
+    name: MSRV check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@1.85   # Match rust-version in Cargo.toml
       - uses: Swatinem/rust-cache@v2
-      - run: cargo test --workspace --all-features --locked  # Full test, not just check
-
-  audit:
-    name: Security Audit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: rustsec/audit-check@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - run: cargo check --locked --all-features
 
   deny:
-    name: Dependency Check
+    name: Dependency audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -271,20 +272,62 @@ jobs:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - run: cargo doc --no-deps --all-features
+      - run: cargo doc --locked --no-deps --all-features
         env:
           RUSTDOCFLAGS: "-D warnings"
+
+  coverage:
+    name: Code coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@cargo-llvm-cov
+      - run: cargo llvm-cov --locked --all-features --lcov --output-path lcov.info
+        env:
+          RUSTFLAGS: "-D warnings"
+      - uses: codecov/codecov-action@v5
+        with:
+          files: lcov.info
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  semver-checks:
+    name: Semver compatibility
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: obi1kenobi/cargo-semver-checks-action@v2
+
+  workflow-scripts:
+    name: Workflow script tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v
 ```
 
 **Key patterns from real-world projects:**
 - Use `actions/checkout@v6` (current), `dtolnay/rust-toolchain` (not `actions-rs`)
-- `Swatinem/rust-cache@v2` with `shared-key` per job type
-- `--locked` in test/build to enforce Cargo.lock reproducibility
-- Test with `--no-default-features` to verify library builds without CLI deps
-- MSRV job should run `cargo test`, not just `cargo check` (flowmark-rs does this)
-- Use `rustsec/audit-check@v2` action, not `cargo install cargo-audit` (faster)
+- `Swatinem/rust-cache@v2` for build caching across jobs
+- `--locked` on all cargo commands enforces Cargo.lock reproducibility
+- `RUSTFLAGS: "-D warnings"` in test/build jobs treats warnings as errors
+- `CARGO_INCREMENTAL: 0` + `CARGO_PROFILE_TEST_DEBUG: 0` for faster CI builds
+- `test-lib-only` verifies library builds without CLI feature deps
+- `coverage` via `cargo-llvm-cov` + Codecov (use `taiki-e/install-action` for speed)
+- `semver-checks` on PRs only (needs `fetch-depth: 0`) catches API breakage
+- `workflow-scripts` validates testable release automation scripts
 - Use `EmbarkStudios/cargo-deny-action@v2` (no manual install needed)
-- Doc build with `-D warnings` catches broken doc links and missing docs
+- Doc build with `RUSTDOCFLAGS: "-D warnings"` catches broken doc links
 
 ### Cross-Platform Test Matrix
 
@@ -410,78 +453,29 @@ See https://opensource.axo.dev/cargo-dist/ for details.
 For full control, the standard hand-rolled pattern:
 
 1. **cargo-release** bumps version, commits, tags, pushes
-2. **Tag push** triggers release workflow
-3. **Release workflow** creates GitHub Release, builds cross-platform binaries,
-   publishes to crates.io
+2. **Tag push** triggers `release.yml` orchestrator
+3. **Release workflow** plans, builds binaries, generates checksums, publishes to
+   channels, and creates GitHub Release
 
-```yaml
-name: Release
-on:
-  push:
-    tags: ["v[0-9]+.*"]
+**Cross-compilation approach:** Use RUSTFLAGS linker overrides with apt-get packages
+instead of Docker-based `cross`. For musl targets, install `musl-tools`; for Linux
+ARM64, install `gcc-aarch64-linux-gnu` and set linker override via
+`--codegen linker=aarch64-linux-gnu-gcc`. This is simpler and more transparent.
 
-permissions:
-  contents: write
+**Static linking:** Use `--codegen target-feature=+crt-static` for statically linked
+binaries on musl targets.
 
-jobs:
-  create-release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
-          generate_release_notes: true
+**crates.io OIDC auth:** Use `rust-lang/crates-io-auth-action@v1` instead of
+long-lived `CARGO_REGISTRY_TOKEN` secrets. Same principle as PyPI trusted publishing.
 
-  build:
-    needs: create-release
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { os: ubuntu-latest, target: x86_64-unknown-linux-gnu, name: linux-x86_64 }
-          - { os: ubuntu-latest, target: x86_64-unknown-linux-musl, name: linux-x86_64-musl }
-          - { os: macos-latest, target: x86_64-apple-darwin, name: macos-x86_64 }
-          - { os: macos-latest, target: aarch64-apple-darwin, name: macos-aarch64 }
-          - { os: windows-latest, target: x86_64-pc-windows-msvc, name: windows-x86_64 }
-    steps:
-      - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
-      - name: Install musl tools
-        if: contains(matrix.target, 'musl')
-        run: sudo apt-get update && sudo apt-get install -y musl-tools
-      - run: cargo build --release --locked --target ${{ matrix.target }}
-      # ... archive and upload steps
+**Release automation scripts:** Extract complex workflow logic into testable Python
+scripts (`scripts/*.py`) with unit tests. Scripts handle semver parsing, archive
+creation, idempotency checks, and wheel validation. Run tests in CI with
+`python3 -m unittest discover -s scripts/tests -p 'test_*.py'`.
 
-  publish-crates-io:
-    needs: [create-release, build]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo publish --locked
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-```
-
-**For Linux ARM64**, add a matrix entry that uses `cross` (cross-compilation tool):
-```yaml
-          - { os: ubuntu-latest, target: aarch64-unknown-linux-gnu, name: linux-aarch64, use-cross: true }
-```
-Then conditionally use `cross` instead of `cargo`:
-```yaml
-      - name: Install cross
-        if: matrix.use-cross
-        run: cargo install cross --git https://github.com/cross-rs/cross
-      - name: Build
-        run: |
-          BUILD_CMD=${{ matrix.use-cross && 'cross' || 'cargo' }}
-          $BUILD_CMD build --release --locked --target ${{ matrix.target }}
-```
+See [Rust CLI Best Practices](../playbooks/rust-cli-best-practices.md#64-release-ci-workflow)
+for the complete release workflow template with plan job, concurrency control,
+checksum generation, and reusable channel workflows.
 
 ### Multi-Channel Distribution
 

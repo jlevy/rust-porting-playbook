@@ -34,6 +34,32 @@ workflows, testable release scripts, and idempotent publishing.
 system (release.yml orchestrator, publish.yml for crates.io, pypi.yml for PyPI,
 scripts/ for testable release logic, docs/publishing.md runbook).
 
+### CI workflow and release automation hardening (from flowmark-rs sync)
+
+Extracted comprehensive CI and release workflow patterns from the flowmark-rs production
+setup into playbook guidance.
+
+**Changes made:**
+
+- Rewrote CI section (7.2) in `playbooks/rust-cli-best-practices.md` with 13-job
+  workflow from flowmark-rs: added `test-lib-only`, `coverage` (cargo-llvm-cov +
+  Codecov), `semver-checks` (PR-only), `workflow-scripts` (unit tests for release
+  scripts); added `CARGO_INCREMENTAL: 0` and `CARGO_PROFILE_TEST_DEBUG: 0` env vars;
+  added `--locked` on clippy; added `RUSTFLAGS: "-D warnings"` to test jobs.
+- Rewrote release workflow (6.4) to replace `cross` Docker approach with RUSTFLAGS
+  linker overrides + apt-get packages (simpler, more transparent). Added: plan job
+  with script-driven decision logic, concurrency control, SHA256SUMS checksum
+  generation, `fail-fast: false`, `fail_on_unmatched_files: true`, static linking
+  via `+crt-static`, reusable channel workflow invocation, crates.io OIDC auth via
+  `rust-lang/crates-io-auth-action@v1`.
+- Added "Release Automation Scripts" section documenting the pattern of extracting
+  workflow logic into testable Python scripts (resolve_release_plan, package_archive,
+  resolve_crate_metadata, validate_wheel_entrypoints, pypi_smoke_test) with code
+  examples and directory layout.
+- Updated `guidelines/rust-project-setup.md` CI workflow to match (13 jobs, env vars,
+  coverage, semver-checks, workflow-scripts). Rewrote release workflow section to
+  document RUSTFLAGS cross-compilation, OIDC auth, and script-driven automation.
+
 ## 2026-02-26
 
 ### Scope and claim calibration
