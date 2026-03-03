@@ -13,7 +13,6 @@ workflows, testable release scripts, and idempotent publishing.
 
 **Changes made:**
 
-- Added `repos/flowmark-rs` as a git submodule for reference implementation access.
 - Added new section 6.5 "Multi-Channel Distribution" to
   `playbooks/rust-cli-best-practices.md` covering:
   - PyPI distribution via maturin (`bindings = "bin"`) with full workflow template
@@ -27,7 +26,7 @@ workflows, testable release scripts, and idempotent publishing.
 - Added "Multi-Channel Distribution Learnings" section to
   `case-studies/flowmark/flowmark-port-analysis.md` documenting key innovations.
 - Updated `README.md`:
-  - Added `docs/project/research/` and `repos/` to structure map.
+  - Added `docs/project/research/` to structure map.
   - Added "Research Docs" section to reference tables.
   - Updated documentation layers from four to five (adding Research layer).
 

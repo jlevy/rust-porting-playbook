@@ -130,8 +130,6 @@ rust-porting-playbook/
 │       ├── flowmark-port-cross-validation.md
 │       ├── flowmark-port-comrak-bug.md
 │       └── flowmark-port-wrapping-solution.md
-└── repos/                     # Git submodules of ported projects
-    └── flowmark-rs/           # Reference implementation (submodule)
 ```
 
 ### Five layers of documentation

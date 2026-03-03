@@ -1,3 +1,0 @@
-[submodule "repos/flowmark-rs"]
-	path = repos/flowmark-rs
-	url = https://github.com/jlevy/flowmark-rs.git
