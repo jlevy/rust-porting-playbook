@@ -88,25 +88,31 @@ the playbook itself to drive the rest of the process.
 > cd <PROJECT>-rs
 > ```
 >
-> **Step 2 — Add the Python source and porting playbook as submodules**
+> **Step 2 — Add the Python source, porting playbook, and reference project as submodules**
 >
 > ```bash
 > mkdir repos
 > git submodule add <PYTHON_REPO_URL> repos/<PYTHON_PROJECT>
 > git submodule add https://github.com/jlevy/rust-porting-playbook.git repos/rust-porting-playbook
+> git submodule add https://github.com/jlevy/flowmark-rs.git repos/flowmark-rs
 > ```
+>
+> The `flowmark-rs` repo is included as a **working reference project** — a real,
+> production Rust port built with this playbook.
+> Use it to see concrete examples of Cargo.toml config, CI workflows, release automation,
+> test organization, deny.toml, build.rs, maturin/PyPI setup, and more.
 >
 > **Step 3 — Read the playbook and begin the port**
 >
 > Read `repos/rust-porting-playbook/playbooks/python-to-rust-playbook.md` and follow it
 > from Phase 1.
 > Load guidelines as needed from `repos/rust-porting-playbook/guidelines/`.
-> Use the case study at `repos/rust-porting-playbook/case-studies/flowmark/` as a
-> reference for decisions and tradeoffs.
+> Use the case study at `repos/rust-porting-playbook/case-studies/flowmark/` for decisions
+> and tradeoffs, and browse `repos/flowmark-rs/` for working examples of every config file
+> and workflow.
 >
-> *(If using [tbd](https://github.com/jlevy/tbd) for issue tracking, also run
-> `tbd setup --auto --prefix=<PREFIX>` and load guidelines with
-> `tbd guidelines python-to-rust-porting-rules`, etc.)*
+> *(If using [tbd](https://github.com/jlevy/tbd) for task tracking, also run
+> `tbd setup --auto --prefix=<PREFIX>`.)*
 
 Replace `<PYTHON_PROJECT>`, `<PYTHON_REPO_URL>`, `<PROJECT>`, and `<PREFIX>` with your
 actual values.
@@ -212,19 +218,22 @@ Thorough library evaluation in Phase 2 is the single highest-leverage activity.
 
 The `guidelines/` directory contains compact documents (~2-3k tokens each) designed to
 be loaded into an AI agent’s context window before starting work.
-If using [tbd](https://github.com/jlevy/tbd), load them with:
+Include the raw markdown files from `guidelines/` in your agent’s system prompt or
+context.
+The key guidelines for porting are:
 
-```bash
-tbd guidelines python-to-rust-porting-rules    # guidelines/python-to-rust-porting-rules.md
-tbd guidelines rust-project-setup               # guidelines/rust-project-setup.md
-tbd guidelines test-coverage-for-porting        # guidelines/test-coverage-for-porting.md
-tbd guidelines python-to-rust-cli-porting       # guidelines/python-to-rust-cli-porting.md
-tbd guidelines rust-general-rules               # guidelines/rust-general-rules.md
-tbd guidelines rust-cli-app-patterns            # guidelines/rust-cli-app-patterns.md
-```
+- `guidelines/python-to-rust-porting-rules.md` — Core porting rules
+- `guidelines/rust-project-setup.md` — Project setup patterns
+- `guidelines/rust-general-rules.md` — General Rust best practices
+- `guidelines/rust-cli-app-patterns.md` — CLI application patterns
+- `guidelines/python-to-rust-cli-porting.md` — CLI-specific porting rules
+- `guidelines/test-coverage-for-porting.md` — Test coverage strategy
+- `guidelines/porting-principles-and-antipatterns.md` — Principles and antipatterns
 
-Otherwise, include the raw markdown files from `guidelines/` in your agent’s system
-prompt or context.
+For a **working reference project**, check out
+[flowmark-rs](https://github.com/jlevy/flowmark-rs) — it demonstrates all of these
+patterns in a real, production codebase (Cargo.toml, CI workflows, deny.toml, release
+automation, test organization, maturin/PyPI distribution, and more).
 
 ## Case Study: Flowmark
 
@@ -245,6 +254,13 @@ Canonical metrics are in
 The case study covers library evaluation methodology, all technical decisions,
 workaround strategies, and a meta-analysis of what can be automated in porting
 workflows.
+
+**For agents:** Beyond the case study docs here, the
+[flowmark-rs repo itself](https://github.com/jlevy/flowmark-rs) is the best working
+reference for what a completed port looks like — including CI workflows, release
+automation, test structure, deny.toml, build.rs, and PyPI distribution via maturin.
+The bootstrap instructions above include it as a submodule so your agent has direct
+access.
 
 ## Reference Docs
 
