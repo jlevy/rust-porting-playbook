@@ -70,12 +70,50 @@ improvement.
 
 ## Quick Start
 
-Choose the correct entry point:
+### New port (bootstrapping a Rust project from Python)
 
-- **Initial port (new Rust implementation):**
-  [`playbooks/python-to-rust-playbook.md`](playbooks/python-to-rust-playbook.md)
-- **Auto-sync update (existing Rust port, new upstream release):**
-  [`playbooks/port-checklist-update-template.md`](playbooks/port-checklist-update-template.md)
+Copy-paste the following **bootstrap instructions** to your agent to get started.
+The agent will set up the workspace, pull in the playbook as a submodule, and then use
+the playbook itself to drive the rest of the process.
+
+> **Bootstrap a Python-to-Rust port**
+>
+> I want to port `<PYTHON_PROJECT>` (at `<PYTHON_REPO_URL>`) to Rust.
+> Follow these steps to set up the workspace, then use the playbook to drive the port.
+>
+> **Step 1 — Create the Rust project and workspace**
+>
+> ```bash
+> cargo init <PROJECT>-rs
+> cd <PROJECT>-rs
+> ```
+>
+> **Step 2 — Add the Python source and porting playbook as submodules**
+>
+> ```bash
+> mkdir repos
+> git submodule add <PYTHON_REPO_URL> repos/<PYTHON_PROJECT>
+> git submodule add https://github.com/jlevy/rust-porting-playbook.git repos/rust-porting-playbook
+> ```
+>
+> **Step 3 — Read the playbook and begin the port**
+>
+> Read `repos/rust-porting-playbook/playbooks/python-to-rust-playbook.md` and follow it
+> from Phase 1.
+> Load guidelines as needed from `repos/rust-porting-playbook/guidelines/`.
+> Use the case study at `repos/rust-porting-playbook/case-studies/flowmark/` as a
+> reference for decisions and tradeoffs.
+>
+> *(If using [tbd](https://github.com/jlevy/tbd) for issue tracking, also run
+> `tbd setup --auto --prefix=<PREFIX>` and load guidelines with
+> `tbd guidelines python-to-rust-porting-rules`, etc.)*
+
+Replace `<PYTHON_PROJECT>`, `<PYTHON_REPO_URL>`, `<PROJECT>`, and `<PREFIX>` with your
+actual values.
+
+### Existing port (syncing with a new upstream release)
+
+- [`playbooks/port-checklist-update-template.md`](playbooks/port-checklist-update-template.md)
   + [`playbooks/auto-sync-agent-prompt-template.md`](playbooks/auto-sync-agent-prompt-template.md)
 
 Everything else in this repo is supporting material referenced from these entry points.
