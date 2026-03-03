@@ -583,6 +583,20 @@ Set up `release.toml` for cargo-release and a release CI workflow for cross-plat
 binary builds. See [Rust Project Setup](../guidelines/rust-project-setup.md) for
 templates.
 
+For Python-to-Rust ports, consider multi-channel distribution to preserve the original
+install experience:
+
+- **PyPI via maturin:** Add `pyproject.toml` with `bindings = "bin"` so users can
+  `uvx <tool>` or `pip install <tool>` — same workflow as the original Python package.
+  This is especially valuable when the Python original was distributed via PyPI.
+- **Homebrew tap:** Personal tap with SHA256-pinned formula for macOS users.
+- **crates.io:** Standard Rust distribution (`cargo install` / `cargo binstall`).
+
+See [Rust CLI Best Practices](rust-cli-best-practices.md#65-multi-channel-distribution)
+for workflow templates and the
+[PyPI distribution research](../docs/project/research/research-rust-cli-pypi-distribution.md)
+for detailed guidance on the maturin approach.
+
 * * *
 
 ## Phase 8: Ongoing Synchronization

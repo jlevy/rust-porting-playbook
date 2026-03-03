@@ -116,25 +116,31 @@ rust-porting-playbook/
 │   ├── test-coverage-for-porting.md
 │   ├── porting-principles-and-antipatterns.md
 │   └── ...
-└── case-studies/              # Real-world porting examples
-    └── flowmark/              # Python Markdown formatter → Rust
-        ├── README.md
-        ├── flowmark-port-library-choices.md
-        ├── flowmark-port-decision-log.md
-        ├── flowmark-port-analysis.md
-        ├── flowmark-port-metrics.md
-        ├── flowmark-port-migration-plan.md
-        ├── flowmark-port-cross-validation.md
-        ├── flowmark-port-comrak-bug.md
-        └── flowmark-port-wrapping-solution.md
+├── docs/project/research/     # In-depth research on specific topics
+│   ├── research-rust-cli-binary-distribution.md
+│   └── research-rust-cli-pypi-distribution.md
+├── case-studies/              # Real-world porting examples
+│   └── flowmark/              # Python Markdown formatter → Rust
+│       ├── README.md
+│       ├── flowmark-port-library-choices.md
+│       ├── flowmark-port-decision-log.md
+│       ├── flowmark-port-analysis.md
+│       ├── flowmark-port-metrics.md
+│       ├── flowmark-port-migration-plan.md
+│       ├── flowmark-port-cross-validation.md
+│       ├── flowmark-port-comrak-bug.md
+│       └── flowmark-port-wrapping-solution.md
+└── repos/                     # Git submodules of ported projects
+    └── flowmark-rs/           # Reference implementation (submodule)
 ```
 
-### Four layers of documentation
+### Five layers of documentation
 
 | Layer | Directory | Purpose | When to use |
 | --- | --- | --- | --- |
 | **Playbook + Reference** | `playbooks/` | Step-by-step process, detailed mappings, checklists | Start here. The playbook is the primary doc. |
 | **Guidelines** | `guidelines/` | Compact rules optimized for AI agent context windows | Load into agent context before porting |
+| **Research** | `docs/project/research/` | In-depth investigation of specific topics (distribution, packaging) | When you need deep research on a specific area |
 | **Case Studies** | `case-studies/` | Real-world examples with decisions, metrics, lessons | When you hit a specific problem and want to see how it was handled |
 | **Meta Process** | `_meta/` | How to improve the playbook itself via case studies | Use when contributing playbook improvements |
 
@@ -219,6 +225,13 @@ workflows.
 | [port-checklist-update-template.md](playbooks/port-checklist-update-template.md) | Ongoing sync checklist template |
 | [auto-sync-agent-prompt-template.md](playbooks/auto-sync-agent-prompt-template.md) | Canonical prompt for syncing existing Rust ports to new upstream Python releases |
 | [python-to-rust-sync-release-workflow.md](playbooks/python-to-rust-sync-release-workflow.md) | Two-stage release-refresh workflow: Rust-only stabilization release, then upstream sync release |
+
+## Research Docs
+
+| Document | What it covers |
+| --- | --- |
+| [research-rust-cli-binary-distribution.md](docs/project/research/research-rust-cli-binary-distribution.md) | Survey of how 14 Rust CLI tools distribute binaries (GitHub Actions, cargo-dist, cross-compilation) |
+| [research-rust-cli-pypi-distribution.md](docs/project/research/research-rust-cli-pypi-distribution.md) | Distributing Rust CLI binaries via PyPI using maturin (ruff/uv pattern, workflow templates, platform targets) |
 
 ## Meta Docs
 

@@ -784,6 +784,227 @@ jobs:
 
 **Versioning**: Follow [Semantic Versioning](https://semver.org/) (semver)
 
+### 6.5 Multi-Channel Distribution
+
+For production Rust CLI tools, distribute through multiple channels to maximize reach.
+The flowmark-rs project provides a proven template: three coordinated channels
+(crates.io, PyPI, Homebrew) orchestrated by a single release workflow.
+
+**Channel overview:**
+
+| Channel | Audience | Install command | Mechanism |
+| --- | --- | --- | --- |
+| **crates.io** | Rust developers | `cargo install <name>` / `cargo binstall <name>` | `cargo publish` with OIDC trusted publisher |
+| **PyPI** | Python/general users | `uvx <name>` / `uv tool install <name>` / `pip install <name>` | maturin `bindings = "bin"` — packages Rust binary into Python wheel |
+| **Homebrew** | macOS users | `brew install <tap>/<name>` | Personal tap with SHA256-pinned formula |
+| **GitHub Releases** | Direct downloads | Browser / curl | Binary archives (.tar.gz, .zip) + SHA256SUMS |
+
+#### PyPI Distribution via Maturin
+
+Distributing Rust CLI binaries on PyPI via maturin is an increasingly important channel.
+It is the pattern used by **ruff**, **uv**, and **maturin** itself.
+The key advantage: `uvx <tool>` gives users instant access without installing Rust.
+
+**Minimal `pyproject.toml`** (at repo root, alongside `Cargo.toml`):
+```toml
+[build-system]
+requires = ["maturin>=1.9,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "myproject-rs"
+description = "Short description"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+dynamic = ["version"]       # Reads version from Cargo.toml automatically
+
+[tool.maturin]
+bindings = "bin"             # Standalone CLI binary, not a Python extension
+strip = true                 # Strip debug symbols for smaller wheels
+```
+
+**How it works:**
+- Maturin compiles the Rust binary and places it into the wheel's `.data/scripts/`
+- pip/uv installs it into the appropriate `bin/` directory
+- No Python code runs at binary invocation — it is pure Rust
+- Platform tags (e.g., `manylinux_2_17_x86_64`) ensure the correct wheel is selected
+
+**Versioning:** Use `dynamic = ["version"]` so maturin reads the version from
+`Cargo.toml`. This avoids maintaining version numbers in two places.
+Ruff and uv use manual sync instead (via rooster) because they are Cargo workspaces,
+but for single-crate projects, dynamic versioning is simpler and less error-prone.
+
+**Standard platform targets** (covers ~99% of users):
+
+| Target | Platform Tag | Runner |
+| --- | --- | --- |
+| `x86_64-unknown-linux-gnu` | `manylinux_2_17_x86_64` | `ubuntu-latest` |
+| `aarch64-unknown-linux-gnu` | `manylinux_2_17_aarch64` | `ubuntu-latest` |
+| `x86_64-apple-darwin` | `macosx_10_12_x86_64` | `macos-13` or `macos-14` |
+| `aarch64-apple-darwin` | `macosx_11_0_arm64` | `macos-14` |
+| `x86_64-pc-windows-msvc` | `win_amd64` | `windows-latest` |
+
+Add musl targets (`musllinux_1_2_*`) for Alpine Linux support if needed.
+
+**PyPI workflow** (`pypi.yml`, reusable):
+```yaml
+name: PyPI
+on:
+  workflow_call:
+    inputs:
+      publish:
+        type: boolean
+        default: false
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-latest, manylinux: "2_17" }
+          - { target: aarch64-unknown-linux-gnu, os: ubuntu-latest, manylinux: "2_17" }
+          - { target: x86_64-apple-darwin, os: macos-14 }
+          - { target: aarch64-apple-darwin, os: macos-14 }
+          - { target: x86_64-pc-windows-msvc, os: windows-latest }
+    steps:
+      - uses: actions/checkout@v6
+      - uses: PyO3/maturin-action@v1
+        with:
+          command: build
+          args: --release --locked --out dist
+          target: ${{ matrix.target }}
+          manylinux: ${{ matrix.manylinux || 'auto' }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.target }}
+          path: dist/*.whl
+
+  sdist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-sdist
+          path: dist/*.tar.gz
+
+  publish:
+    if: inputs.publish
+    needs: [build, sdist]
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+    steps:
+      - uses: astral-sh/setup-uv@v7
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          merge-multiple: true
+          path: wheels/
+      - run: uv publish --trusted-publishing always --check-url wheels/*
+```
+
+**Key points:**
+- Use `PyO3/maturin-action@v1` for cross-platform wheel builds (pin the version)
+- Use `uv publish --trusted-publishing always` with OIDC (no long-lived API tokens)
+- Add `--check-url` to skip already-published versions (idempotent reruns)
+- Set up trusted publishing on PyPI: link your GitHub repo/workflow to the PyPI project
+- Include an sdist for users who want to build from source on unsupported platforms
+
+For detailed research on this pattern, see
+[research-rust-cli-pypi-distribution.md](../docs/project/research/research-rust-cli-pypi-distribution.md).
+
+#### Homebrew Tap Distribution
+
+For macOS users, a personal Homebrew tap provides `brew install` access.
+
+**Setup:**
+1. Create a tap repository: `<user>/homebrew-<project>`
+2. Add a formula that downloads the GitHub Release binary archive
+3. Pin SHA256 checksums from the release's `SHA256SUMS` file
+
+**Formula template** (`Formula/<project>.rb`):
+```ruby
+class MyProject < Formula
+  desc "Short description"
+  homepage "https://github.com/<user>/<project>"
+  version "X.Y.Z"
+  license "MIT"
+
+  on_macos do
+    on_arm do
+      url "https://github.com/<user>/<project>/releases/download/vX.Y.Z/<project>-vX.Y.Z-aarch64-apple-darwin.tar.gz"
+      sha256 "<sha256>"
+    end
+    on_intel do
+      url "https://github.com/<user>/<project>/releases/download/vX.Y.Z/<project>-vX.Y.Z-x86_64-apple-darwin.tar.gz"
+      sha256 "<sha256>"
+    end
+  end
+
+  def install
+    bin.install "<binary-name>"
+  end
+end
+```
+
+**Update process:** After each GitHub Release, extract SHA256 checksums from the release
+assets and update the formula version and hashes. This is typically a manual step to keep
+auditable.
+
+#### Orchestrated Multi-Channel Releases
+
+For projects publishing to multiple channels, use a single orchestrator workflow that
+coordinates all channels. The flowmark-rs pattern:
+
+```
+cargo release patch --execute
+  → tag push triggers release.yml (orchestrator)
+    ├── plan job: resolve release mode (dry-run vs. publish, stable vs. pre-release)
+    ├── package job: build 6 targets → GitHub Release artifacts + SHA256SUMS
+    ├── publish.yml (reusable): test → dry-run → crates.io publish
+    ├── pypi.yml (reusable): maturin build 5 targets → PyPI publish
+    └── announce job: create/update GitHub Release (gated on success)
+```
+
+**Key orchestration patterns:**
+
+1. **Reusable channel workflows:** Both `publish.yml` (crates.io) and `pypi.yml` (PyPI)
+   are reusable workflows (`workflow_call`) that can also be triggered independently via
+   `workflow_dispatch`. This enables testing channels in isolation.
+
+2. **Script-driven decision logic:** Complex release decisions (semver parsing,
+   dry-run detection, idempotency checks) live in testable Python scripts
+   (`scripts/*.py`), not inline YAML. Each script has unit tests.
+
+3. **Idempotent publishing:** Each channel detects already-published versions and skips:
+   - crates.io: API query before publish
+   - PyPI: `uv publish --check-url`
+   - GitHub Releases: naturally idempotent (updates existing)
+
+4. **Concurrency control:** Prevent parallel releases of the same tag:
+   ```yaml
+   concurrency:
+     group: release-${{ github.ref_name || inputs.tag }}
+     cancel-in-progress: false
+   ```
+
+5. **Conditional channel gating:** Orchestrator outputs control which channels publish:
+   ```yaml
+   crates:
+     uses: ./.github/workflows/publish.yml
+     with:
+       publish: ${{ needs.plan.outputs.publish_channels == 'true' }}
+   ```
+
 ## 7. Continuous Integration
 
 ### 7.1 Essential CI Checks

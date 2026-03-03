@@ -278,6 +278,45 @@ Porting frequently reveals bugs in the original because:
    correct.
 6. **Track for sync.** When Python fixes the bug, remove the divergence note.
 
+## Multi-Channel Distribution Learnings
+
+The flowmark-rs project developed a production-grade multi-channel publishing system that
+distributes through four channels: crates.io, PyPI (via maturin), Homebrew tap, and
+GitHub Releases. This is especially relevant for Python-to-Rust ports where users expect
+the same install experience.
+
+**Key innovations:**
+
+1. **PyPI distribution via maturin (`bindings = "bin"`):** The Rust binary is packaged
+   into Python wheels, so `uvx flowmark-rs` works identically to the original Python
+   package. This is the same pattern used by ruff, uv, and maturin itself. For
+   Python-to-Rust ports, this preserves the install experience that existing users expect.
+
+2. **Orchestrated release workflow:** A single `release.yml` orchestrator invokes
+   reusable channel workflows (`publish.yml` for crates.io, `pypi.yml` for PyPI) via
+   `workflow_call`. Each channel can also be tested independently via `workflow_dispatch`.
+
+3. **Testable release scripts:** Complex release decisions (semver parsing, dry-run
+   detection, idempotency checks, wheel validation) are implemented as Python scripts
+   with unit tests, not inline YAML. This dramatically improves maintainability.
+
+4. **Idempotent publishing:** Each channel detects already-published versions and skips
+   gracefully, enabling safe reruns after partial failures.
+
+5. **Dual binary names:** Both `flowmark` and `flowmark-rs` binaries are packaged into
+   each distribution channel, so users can invoke either name regardless of install
+   method.
+
+**Process retrospective:** The full port tracked 235 issues across 7 workstreams
+(architecture, parity, CI, packaging, performance, documentation, playbook). The
+packaging/distribution workstream was a significant effort that produced reusable
+patterns now documented in the playbook.
+
+For detailed guidance, see:
+- [Rust CLI Best Practices: Multi-Channel Distribution](../../playbooks/rust-cli-best-practices.md#65-multi-channel-distribution)
+- [Research: PyPI Distribution](../../docs/project/research/research-rust-cli-pypi-distribution.md)
+- [Research: Binary Distribution](../../docs/project/research/research-rust-cli-binary-distribution.md)
+
 ## Future Research Areas
 
 ### 1. Alternative Markdown Parsers

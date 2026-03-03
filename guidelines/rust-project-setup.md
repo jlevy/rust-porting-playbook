@@ -483,6 +483,31 @@ Then conditionally use `cross` instead of `cargo`:
           $BUILD_CMD build --release --locked --target ${{ matrix.target }}
 ```
 
+### Multi-Channel Distribution
+
+Beyond crates.io and GitHub Releases, distribute Rust CLI binaries through additional
+channels for broader reach. See
+[Rust CLI Best Practices](../playbooks/rust-cli-best-practices.md#65-multi-channel-distribution)
+for full workflow templates.
+
+**PyPI via maturin** (`uvx <tool>`, `pip install <tool>`):
+Add `pyproject.toml` at repo root with `[tool.maturin] bindings = "bin"` and
+`dynamic = ["version"]` (reads from `Cargo.toml`). Build cross-platform wheels with
+`PyO3/maturin-action` in CI; publish with `uv publish --trusted-publishing always`.
+This is the pattern used by ruff, uv, and maturin itself.
+
+**Homebrew tap** (`brew install <tap>/<tool>`):
+Create a personal tap repo (`<user>/homebrew-<project>`) with a formula that downloads
+GitHub Release archives. Pin SHA256 checksums; update manually after each release.
+
+**Orchestration:** For multi-channel projects, use a single `release.yml` orchestrator
+that invokes reusable channel workflows (`publish.yml`, `pypi.yml`) with conditional
+gating. Keep complex logic in testable scripts, not inline YAML.
+
+**Idempotent publishing:** Each channel should detect already-published versions and skip
+gracefully (crates.io: API query; PyPI: `--check-url`; GitHub Releases: naturally
+idempotent).
+
 ## Development Tooling
 
 ### Task Runner: just

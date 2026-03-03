@@ -22,3 +22,6 @@ Primary case study for this playbook: a full Python-to-Rust port plus ongoing sy
 
 - Use `flowmark-port-metrics.md` as the canonical metrics source.
 - Historical baseline values are preserved in individual docs where marked.
+- For multi-channel publishing learnings (PyPI via maturin, Homebrew, orchestrated
+  releases), see the "Multi-Channel Distribution Learnings" section in
+  `flowmark-port-analysis.md`.
