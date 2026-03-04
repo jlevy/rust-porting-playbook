@@ -129,7 +129,7 @@ flowchart TD
         P8_done -->|Next cycle| P8_mode
     end
 
-    style P0 fill:#ffcdd2,stroke:#C62828
+    style P0 fill:#efebe9,stroke:#795548
     style P1 fill:#e8f4f8,stroke:#2196F3
     style P2 fill:#e8f4f8,stroke:#2196F3
     style P3 fill:#e8f4f8,stroke:#2196F3
@@ -143,6 +143,7 @@ flowchart TD
 ```
 
 **Phase color key:**
+- Tan (Phase 0): Remediation — loop back until gate conditions met
 - Blue (Phases 1-4): Planning and preparation — ~25% of effort
 - Orange (Phases 5-6): Implementation and fixing — ~65% of effort
 - Green (Phase 7): Validation and release — ~10% of effort
@@ -163,26 +164,26 @@ see the inventory table in Section 8.
 ```mermaid
 flowchart LR
     subgraph core["Core References (All Phases)"]
-        PB_CORE["★ python-to-rust-playbook.md<br/>port-checklist-initial-template.md"]
+        PB_CORE[["★ python-to-rust-playbook.md<br/>port-checklist-initial-template.md"]]
     end
 
     subgraph playbooks["Playbooks"]
-        PB_TEST["python-to-rust-test-coverage-playbook.md"]
-        PB_PORT["python-to-rust-mapping-reference.md<br/>python-to-rust-porting-guide.md<br/>cross-language-test-mapping.md"]
-        PB_INFRA["rust-cli-best-practices.md<br/>rust-code-review-checklist.md"]
-        PB_SYNC["python-to-rust-sync-release-workflow.md<br/>auto-sync-agent-prompt-template.md<br/>port-checklist-update-template.md"]
+        PB_TEST[["python-to-rust-test-coverage-playbook.md"]]
+        PB_PORT[["python-to-rust-mapping-reference.md<br/>python-to-rust-porting-guide.md<br/>cross-language-test-mapping.md"]]
+        PB_INFRA[["rust-cli-best-practices.md<br/>rust-code-review-checklist.md"]]
+        PB_SYNC[["python-to-rust-sync-release-workflow.md<br/>auto-sync-agent-prompt-template.md<br/>port-checklist-update-template.md"]]
     end
 
     subgraph guidelines["Guidelines"]
-        G_TEST_DOC["test-coverage-for-porting.md"]
-        G_SETUP_DOC["rust-project-setup.md"]
-        G_IMPL["python-to-rust-porting-rules.md<br/>rust-general-rules.md<br/>rust-cli-app-patterns.md<br/>python-to-rust-cli-porting.md<br/>porting-principles-and-antipatterns.md<br/>filesystem-heavy-cli-porting.md"]
+        G_TEST_DOC[["test-coverage-for-porting.md"]]
+        G_SETUP_DOC[["rust-project-setup.md"]]
+        G_IMPL[["python-to-rust-porting-rules.md<br/>rust-general-rules.md<br/>rust-cli-app-patterns.md<br/>python-to-rust-cli-porting.md<br/>porting-principles-and-antipatterns.md<br/>filesystem-heavy-cli-porting.md"]]
     end
 
     subgraph evidence["Research & Case Study"]
-        CS_PLAN_EV["flowmark-port-analysis.md<br/>flowmark-port-decision-log.md<br/>flowmark-port-library-choices.md"]
-        CS_VAL_EV["flowmark-port-cross-validation.md<br/>flowmark-port-metrics.md"]
-        R_DIST["research-rust-cli-binary-distribution.md<br/>research-rust-cli-pypi-distribution.md"]
+        CS_PLAN_EV[["flowmark-port-analysis.md<br/>flowmark-port-decision-log.md<br/>flowmark-port-library-choices.md"]]
+        CS_VAL_EV[["flowmark-port-cross-validation.md<br/>flowmark-port-metrics.md"]]
+        R_DIST[["research-rust-cli-binary-distribution.md<br/>research-rust-cli-pypi-distribution.md"]]
     end
 
     PREP["Phases 1-4<br/>Preparation"]
@@ -210,14 +211,25 @@ flowchart LR
     PB_PORT -.-> VAL_PH
     G_IMPL -.-> PREP
 
+    style PB_CORE fill:#e0f2f1,stroke:#00897B
+    style PB_TEST fill:#e0f2f1,stroke:#00897B
+    style PB_PORT fill:#e0f2f1,stroke:#00897B
+    style PB_INFRA fill:#e0f2f1,stroke:#00897B
+    style PB_SYNC fill:#e0f2f1,stroke:#00897B
+    style G_TEST_DOC fill:#e0f2f1,stroke:#00897B
+    style G_SETUP_DOC fill:#e0f2f1,stroke:#00897B
+    style G_IMPL fill:#e0f2f1,stroke:#00897B
+    style CS_PLAN_EV fill:#e0f2f1,stroke:#00897B
+    style CS_VAL_EV fill:#e0f2f1,stroke:#00897B
+    style R_DIST fill:#e0f2f1,stroke:#00897B
     style PREP fill:#e8f4f8,stroke:#2196F3
     style IMPL_PH fill:#fff3e0,stroke:#FF9800
     style VAL_PH fill:#e8f5e9,stroke:#4CAF50
     style SYNC_PH fill:#f3e5f5,stroke:#9C27B0
-    style core fill:#fff9c4,stroke:#F9A825
-    style playbooks fill:#e3f2fd,stroke:#1565C0
-    style guidelines fill:#e8f5e9,stroke:#2E7D32
-    style evidence fill:#fff3e0,stroke:#E65100
+    style core fill:#f5f5f5,stroke:#9E9E9E
+    style playbooks fill:#f5f5f5,stroke:#9E9E9E
+    style guidelines fill:#f5f5f5,stroke:#9E9E9E
+    style evidence fill:#f5f5f5,stroke:#9E9E9E
 ```
 
 ---
@@ -229,13 +241,13 @@ of the playbook itself.
 
 ```mermaid
 flowchart TD
-    README["<b>README.md</b><br/>Entry point"] --> MAIN
+    README[["<b>README.md</b><br/>Entry point"]] --> MAIN
     README --> CHK_INIT
     README --> CHK_UPD
     README --> AUTO_SYNC
     README --> META
 
-    MAIN["<b>python-to-rust-<br/>playbook.md</b><br/>8-phase process"]
+    MAIN[["<b>python-to-rust-playbook.md</b><br/>8-phase process"]]
     MAIN --> TEST_COV
     MAIN --> MAPPING
     MAIN --> CLI_BP
@@ -245,63 +257,63 @@ flowchart TD
     MAIN --> SYNC_WF
     MAIN --> G_FS
 
-    TEST_COV["python-to-rust-test-<br/>coverage-playbook.md"]
-    MAPPING["python-to-rust-<br/>mapping-reference.md"]
-    GUIDE["python-to-rust-<br/>porting-guide.md"]
+    TEST_COV[["python-to-rust-test-coverage-playbook.md"]]
+    MAPPING[["python-to-rust-mapping-reference.md"]]
+    GUIDE[["python-to-rust-porting-guide.md"]]
 
-    CLI_BP["rust-cli-<br/>best-practices.md"]
+    CLI_BP[["rust-cli-best-practices.md"]]
     CLI_BP --> R_BIN
     CLI_BP --> R_PYPI
 
-    TEST_MAP["cross-language-<br/>test-mapping.md"]
-    REVIEW["rust-code-review-<br/>checklist.md"]
+    TEST_MAP[["cross-language-test-mapping.md"]]
+    REVIEW[["rust-code-review-checklist.md"]]
 
-    CHK_INIT["port-checklist-<br/>initial-template.md"]
+    CHK_INIT[["port-checklist-initial-template.md"]]
     CHK_INIT --> MAIN
     CHK_INIT --> CS_INDEX
 
-    CHK_UPD["port-checklist-<br/>update-template.md"]
+    CHK_UPD[["port-checklist-update-template.md"]]
     CHK_UPD --> SYNC_WF
 
-    SYNC_WF["python-to-rust-sync-<br/>release-workflow.md"]
-    AUTO_SYNC["auto-sync-agent-<br/>prompt-template.md"]
+    SYNC_WF[["python-to-rust-sync-release-workflow.md"]]
+    AUTO_SYNC[["auto-sync-agent-prompt-template.md"]]
     AUTO_SYNC --> CHK_UPD
     AUTO_SYNC --> SYNC_WF
 
-    G_SETUP["rust-project-<br/>setup.md"]
-    G_CLI["python-to-rust-<br/>cli-porting.md"]
-    G_PORT["python-to-rust-<br/>porting-rules.md"]
-    G_RUST["rust-general-<br/>rules.md"]
-    G_CLI_PAT["rust-cli-app-<br/>patterns.md"]
-    G_TEST["test-coverage-<br/>for-porting.md"]
-    G_PRINC["porting-principles-<br/>and-antipatterns.md"]
-    G_FS["filesystem-heavy-<br/>cli-porting.md"]
+    G_SETUP[["rust-project-setup.md"]]
+    G_CLI[["python-to-rust-cli-porting.md"]]
+    G_PORT[["python-to-rust-porting-rules.md"]]
+    G_RUST[["rust-general-rules.md"]]
+    G_CLI_PAT[["rust-cli-app-patterns.md"]]
+    G_TEST[["test-coverage-for-porting.md"]]
+    G_PRINC[["porting-principles-and-antipatterns.md"]]
+    G_FS[["filesystem-heavy-cli-porting.md"]]
 
-    R_BIN["research-rust-cli-<br/>binary-distribution.md"]
-    R_PYPI["research-rust-cli-<br/>pypi-distribution.md"]
+    R_BIN[["research-rust-cli-binary-distribution.md"]]
+    R_PYPI[["research-rust-cli-pypi-distribution.md"]]
 
-    CS_INDEX["<b>case-studies/<br/>flowmark/README.md</b>"]
+    CS_INDEX[["<b>case-studies/flowmark/README.md</b>"]]
     CS_INDEX --> CS_ANALYSIS & CS_METRICS & CS_DECISIONS & CS_LIBS & CS_XVAL & CS_COMRAK & CS_WRAP & CS_PLAN
 
-    CS_ANALYSIS["flowmark-port-<br/>analysis.md"]
-    CS_METRICS["flowmark-port-<br/>metrics.md"]
-    CS_DECISIONS["flowmark-port-<br/>decision-log.md"]
-    CS_LIBS["flowmark-port-<br/>library-choices.md"]
-    CS_XVAL["flowmark-port-<br/>cross-validation.md"]
-    CS_COMRAK["flowmark-port-<br/>comrak-bug.md"]
-    CS_WRAP["flowmark-port-<br/>wrapping-solution.md"]
-    CS_PLAN["flowmark-port-<br/>migration-plan.md"]
+    CS_ANALYSIS[["flowmark-port-analysis.md"]]
+    CS_METRICS[["flowmark-port-metrics.md"]]
+    CS_DECISIONS[["flowmark-port-decision-log.md"]]
+    CS_LIBS[["flowmark-port-library-choices.md"]]
+    CS_XVAL[["flowmark-port-cross-validation.md"]]
+    CS_COMRAK[["flowmark-port-comrak-bug.md"]]
+    CS_WRAP[["flowmark-port-wrapping-solution.md"]]
+    CS_PLAN[["flowmark-port-migration-plan.md"]]
 
-    META["<b>_meta/</b><br/>Meta-process"]
+    META[["<b>_meta/</b><br/>Meta-process"]]
     META --> OBS_TPL & TRIAGE_TPL & LOG
-    OBS_TPL["case-study-<br/>observations-template.md"]
-    TRIAGE_TPL["case-study-improvement-<br/>triage-template.md"]
-    LOG["playbook-<br/>improvement-log.md"]
+    OBS_TPL[["case-study-observations-template.md"]]
+    TRIAGE_TPL[["case-study-improvement-triage-template.md"]]
+    LOG[["playbook-improvement-log.md"]]
 
-    style README fill:#fff9c4,stroke:#F9A825,stroke-width:3px
-    style MAIN fill:#bbdefb,stroke:#1565C0,stroke-width:3px
-    style CS_INDEX fill:#f8bbd0,stroke:#C62828
-    style META fill:#e1bee7,stroke:#7B1FA2
+    style README fill:#e0f2f1,stroke:#00897B,stroke-width:3px
+    style MAIN fill:#e0f2f1,stroke:#00897B,stroke-width:3px
+    style CS_INDEX fill:#e0f2f1,stroke:#00897B,stroke-width:2px
+    style META fill:#e0f2f1,stroke:#00897B,stroke-width:2px
 ```
 
 ---
@@ -346,9 +358,9 @@ flowchart TD
     style execute fill:#e3f2fd,stroke:#1565C0
     style extract fill:#fff3e0,stroke:#E65100
     style integrate fill:#e8f5e9,stroke:#2E7D32
-    style OBS_T fill:#ffcdd2,stroke:#C62828
-    style TRI_T fill:#ffcdd2,stroke:#C62828
-    style IMP_LOG fill:#ffcdd2,stroke:#C62828
+    style OBS_T fill:#e0f2f1,stroke:#00897B
+    style TRI_T fill:#e0f2f1,stroke:#00897B
+    style IMP_LOG fill:#e0f2f1,stroke:#00897B
 ```
 
 ---
@@ -385,19 +397,24 @@ flowchart TD
     WHO -->|"Syncing an existing<br/>port to new upstream"| SYNC
     WHO -->|"Setting up an AI agent<br/>for porting"| AGENT
     WHO -->|"Reviewing Rust<br/>port quality"| QA
-    WHO -->|"Improving the<br/>playbook itself"| META
+    WHO -->|"Improving the<br/>playbook itself"| META_DOCS
 
-    NEW["<b>1.</b> README.md → Quick Start<br/><b>2.</b> python-to-rust-playbook.md<br/><b>3.</b> port-checklist-initial-template.md<br/><b>4.</b> case-studies/flowmark/"]
+    NEW[["<b>1.</b> README.md<br/><b>2.</b> python-to-rust-playbook.md<br/><b>3.</b> port-checklist-initial-template.md<br/><b>4.</b> case-studies/flowmark/"]]
 
-    SYNC["<b>1.</b> auto-sync-agent-prompt-template.md<br/><b>2.</b> port-checklist-update-template.md<br/><b>3.</b> python-to-rust-sync-release-workflow.md"]
+    SYNC[["<b>1.</b> auto-sync-agent-prompt-template.md<br/><b>2.</b> port-checklist-update-template.md<br/><b>3.</b> python-to-rust-sync-release-workflow.md"]]
 
-    AGENT["Load into context window:<br/><b>1.</b> python-to-rust-porting-rules.md<br/><b>2.</b> rust-project-setup.md<br/><b>3.</b> rust-general-rules.md<br/><b>4.</b> python-to-rust-cli-porting.md<br/><b>5.</b> porting-principles-and-antipatterns.md"]
+    AGENT[["<b>1.</b> python-to-rust-porting-rules.md<br/><b>2.</b> rust-project-setup.md<br/><b>3.</b> rust-general-rules.md<br/><b>4.</b> python-to-rust-cli-porting.md<br/><b>5.</b> porting-principles-and-antipatterns.md"]]
 
-    QA["<b>1.</b> rust-code-review-checklist.md<br/><b>2.</b> cross-language-test-mapping.md<br/><b>3.</b> flowmark-port-cross-validation.md"]
+    QA[["<b>1.</b> rust-code-review-checklist.md<br/><b>2.</b> cross-language-test-mapping.md<br/><b>3.</b> flowmark-port-cross-validation.md"]]
 
-    META["<b>1.</b> _meta/meta-improving-this-playbook.md<br/><b>2.</b> case-study-observations-template.md<br/><b>3.</b> playbook-improvement-log.md"]
+    META_DOCS[["<b>1.</b> _meta/meta-improving-this-playbook.md<br/><b>2.</b> case-study-observations-template.md<br/><b>3.</b> playbook-improvement-log.md"]]
 
     style WHO fill:#fff9c4,stroke:#F9A825,stroke-width:2px
+    style NEW fill:#e0f2f1,stroke:#00897B
+    style SYNC fill:#e0f2f1,stroke:#00897B
+    style AGENT fill:#e0f2f1,stroke:#00897B
+    style QA fill:#e0f2f1,stroke:#00897B
+    style META_DOCS fill:#e0f2f1,stroke:#00897B
 ```
 
 ---
