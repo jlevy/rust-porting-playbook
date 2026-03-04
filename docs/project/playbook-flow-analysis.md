@@ -18,9 +18,9 @@ flowchart TD
         P1_3[Measure test coverage]
         P1_4[Identify ambiguous behavior<br/>write clarifying tests]
         P1_1 --> P1_2 --> P1_3 --> P1_4
-        P1_4 --> G1{Gate: Ready to port?}
     end
 
+    P1_4 --> G1{Gate: Ready to port?}
     G1 -->|"Coverage >=80%<br/>All deps have Rust candidates<br/>Scope understood"| P2
     G1 -->|"Coverage gaps"| P0A(["⟲ Phase 0: Enhance test coverage<br/>(repeat gate when done)"])
     G1 -->|"Missing Rust<br/>equivalents"| P0B(["⟲ Phase 0: Research alternatives<br/>(repeat gate when done)"])
@@ -89,9 +89,9 @@ flowchart TD
         P6_decide --> P6_track
         P6_doc --> P6_track
         P6_track[Track all with<br/>HACK:/FIXME: comments]
-        P6_track --> G6{"More than 3 unfixable diffs<br/>or core feature broken?"}
     end
 
+    P6_track --> G6{"More than 3 unfixable diffs<br/>or core feature broken?"}
     G6 -->|"No, or past 50%"| P7
     G6 -->|"Yes, early enough"| G6_ret(["⟲ Return to Phase 2:<br/>re-evaluate library choices"])
 
