@@ -91,7 +91,7 @@ flowchart TD
         P6_decide --> P6_track
         P6_doc --> P6_track
         P6_track[Track all with<br/>HACK:/FIXME: comments]
-        P6_track --> G6{"> 3 unfixable diffs<br/>or core feature broken?"}
+        P6_track --> G6{"More than 3 unfixable diffs<br/>or core feature broken?"}
     end
 
     G6 -->|Yes, early enough| P2_1
