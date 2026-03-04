@@ -1,0 +1,11 @@
+{
+  "node-llama-cpp": 226,
+  "vitest": 103,
+  "@modelcontextprotocol/sdk": 90,
+  "better-sqlite3": 37,
+  "tsx": 30,
+  "fast-glob": 16,
+  "@types/better-sqlite3": 2,
+  "sqlite-vec": 2,
+  "sqlite-vec-win32-x64": 1
+}

@@ -1,0 +1,29 @@
+{
+  "lock_entries": 447,
+  "lock_unique_names": 403,
+  "direct_manifest_entries": 16,
+  "direct_manifest_unique_names": 16,
+  "transitive_entries": 431,
+  "transitive_unique_names": 388,
+  "action_counts": {
+    "removed-with-js-toolchain": 100,
+    "replace-through-runtime-owner": 328,
+    "covered-in-direct-plan": 16,
+    "split-runtime-and-tooling": 3
+  },
+  "owner_group_mix_counts": {
+    "dev": 103,
+    "runtime": 334,
+    "dev+runtime": 5,
+    "optional+runtime": 4,
+    "peer+runtime": 1
+  },
+  "unresolved_direct_names": [],
+  "direct_name_aliases": [
+    {
+      "manifest": "sqlite-vec-win32-x64",
+      "lock_key": "sqlite-vec-windows-x64"
+    }
+  ],
+  "unreachable_entries": 0
+}

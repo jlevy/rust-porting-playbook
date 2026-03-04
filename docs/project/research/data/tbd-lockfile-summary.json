@@ -1,0 +1,25 @@
+{
+  "lock_entries": 454,
+  "lock_unique_names": 419,
+  "direct_manifest_entries": 32,
+  "direct_manifest_unique_names": 31,
+  "transitive_entries": 420,
+  "transitive_unique_names": 388,
+  "action_counts": {
+    "removed-with-js-toolchain": 365,
+    "covered-in-direct-plan": 34,
+    "replace-through-runtime-owner": 30,
+    "split-runtime-and-tooling": 25
+  },
+  "owner_group_mix_counts": {
+    "package-dev": 190,
+    "workspace-dev": 152,
+    "runtime": 37,
+    "package-dev+workspace-dev": 45,
+    "package-dev+runtime+workspace-dev": 8,
+    "package-dev+runtime": 17,
+    "runtime+workspace-dev": 5
+  },
+  "missing_edges": 0,
+  "unreachable_entries": 0
+}

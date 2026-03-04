@@ -4,551 +4,676 @@
 
 **Author:** Joshua Levy + Claude
 
-**Status:** Draft
+**Status:** Draft (revised after senior review)
 
 ## Overview
 
-Extend the Rust Porting Playbook to support **TypeScript as a source language**,
-providing equivalent coverage to what currently exists for Python-to-Rust porting.
-This means creating a parallel set of documents — playbooks, guidelines, mapping
-references, checklists, and templates — that guide an AI agent through porting a
-TypeScript application to Rust with the same rigor, test discipline, and process quality
-as the Python path.
+Extend the Rust Porting Playbook to support **TypeScript as a source language** with
+comparable depth to the existing Python-to-Rust path.
+
+This effort adds TypeScript-specific playbooks/guidelines while keeping core process and
+Rust-target guidance shared. The result should be a reliable, citation-backed path an AI
+agent can use to port a real TypeScript project to Rust with strong parity and test
+rigor.
+
+## Executive Decisions (2026-03-04)
+
+These decisions remove ambiguity and unblock writing:
+
+1. **Runtime scope:** Node.js is primary. Bun is supported as a variant where behavior is
+   materially different. Deno is explicitly deferred.
+2. **Project scope:** CLI tools and filesystem-heavy tooling are first-class. Browser/DOM
+   frameworks are out of scope for this iteration.
+3. **Structure strategy:** Deliver TypeScript docs in the current flat structure first.
+   Directory reorganization is a separate follow-up after content stabilizes.
+4. **Evidence standard:** Any claim that is version-sensitive (tool versions, action
+   versions, runtime behavior) must have a primary source citation and an as-of date.
 
 ## Goals
 
-- Provide a complete TypeScript-to-Rust porting path with the same 8-phase methodology
-  (Assess, Research, Plan, Set Up, Port, Fix, Finalize, Sync)
-- Create TypeScript-specific type mapping, dependency mapping, and CLI porting references
-- Reuse generic/process-level docs (porting principles, cross-language test mapping,
-  checklist templates) without duplication
-- Incorporate relevant TypeScript best practices from tbd guidelines
-  (`typescript-rules`, `typescript-cli-tool-rules`, `pnpm-monorepo-patterns`,
-  `bun-monorepo-patterns`, etc.) as source material
-- Reorganize the repo so that Python-specific, TypeScript-specific, Rust-specific, and
-  generic docs are clearly distinguished
-- Make the playbook genuinely multi-source-language without losing depth on either path
+- Provide a complete TypeScript-to-Rust porting path aligned to the existing 8 phases
+  (Assess, Research, Plan, Set Up, Port, Fix, Finalize, Sync).
+- Create TypeScript-specific mapping, CLI, testing, and async guidance that is accurate
+  for modern TS/Node ecosystems.
+- Reuse generic/process-level docs without duplicating them.
+- Integrate relevant tbd guidance (`typescript-rules`, `typescript-cli-tool-rules`,
+  `typescript-code-coverage`, monorepo patterns, golden testing, TDD/testing rules).
+- Keep Python and TypeScript paths equally usable from README entry points.
 
 ## Non-Goals
 
-- Executing an actual TypeScript-to-Rust port (that would be a separate case study)
-- Covering other source languages beyond Python and TypeScript in this iteration
-- Rewriting docs that are already correct and generic
-- Changing the core 8-phase porting methodology
-- Duplicating tbd guidelines verbatim — we adapt and reference them
+- Executing an actual TypeScript-to-Rust port in this spec (that is a case study).
+- Full Deno coverage in this iteration.
+- Rewriting stable Rust-target docs that are already language-agnostic.
+- Forcing immediate directory moves before content quality is validated.
 
-## Background
+## Senior Review Findings on the Original Draft
 
-### Current State
+| Finding | Impact | Resolution in this revision |
+| --- | --- | --- |
+| Runtime scope (Node/Bun/Deno) was ambiguous | Conflicting guidance and tooling choices | Added explicit scope matrix and phase gates for Node-first, Bun-variant, Deno deferred |
+| Some TS→Rust mappings were unsafe or oversimplified (`unknown`, conditional types, Promise rejection, `never`) | Could produce incorrect ports | Replaced with fidelity-based mapping rules and explicit caveats |
+| Test guidance had internal contradiction (questioning tryscript vs later requiring it) | Confusing execution guidance | Made tryscript an explicit recommended path for CLI golden tests |
+| Bun + Vitest coverage interaction not accounted for | Risk of invalid coverage setup | Added runtime-specific testing guidance (Vitest v8 on Node; Bun alternatives documented) |
+| Acceptance criteria were broad but not measurable | Hard to know when phase is done | Added per-document DoD and cross-doc validation checklist |
+| Version drift policy missing | High risk of stale references | Added version tracking policy and required citation discipline |
 
-The Rust Porting Playbook currently has ~20 docs (~300 pages) organized into 5 layers:
+## Current Repo Scope (Baseline)
 
-| Layer | Directory | Count | Focus |
+As of 2026-03-04 on this branch:
+
+| Layer | Directory | Current Count | Notes |
 | --- | --- | --- | --- |
-| Playbooks | `playbooks/` | 11 files | Process, reference, checklists |
-| Guidelines | `guidelines/` | 8 files | Compact rules for agent context |
-| Research | `docs/project/research/` | 2 files | Deep dives (distribution) |
-| Case Studies | `case-studies/` | 2 dirs | Flowmark (done), repren (planning) |
-| Meta Process | `_meta/` | 6+ files | Self-improvement framework |
+| Playbooks | `playbooks/` | 11 files | Includes Python-specific and generic docs |
+| Guidelines | `guidelines/` | 8 files | Includes Python-specific and Rust-target docs |
+| Research | `docs/project/research/` | 2 files | Binary distribution + PyPI distribution research |
+| Case Studies | `case-studies/` | 2 directories | flowmark + repren |
+| Meta | `_meta/` | multiple files | Plans, templates, improvement process |
 
-### Document Classification
+### Python-Specific Documents Requiring TypeScript Parallels
 
-**Python-specific docs** (7 docs — these need TypeScript parallels):
+1. `playbooks/python-to-rust-playbook.md`
+2. `playbooks/python-to-rust-mapping-reference.md`
+3. `playbooks/python-to-rust-porting-guide.md`
+4. `playbooks/python-to-rust-test-coverage-playbook.md`
+5. `guidelines/python-to-rust-porting-rules.md`
+6. `guidelines/python-to-rust-cli-porting.md`
+7. `playbooks/auto-sync-agent-prompt-template.md` (needs TS variant section)
 
-1. `playbooks/python-to-rust-playbook.md` — 8-phase process with Python-specific
-   commands, tooling (uv, pytest, coverage.py)
-2. `playbooks/python-to-rust-mapping-reference.md` — exhaustive type/construct mappings
-3. `playbooks/python-to-rust-porting-guide.md` — detailed methodology with Python
-   pitfalls
-4. `playbooks/python-to-rust-test-coverage-playbook.md` — pre-port coverage strategy
-   using Python tooling
-5. `guidelines/python-to-rust-porting-rules.md` — type mappings, module patterns,
-   dependency mapping
-6. `guidelines/python-to-rust-cli-porting.md` — argparse/click/typer to clap mapping
-7. `playbooks/auto-sync-agent-prompt-template.md` — sync prompt referencing Python repos
+## Research Inputs Used for This Plan
 
-**Rust-specific docs** (8 docs — these are shared across both paths):
+### tbd Guidelines (Consulted)
 
-1. `guidelines/rust-general-rules.md` — Edition 2024+, ownership, error handling
-2. `guidelines/rust-cli-app-patterns.md` — clap, project structure, error reporting
-3. `guidelines/rust-project-setup.md` — Cargo.toml, CI, release workflows
-4. `guidelines/filesystem-heavy-cli-porting.md` — atomic writes, backups, walkdir
-5. `playbooks/rust-cli-best-practices.md` — modern Rust CLI patterns
-6. `playbooks/rust-code-review-checklist.md` — code review criteria
-7. `docs/project/research/research-rust-cli-binary-distribution.md`
-8. `docs/project/research/research-rust-cli-pypi-distribution.md`
-
-**Generic/process docs** (7 docs — reusable as-is):
-
-1. `guidelines/porting-principles-and-antipatterns.md` — 9 principles (need minor
-   generalization)
-2. `guidelines/test-coverage-for-porting.md` — strategy (needs minor generalization)
-3. `playbooks/cross-language-test-mapping.md` — YAML-based mapping (generic)
-4. `playbooks/port-checklist-initial-template.md` — execution checklist (generic)
-5. `playbooks/port-checklist-update-template.md` — sync checklist (generic)
-6. `playbooks/python-to-rust-sync-release-workflow.md` — two-stage workflow (mostly
-   generic)
-
-### tbd Guidelines as Source Material
-
-The tbd tool ships with extensive TypeScript and monorepo guidelines that are valuable
-source material for the TypeScript-to-Rust porting path:
-
-| tbd Guideline | Relevance to Porting Path |
+| Guideline | Key Takeaway for This Plan |
 | --- | --- |
-| `typescript-rules` | Type system mapping, coding patterns, error handling idioms — essential for understanding TypeScript source code patterns that map to Rust |
-| `typescript-cli-tool-rules` | Commander.js/picocolors patterns — the TypeScript equivalent of argparse/click, maps to clap in Rust |
-| `pnpm-monorepo-patterns` | TypeScript project structure (pnpm workspaces, tsdown, CI) — informs TypeScript project assessment |
-| `bun-monorepo-patterns` | Alternative TS toolchain (Bun workspaces, bunup, Biome) — informs TypeScript project assessment |
-| `typescript-code-coverage` | Vitest coverage (v8 provider) — TypeScript equivalent of pytest --cov |
-| `typescript-sorting-patterns` | Deterministic sorting — porting pitfall area |
-| `typescript-yaml-handling-rules` | YAML parsing patterns — maps to serde_yaml_ng |
-| `golden-testing-guidelines` | Golden/snapshot testing — shared technique, already used |
-| `general-tdd-guidelines` | TDD methodology — shared across both paths |
-| `general-testing-rules` | Testing best practices — shared across both paths |
+| `typescript-rules` | Emphasize strict typing, no `any` shortcuts, discriminated-union exhaustiveness, static imports, and pragmatic exception handling |
+| `typescript-cli-tool-rules` | Commander patterns, global options discipline, `--no-*` flag gotcha, color precedence (`--color`, `NO_COLOR`, `FORCE_COLOR`, TTY) |
+| `typescript-code-coverage` | Vitest + v8 baseline thresholds and reporting expectations |
+| `pnpm-monorepo-patterns` | Workspace/tooling reality for modern Node+TS repos; version drift must be tracked |
+| `bun-monorepo-patterns` | Bun-specific workspace/build/test patterns and tradeoffs |
+| `typescript-sorting-patterns` | Deterministic ordering and explicit tiebreakers as parity-critical behavior |
+| `typescript-yaml-handling-rules` | YAML parser/serializer discipline and validation expectations |
+| `golden-testing-guidelines` | Golden/session tests and tryscript workflow for CLI behavior checks |
+| `general-tdd-guidelines` | Red-green-refactor and small behavioral increments |
+| `general-testing-rules` | Minimal test count with maximal meaningful coverage |
 
-These guidelines should be read and adapted (not copied verbatim) when creating the
-TypeScript-specific porting documents. They provide the TypeScript-side context that
-mirrors what the Python docs already provide for the Python-to-Rust path.
+### External Primary Sources (Validated)
 
-### Key Differences: TypeScript vs Python as Source Language
+| Topic | Source | Planning Implication |
+| --- | --- | --- |
+| TS structural typing, unions, template literal types, strict null semantics | TypeScript Handbook + TSConfig docs | Mapping docs must separate compile-time typing from runtime JS behavior |
+| Node package `exports`/`imports` and module resolution boundaries | Node package docs | Porting guide must treat ESM/CJS boundaries as explicit migration risk |
+| npm `optionalDependencies` + `os`/`cpu`/`libc` fields | npm package.json docs | npm-distribution research must cover platform-binary package topology |
+| Rust `IsTerminal`, `ExitCode`, `Infallible`, and never-type caveats | Rust std docs | CLI and type-mapping docs must avoid oversimplified TS→Rust equivalence claims |
+| Tokio `join!` / `select!` behavior | Tokio docs | Async guide must call out cancellation and race semantics differences |
+| Vitest coverage + c8 docs | Vitest + c8 docs | Testing playbook must define runtime-specific coverage tooling |
+| Bun test runner coverage | Bun docs | Bun variant requires dedicated coverage instructions (not blind Vitest parity) |
+| cargo-dist npm installer support | cargo-dist book | npm distribution research should compare cargo-dist installer path vs custom scripts |
 
-Understanding these differences is essential for accurate porting documentation:
+### Local Exemplar Codebase Audit Input: `jlevy/tbd`
 
-**Type system:**
-- TypeScript has a sophisticated static type system (generics, conditional types,
-  mapped types, template literals) — closer to Rust than Python's optional type hints
-- TypeScript's structural typing vs Rust's nominal typing creates unique mapping
-  challenges
-- TypeScript interfaces/type aliases have no runtime presence — Rust structs/enums do
+To keep this plan grounded in a real, complex TS CLI, we use the `tbd` codebase as an
+exemplar for construct coverage.
 
-**Runtime and ecosystem:**
-- TypeScript compiles to JavaScript — runtime behavior is JavaScript, not TypeScript
-- `null` and `undefined` (two kinds of nothing) vs Rust's `Option<T>`
-- JavaScript's prototype-based OOP vs Rust's trait-based system
-- npm/pnpm/bun ecosystem vs Cargo ecosystem
-- Node.js async model (event loop, Promises) vs Rust async (futures, tokio)
+Acquisition workflow (required):
+1. Run `tbd shortcut checkout-third-party-repo` to load canonical instructions.
+2. Ensure local attic clone path exists and is gitignored (`attic/`).
+3. Clone `https://github.com/jlevy/tbd` to `attic/tbd`.
+4. Record the audited commit SHA in the coverage matrix deliverable.
 
-**Project structure:**
-- `package.json` / `tsconfig.json` vs `Cargo.toml`
-- `node_modules` vs Cargo's dependency management
-- ESM/CJS module system vs Rust's module system
-- Monorepo patterns (pnpm workspaces, Bun workspaces) vs Cargo workspaces
+Construct families observed in `tbd` that the porting playbook must cover:
+- pnpm monorepo + ESM package setup (`pnpm-workspace.yaml`, root/package `package.json`,
+  `exports`, bin bootstrap).
+- Commander-heavy CLI architecture (global options, subcommands, `--no-*` semantics,
+  grouped help, colorized help).
+- Terminal/runtime behavior (`NO_COLOR`, TTY checks, pager usage, EPIPE and SIGINT
+  handling, JSON/text dual output).
+- Filesystem safety patterns (atomic writes via `atomically`, lock-directory coordination,
+  backups, migration paths).
+- YAML/Markdown/Zod stack (frontmatter parsing, YAML conflict detection, schema
+  validation, canonical field ordering).
+- Git subprocess/worktree orchestration (isolated index, merge/retry flow, conflict
+  attic, branch health checks).
+- Async/process patterns (spawn/execFile, timeout + AbortController, dynamic imports).
+- Test architecture (Vitest + tryscript golden tests + coverage workflows).
 
-**Testing:**
-- Vitest/Jest vs cargo test
-- c8/v8 coverage vs cargo-llvm-cov
-- Snapshot testing (Vitest inline snapshots) vs insta
-- No equivalent of `tryscript` golden tests for TS CLIs (or is there?)
+#### Preliminary Coverage Snapshot (`attic/tbd`, 2026-03-04)
 
-**CLI tooling:**
-- Commander.js / yargs / oclif vs clap
-- picocolors / chalk vs anstream / console
-- process.exit() vs std::process::ExitCode
-- Node.js SIGPIPE handling differences
+Initial mapping of exemplar constructs against this plan revision:
 
-**Error handling:**
-- try/catch with untyped exceptions vs Result<T, E>
-- throw vs return Err()
-- No equivalent of Python's exception hierarchy richness in TS
-- TypeScript errors are stringly-typed at runtime
+| Exemplar Construct Family | Coverage Status | Primary Destination Docs | Required Strengthening |
+| --- | --- | --- | --- |
+| pnpm monorepo + ESM packaging (`exports`, `bin`) | partial | D3, D8 | Add explicit ESM/CJS + bin-bootstrap migration patterns |
+| Commander subcommands + global options + `--no-*` | covered | D4 | Keep parity checklist strict |
+| Terminal behavior (`NO_COLOR`, TTY, pager, EPIPE, SIGINT) | partial | D4, D6 | Add dedicated runtime behavior parity subsection |
+| YAML + markdown frontmatter + schema validation (Zod) | partial | D1, D2, D6 | Add schema-validation and frontmatter migration recipe |
+| Atomic writes + lock-directory coordination + backups | partial | D6 + existing filesystem-heavy guideline | Add cross-reference and lock/atomic migration patterns |
+| Git subprocess/worktree sync + conflict attic/merge strategy | partial | D6, D8 | Add advanced git-workflow porting section with failure modes |
+| Async subprocess timeout/cancellation (`AbortController`) | partial | D7, D6 | Add cancellation/timeouts mapping examples |
+| Dynamic imports for lazy/conditional loading | partial | D1, D6 | Add decision rule: preserve/lift/replace dynamic imports |
+| Vitest + tryscript golden testing + coverage merge | covered | D5 | Keep Node vs Bun tooling caveats explicit |
 
-**Package distribution:**
-- npm publish vs crates.io / cargo-dist
-- npx vs cargo install
-- Bun compile (standalone binary) as an interesting comparison point
+The D11 matrix deliverable formalizes this snapshot at a fixed commit SHA and tracks gap
+closure.
+
+### Local Exemplar Codebase Audit Input: `tobi/qmd`
+
+To avoid overfitting the guidance to one exemplar, we audit `qmd` as a second real-world
+TypeScript CLI with heavy local-AI and SQLite usage.
+
+Acquisition workflow (required):
+1. Run `tbd shortcut checkout-third-party-repo` to load canonical instructions.
+2. Ensure local attic clone path exists and is gitignored (`attic/`).
+3. Clone `https://github.com/tobi/qmd` to `attic/qmd`.
+4. Record the audited commit SHA in the coverage matrix deliverable.
+
+Construct families observed in `qmd` that the porting playbook must cover:
+- Non-Commander CLI architecture (`util.parseArgs`, manual subcommand routing).
+- Terminal behavior and UX (`NO_COLOR`, TTY checks, hardcoded ANSI, progress bar OSC
+  sequences, SIGINT/SIGTERM cursor restoration).
+- SQLite-centric architecture (`better-sqlite3`, extension loading, schema/search flows).
+- Vector extension loading and platform packaging (`sqlite-vec` plus platform-specific
+  optional dependencies).
+- Local LLM inference integration (`node-llama-cpp`, model lifecycle, timeouts,
+  cancellation, reranking/embedding flows).
+- MCP server support over stdio and HTTP transports.
+- Cross-runtime Node/Bun conditionals and dynamic imports.
+- YAML configuration and context metadata management.
+- Child-process orchestration (`spawn`, `execSync`) for update/daemon workflows.
+
+#### Preliminary Coverage Snapshot (`attic/qmd`, 2026-03-04)
+
+Initial mapping of exemplar constructs against this plan revision:
+
+| Exemplar Construct Family | Coverage Status | Primary Destination Docs | Required Strengthening |
+| --- | --- | --- | --- |
+| parseArgs/manual CLI routing (no Commander) | partial | D3, D4 | Add non-Commander CLI-to-clap migration patterns |
+| ANSI/progress/cursor/signal handling | partial | D4, D6 | Add explicit terminal-control and signal parity guidance |
+| SQLite core (`better-sqlite3`) | partial | D2, D6 | Add DB abstraction and query parity migration recipes |
+| `sqlite-vec` optional/platform packaging | partial | D6, D8 | Add extension loading + platform distribution guidance |
+| local LLM runtime (`node-llama-cpp`) | partial | D7, D6 | Add backend strategy decision tree and timeout/cancellation mapping |
+| MCP stdio+HTTP server behavior | partial | D6 | Add MCP-specific porting section and protocol validation checklist |
+| Node/Bun runtime branching + dynamic import | partial | D1, D6 | Add cross-runtime simplification rules and mapping examples |
+| YAML config + schema validation | covered | D1, D2, D6 | Keep deterministic serialization and validation coverage strict |
+| Vitest-based test suite | covered | D5 | Extend with qmd-style integration fixtures and CLI parity harness |
+
+The D11/D12/D13 deliverables formalize this snapshot at fixed commit SHAs and track gap
+closure.
+
+### Ecosystem Snapshot (As of 2026-03-04)
+
+Validated from npm registry metadata during this review:
+
+- `typescript`: `5.9.3`
+- `vitest`: `4.0.18`
+- `@vitest/coverage-v8`: `4.0.18`
+- `commander`: `14.0.3`
+- `picocolors`: `1.1.1`
+- `c8`: `11.0.0`
+- `esbuild`: `0.27.3`
+- `@biomejs/biome`: `2.4.5`
+- `oxlint`: `1.51.0`
+
+This snapshot is informative only; documents should cite sources and verify again when
+writing/refreshing concrete commands.
 
 ## Design
 
-### Approach
+### Scope Matrix
 
-Create a parallel document set following the same layered architecture, with clear
-naming conventions that distinguish source language. Reorganize the repo directory
-structure to make the multi-language nature explicit.
+| Dimension | In Scope (Phase 1-3) | Deferred |
+| --- | --- | --- |
+| Source runtime | Node.js (primary), Bun (variant notes) | Deno |
+| App types | CLI tools, filesystem-heavy tools, service-style TS libraries | Browser/DOM-heavy apps, React/Next frontends |
+| Packaging | crates.io, GitHub Releases, npm binary distribution patterns | npm + Deno hybrid publish flows |
+| Testing | Vitest/Jest/Bun test mapping + tryscript golden approach | Browser mode/testing frameworks beyond porting needs |
 
-### Proposed Repository Structure
+### Repository Layout Strategy
+
+Short term (this initiative): keep current directories and add new files in-place.
+
+Long term (optional follow-up): reorganize into `general/`, `python-to-rust/`,
+`typescript-to-rust/`, `rust/` subtrees after links and agent prompts are validated.
+
+### Proposed Future Structure (Deferred)
 
 ```
 rust-porting-playbook/
-├── README.md                          # Updated: multi-source-language overview
 ├── playbooks/
-│   ├── general/                       # Language-agnostic process docs
-│   │   ├── porting-playbook.md        # Generalized 8-phase process template
-│   │   ├── cross-language-test-mapping.md
-│   │   ├── port-checklist-initial-template.md
-│   │   ├── port-checklist-update-template.md
-│   │   ├── sync-release-workflow.md
-│   │   └── auto-sync-agent-prompt-template.md
-│   ├── python-to-rust/               # Python-specific playbooks
-│   │   ├── python-to-rust-playbook.md
-│   │   ├── python-to-rust-mapping-reference.md
-│   │   ├── python-to-rust-porting-guide.md
-│   │   └── python-to-rust-test-coverage-playbook.md
-│   ├── typescript-to-rust/            # NEW: TypeScript-specific playbooks
-│   │   ├── typescript-to-rust-playbook.md
-│   │   ├── typescript-to-rust-mapping-reference.md
-│   │   ├── typescript-to-rust-porting-guide.md
-│   │   └── typescript-to-rust-test-coverage-playbook.md
-│   └── rust/                          # Target-language (Rust) docs
-│       ├── rust-cli-best-practices.md
-│       └── rust-code-review-checklist.md
+│   ├── general/
+│   ├── python-to-rust/
+│   ├── typescript-to-rust/
+│   └── rust/
 ├── guidelines/
-│   ├── general/                       # Language-agnostic guidelines
-│   │   ├── porting-principles-and-antipatterns.md
-│   │   └── test-coverage-for-porting.md
-│   ├── python-to-rust/               # Python-specific guidelines
-│   │   ├── python-to-rust-porting-rules.md
-│   │   └── python-to-rust-cli-porting.md
-│   ├── typescript-to-rust/            # NEW: TypeScript-specific guidelines
-│   │   ├── typescript-to-rust-porting-rules.md
-│   │   ├── typescript-to-rust-cli-porting.md
-│   │   └── typescript-to-rust-async-porting.md
-│   └── rust/                          # Target-language guidelines
-│       ├── rust-general-rules.md
-│       ├── rust-cli-app-patterns.md
-│       ├── rust-project-setup.md
-│       └── filesystem-heavy-cli-porting.md
-├── docs/project/research/            # Research docs (add TS-relevant ones)
-│   ├── research-rust-cli-binary-distribution.md
-│   ├── research-rust-cli-pypi-distribution.md
-│   └── research-rust-cli-npm-distribution.md  # NEW
-├── case-studies/                      # Unchanged structure
-│   ├── flowmark/
-│   └── repren/
-└── _meta/                             # Unchanged
+│   ├── general/
+│   ├── python-to-rust/
+│   ├── typescript-to-rust/
+│   └── rust/
+└── docs/project/research/
 ```
 
-**Note on reorganization:** This is an ideal target structure. The reorganization itself
-is a significant effort and could be done incrementally. The initial phase could create
-the new TypeScript docs in the existing flat structure, with reorganization as a
-follow-up phase. The key principle: old URLs/paths should be handled gracefully if the
-repo has external references.
+## Deliverables (Required Content + Definition of Done)
 
-### New Documents Required
+### D1. `guidelines/typescript-to-rust-porting-rules.md`
 
-The following new documents need to be created for the TypeScript-to-Rust path. Each
-document is modeled after its Python-to-Rust counterpart but with TypeScript-specific
-content.
+Purpose: compact, high-signal rules for agent context windows.
 
-#### Tier 1: Core Playbook and Guidelines (Must-Have)
+Must include:
+- Type mapping table with **fidelity tags**: `exact`, `lossy`, `requires redesign`.
+- Explicit handling of `number` safety (`Number.isSafeInteger` implications) and
+  `bigint` mapping.
+- `Promise` mapping that includes rejection/error channel semantics.
+- `unknown`, `never`, discriminated unions, conditional/mapped/template literal types
+  treatment.
+- Module/import/export and `exports` boundary guidance.
+- Common dependency mapping table (TS package → Rust crate candidates).
 
-These are the essential documents that enable a TypeScript-to-Rust port.
+DoD:
+- Every non-trivial mapping has at least one concrete example.
+- No claim implies Rust trait specialization is required/stable.
+- References included for runtime-sensitive claims.
 
-**1. `typescript-to-rust-playbook.md`** (modeled on `python-to-rust-playbook.md`)
-- Same 8-phase structure
-- TypeScript-specific tooling in each phase:
-  - Phase 1: Assess with `tsc`, Vitest coverage, npm/pnpm dependency audit
-  - Phase 2: Research with TypeScript → Rust library equivalents
-  - Phase 3: Plan with TypeScript module → Rust module mapping
-  - Phase 4: Set up with TypeScript source as submodule, `npm install` or `pnpm install`
-  - Phase 5: Port with TypeScript tests → Rust tests
-  - Phase 6: Fix library differences (different ecosystem pitfalls)
-  - Phase 7: Finalize with npm-compatible distribution
-  - Phase 8: Sync with TypeScript upstream
+### D2. `playbooks/typescript-to-rust-mapping-reference.md`
 
-**2. `typescript-to-rust-porting-rules.md`** (modeled on
-`python-to-rust-porting-rules.md`)
-- TypeScript → Rust type mappings:
-  - `string` → `String` / `&str`
-  - `number` → `f64` / `i64` / `usize` (JavaScript numbers are all f64!)
-  - `boolean` → `bool`
-  - `null | undefined` → `Option<T>` (two nothings → one)
-  - `T[]` / `Array<T>` → `Vec<T>`
-  - `Map<K, V>` → `HashMap<K, V>`
-  - `Set<T>` → `HashSet<T>`
-  - `Record<string, T>` → `HashMap<String, T>`
-  - `Promise<T>` → `Future<Output = T>` / `async fn`
-  - `interface` / `type` → `struct` + `impl`
-  - `enum` (TS string unions) → Rust `enum`
-  - `unknown` → generics / `Box<dyn Any>`
-  - `never` → `!` (never type) or `Infallible`
-  - Discriminated unions → Rust enums (natural fit!)
-  - Generic types `<T extends Foo>` → `<T: Foo>` trait bounds
-  - Conditional types → (no direct equivalent, use trait specialization patterns)
-- Module mapping patterns (`import/export` → `mod`/`pub`)
-- Error handling mapping (`try/catch` → `Result<T, E>`)
-- Dependency mapping table (TypeScript → Rust library equivalents)
-- Key pitfalls unique to TypeScript-to-Rust
-- Sources: tbd `typescript-rules`, original research
+Purpose: exhaustive construct-by-construct reference (deep companion to D1).
 
-**3. `typescript-to-rust-mapping-reference.md`** (modeled on
-`python-to-rust-mapping-reference.md`)
-- Exhaustive construct-by-construct mapping with code examples
-- Sections: Types, Collections, Control Flow, Functions, Classes/Interfaces → Traits,
-  Async/Await, Modules, Error Handling, Testing, I/O, String Operations, Regex
-- TypeScript-specific sections not in Python version:
-  - Generics and type parameters → Rust generics
-  - Decorators → procedural macros (limited parallel)
-  - Prototype chain / class hierarchy → trait hierarchy
-  - Symbol / WeakMap / WeakSet → (no direct Rust equivalent)
-  - TypeScript enums (numeric and string) → Rust enums
-  - Template literal types → (no direct equivalent)
-  - Optional chaining (`?.`) → `.map()` / `if let` / `?` operator
-  - Nullish coalescing (`??`) → `.unwrap_or()` / `.unwrap_or_else()`
-  - Spread operator (`...`) → `.clone()` / `.extend()` / struct update syntax
-- Sources: tbd `typescript-rules`, original research
+Must include:
+- Types, collections, control flow, classes/interfaces, async, modules, errors,
+  filesystem, regex, testing, packaging.
+- TS-only tricky areas: structural typing, type erasure at runtime, optional chaining,
+  nullish coalescing, spread/rest semantics, decorators caveats.
+- Sort determinism and YAML handling appendices aligned with tbd guidelines.
 
-**4. `typescript-to-rust-cli-porting.md`** (modeled on
-`python-to-rust-cli-porting.md`)
-- Commander.js / yargs / oclif → clap mapping table
-- Commander global options → clap derive API
-- picocolors / chalk → anstream / console
-- `process.stdout.isTTY` → `std::io::IsTerminal`
-- `process.exit()` → `std::process::ExitCode`
-- Node.js stream piping → Rust BufReader/BufWriter
-- `NO_COLOR` / `FORCE_COLOR` support mapping
-- Shell completion: `--completions` patterns
-- SIGPIPE handling in Node.js vs Rust
-- npm bin installation → cargo install / cargo-dist
-- Sources: tbd `typescript-cli-tool-rules`, original research
+DoD:
+- Section parity with Python mapping reference where applicable.
+- Explicit “no direct equivalent” strategy patterns (not just warnings).
 
-**5. `typescript-to-rust-test-coverage-playbook.md`** (modeled on
-`python-to-rust-test-coverage-playbook.md`)
-- Pre-port coverage strategy using TypeScript tooling:
-  - Vitest with v8 coverage provider
-  - c8 / istanbul coverage
-  - Jest coverage (if source uses Jest)
-- Coverage thresholds matching the Python ones
-- Golden test patterns for TypeScript CLIs
-- tryscript usage for TypeScript CLI golden tests
-- Cross-validation scripts for TypeScript + Rust
-- Test fixture organization
-- Sources: tbd `typescript-code-coverage`, tbd `golden-testing-guidelines`
+### D3. `playbooks/typescript-to-rust-playbook.md`
 
-#### Tier 2: Supporting Documents (High Value)
+Purpose: full 8-phase workflow for TS→Rust execution.
 
-**6. `typescript-to-rust-porting-guide.md`** (modeled on
-`python-to-rust-porting-guide.md`)
-- Detailed methodology for TypeScript-to-Rust porting
-- TypeScript-specific pitfalls and solutions:
-  - JavaScript number semantics (all numbers are f64, integer overflow is different)
-  - `undefined` vs `null` collapse to `Option`
-  - Prototype-based OOP → trait-based design
-  - Dynamic dispatch in TS → static dispatch in Rust
-  - Closure semantics differences (TS closures capture by reference to mutable
-    variables)
-  - `this` binding complexity → explicit self in Rust
-  - Module resolution differences (Node.js resolution vs Rust module tree)
-  - Async/Promise patterns → Rust futures/tokio
-- Automation scripts for cross-validation
+Must include:
+- Phase gates and pass/fail criteria per phase.
+- Source assessment for `package.json`, lockfiles, workspace topology, tsconfig,
+  test tooling.
+- Port order strategy, parity matrix template, traceability requirements.
+- Sync/update workflow for upstream TypeScript releases.
 
-**7. `typescript-to-rust-async-porting.md`** (new — no Python equivalent because
-Python's async is less pervasive)
-- Unique guideline for porting async TypeScript to Rust
-- Promise chains → Future combinators
-- `async/await` mapping (similar syntax, very different semantics)
-- Event loop (Node.js) → tokio runtime
-- `Promise.all()` → `futures::join!` / `tokio::join!`
-- `Promise.race()` → `tokio::select!`
-- Callback patterns → channels or async streams
-- Error handling in async contexts
-- Sources: original research, tbd `typescript-rules` (async section)
+DoD:
+- Matches structure quality of `python-to-rust-playbook.md`.
+- Includes Node-primary and Bun-variant notes where behavior/tooling differs.
 
-**8. `research-rust-cli-npm-distribution.md`** (new research doc)
-- How to distribute Rust CLI binaries via npm (the TypeScript equivalent of the
-  PyPI/maturin research)
-- Patterns from real projects: `@biomejs/biome`, `esbuild`, `@oxlint/oxlint`
-- npm optional dependencies pattern for platform-specific binaries
-- postinstall scripts for binary download
-- Alternative: Bun compile for standalone executables
+### D4. `guidelines/typescript-to-rust-cli-porting.md`
 
-#### Tier 3: Generalization of Existing Docs
+Purpose: CLI-specific mapping for Commander/yargs/oclif to clap.
 
-**9. Generalize `porting-principles-and-antipatterns.md`**
-- Currently says "Python-to-Rust" in title and throughout
-- Change to be language-agnostic while keeping all 9 principles
-- Examples can reference both Python and TypeScript
-- Minimal changes needed — the principles are inherently generic
+Must include:
+- Option/flag mapping patterns and Commander gotchas (`--no-*` behavior).
+- Output/color behavior parity and precedence policy.
+- TTY, piping, pager integration, EPIPE/SIGPIPE, SIGINT, and exit-code parity expectations.
+- Shell completion and help-output parity guidance.
 
-**10. Generalize `test-coverage-for-porting.md`**
-- Currently references `pytest`, `uv run`, Python-specific tooling
-- Add TypeScript-equivalent commands alongside Python ones
-- Or split into: generic strategy + language-specific tool appendices
+DoD:
+- Includes a parity checklist usable in PR review.
+- Uses modern Rust primitives (`IsTerminal`, `ExitCode`) accurately.
 
-**11. Generalize `cross-language-test-mapping.md`**
-- Currently says "Python-to-Rust" in several places
-- The YAML schema and CI approach is fully generic
-- Generalize language in text; keep the flowmark-specific examples as illustrations
+### D5. `playbooks/typescript-to-rust-test-coverage-playbook.md`
 
-**12. Generalize sync/release workflow docs**
-- `auto-sync-agent-prompt-template.md` — add TypeScript variant
-- `sync-release-workflow.md` — already mostly generic
-- `port-checklist-initial-template.md` — already generic
-- `port-checklist-update-template.md` — already generic
+Purpose: test sufficiency before and during port.
 
-**13. Update README.md**
-- Reflect multi-source-language nature
-- Add TypeScript quick-start bootstrap instructions
-- Update the "Five Layers" table
-- Add TypeScript to the "For AI Agents" section
+Must include:
+- Baseline coverage workflow for Vitest (and Jest/Bun variant notes).
+- Golden testing strategy with tryscript for CLI behavior.
+- Cross-validation harness patterns (TS vs Rust output comparisons).
+- Coverage threshold policy and CI enforcement.
 
-#### Tier 4: Reorganization (Can Be Deferred)
+DoD:
+- No contradictory guidance on tryscript applicability.
+- Runtime/tooling caveats documented (Node vs Bun coverage differences).
 
-**14. Directory restructuring** (as shown in proposed structure above)
-- Move files into `general/`, `python-to-rust/`, `typescript-to-rust/`, `rust/`
-  subdirectories
-- Update all cross-references
-- Handle redirects / old paths gracefully
+### D6. `playbooks/typescript-to-rust-porting-guide.md`
 
-### Content Mapping: Python Doc → TypeScript Equivalent
+Purpose: deep methodology and recurring pitfall handling.
 
-This table shows exactly what each new TypeScript doc should cover, mapped from its
-Python counterpart:
+Must include:
+- JS numeric semantics, null/undefined behavior, prototype/class migration,
+  `this` binding pitfalls, module boundaries, error propagation patterns.
+- File safety and durability patterns: atomic writes, lock coordination, backup/migration
+  workflows.
+- Git subprocess + worktree orchestration patterns (including conflict and retry flows).
+- Dynamic import migration patterns (preserve vs replace).
+- Practical “investigate before fix” workflow for parity diffs.
 
-| Python Doc | TypeScript Equivalent | Key Content Adaptations |
+DoD:
+- Contains actionable recipes, not just warnings.
+
+### D7. `guidelines/typescript-to-rust-async-porting.md`
+
+Purpose: async-specific source-to-target guidance.
+
+Must include:
+- Promise chains, async/await, `Promise.all`/`race`/`allSettled` mapping patterns.
+- Cancellation/backpressure/runtime shutdown differences.
+- Subprocess timeout/cancellation patterns (`AbortController`-style behavior).
+- Error and timeout handling in async paths.
+
+DoD:
+- Explicitly documents semantic mismatches (not one-to-one syntax mapping).
+
+### D8. `docs/project/research/research-rust-cli-npm-distribution.md`
+
+Purpose: evidence-backed npm distribution strategy for Rust CLIs.
+
+Must include:
+- Optional dependency topology for per-platform binaries.
+- `os`/`cpu`/`libc` constraints and installation behavior.
+- Comparison of approaches: custom installer scripts vs cargo-dist npm installer.
+- Case-study patterns (esbuild, Biome, oxlint).
+
+DoD:
+- Includes concrete release workflow recommendations and security considerations.
+- Contains explicit “recommended default for this playbook” section.
+
+### D9. Generalize Existing Shared Docs
+
+Required updates:
+- `guidelines/porting-principles-and-antipatterns.md`
+- `guidelines/test-coverage-for-porting.md`
+- `playbooks/cross-language-test-mapping.md`
+- `playbooks/auto-sync-agent-prompt-template.md` (TS variant)
+- `playbooks/python-to-rust-sync-release-workflow.md` (language-neutral framing or TS
+  companion section)
+- `README.md`
+
+DoD:
+- Shared docs no longer imply Python-only source language.
+- README has clear entry points for Python and TypeScript paths.
+
+### D10. Optional Reorganization
+
+Required only after D1-D9 are validated.
+
+DoD:
+- All internal links updated.
+- Old paths remain discoverable via clear migration notes.
+- Agent prompts/configs updated only after link validation passes.
+
+### D11. `docs/project/research/research-tbd-construct-coverage-matrix.md`
+
+Purpose: prove the TS→Rust path can handle a real-world TS CLI with complex setup and
+runtime behavior.
+
+Must include:
+- Audited `attic/tbd` commit SHA and audit date.
+- Construct inventory extracted from `tbd` (setup, runtime, filesystem, git, testing,
+  typing patterns).
+- Coverage matrix mapping each construct family to specific playbook deliverables (D1-D8)
+  and existing shared docs.
+- For each construct family, explicit Rust-side destination mapping
+  (stdlib primitive, crate, and/or implementation pattern expected in the port).
+- Gap classification (`covered`, `partially covered`, `not covered`) with required doc
+  updates.
+- Prioritized follow-up checklist for uncovered/partial areas.
+
+DoD:
+- Every construct family from the exemplar has at least one mapped destination doc.
+- No `not covered` item remains without an explicit planned update.
+
+### D12. `docs/project/research/research-tbd-dependency-port-plan.md`
+
+Purpose: dependency-by-dependency migration plan for all direct `tbd` dependencies.
+
+Must include:
+- Full direct dependency inventory (runtime, optional, peer, dev/build toolchain).
+- For each dependency: current role, Rust target (crate/pattern), migration steps,
+  validation gates, and risk rating.
+- Explicit plans for CLI, markdown/frontmatter, YAML/schema, color/output, and
+  test/coverage tool migration.
+- Companion lockfile-level transitive appendix with one-row-per-lock-entry inventory
+  and action classification.
+
+DoD:
+- No direct dependency from `attic/tbd/package.json` and
+  `attic/tbd/packages/tbd/package.json` is omitted.
+- Dependency tables are one row per dependency entry (no grouped dependency rows),
+  preserving package-scope distinctions.
+- Every runtime dependency has either a Rust crate target or an explicit in-house
+  implementation plan.
+- No lock entry from `attic/tbd/pnpm-lock.yaml` is left without an action
+  classification or owner mapping.
+
+### D13. `docs/project/research/research-qmd-dependency-port-plan.md`
+
+Purpose: dependency-by-dependency migration plan for all direct `qmd` dependencies.
+
+Must include:
+- Full direct dependency inventory (runtime, optional, peer, dev/build toolchain).
+- For each dependency: current role, Rust target (crate/pattern), migration steps,
+  validation gates, and risk rating.
+- Explicit high-risk plans for LLM runtime, sqlite-vec packaging, MCP transports, and
+  glob/pattern behavior.
+- Companion lockfile-level transitive appendix with one-row-per-lock-entry inventory
+  and action classification.
+
+DoD:
+- No direct dependency from `attic/qmd/package.json` is omitted.
+- Dependency tables are one row per dependency entry (no grouped dependency rows).
+- High-risk dependencies (`node-llama-cpp`, `sqlite-vec`, MCP SDK) each have a spike
+  plan and exit criteria.
+- No lock entry from `attic/qmd/bun.lock` is left without an action classification or
+  owner mapping.
+
+## Content Mapping: Python Documents to TypeScript Counterparts
+
+| Python Doc | TypeScript Counterpart | Critical Adaptation |
 | --- | --- | --- |
-| `python-to-rust-playbook.md` | `typescript-to-rust-playbook.md` | Replace `uv`/`pytest` with `pnpm`/`vitest`; replace `pyproject.toml` with `package.json`/`tsconfig.json`; adjust Phase 1 assessment for TS tooling; adjust Phase 4 for TS submodule setup |
-| `python-to-rust-mapping-reference.md` | `typescript-to-rust-mapping-reference.md` | Full rewrite of type tables; add generics, interfaces, discriminated unions, template literals; address `null`/`undefined` duality; add async/Promise mapping |
-| `python-to-rust-porting-guide.md` | `typescript-to-rust-porting-guide.md` | Replace Python pitfalls with TS pitfalls (number semantics, `this` binding, prototype chain, closure capture, module resolution); adjust automation scripts |
-| `python-to-rust-test-coverage-playbook.md` | `typescript-to-rust-test-coverage-playbook.md` | Replace pytest/coverage.py with vitest/v8; adjust fixture generation scripts; same golden test patterns |
-| `python-to-rust-porting-rules.md` | `typescript-to-rust-porting-rules.md` | Rewrite type mapping tables; adjust dependency mapping table; replace Python idiom examples with TS equivalents |
-| `python-to-rust-cli-porting.md` | `typescript-to-rust-cli-porting.md` | Replace argparse/click/typer with Commander.js/yargs; replace colorama/rich with picocolors/chalk; adjust I/O and process handling |
-| (no equivalent) | `typescript-to-rust-async-porting.md` | NEW — async is pervasive in TypeScript in ways it isn't in Python |
-| `research-rust-cli-pypi-distribution.md` | `research-rust-cli-npm-distribution.md` | npm distribution patterns instead of PyPI/maturin |
-
-### tbd Guidelines Usage Plan
-
-The following tbd guidelines should be consulted when writing each TypeScript-to-Rust
-document:
-
-| New Document | tbd Guidelines to Consult | How to Use |
-| --- | --- | --- |
-| `typescript-to-rust-porting-rules.md` | `typescript-rules` | Source for TS type patterns, idioms, and conventions that need Rust equivalents |
-| `typescript-to-rust-cli-porting.md` | `typescript-cli-tool-rules` | Source for Commander.js patterns, color handling, option parsing that maps to clap |
-| `typescript-to-rust-test-coverage-playbook.md` | `typescript-code-coverage`, `golden-testing-guidelines`, `general-tdd-guidelines` | Source for Vitest/v8 coverage patterns and golden test methodology |
-| `typescript-to-rust-playbook.md` | `pnpm-monorepo-patterns`, `bun-monorepo-patterns` | Source for understanding TS project structure, CI, build tooling |
-| `typescript-to-rust-mapping-reference.md` | `typescript-rules`, `typescript-sorting-patterns`, `typescript-yaml-handling-rules` | Source for type system details, sorting patterns, YAML handling |
-| `typescript-to-rust-async-porting.md` | `typescript-rules` (async section) | Source for Promise/async patterns |
+| `python-to-rust-playbook.md` | `typescript-to-rust-playbook.md` | Replace Python tooling/process examples with TS runtime/tooling reality and Node/Bun variants |
+| `python-to-rust-mapping-reference.md` | `typescript-to-rust-mapping-reference.md` | Rebuild type/construct mapping around structural typing + runtime JS semantics |
+| `python-to-rust-porting-guide.md` | `typescript-to-rust-porting-guide.md` | Replace Python-centric pitfalls with TS/Node pitfalls and module-runtime concerns |
+| `python-to-rust-test-coverage-playbook.md` | `typescript-to-rust-test-coverage-playbook.md` | Replace pytest/coverage.py with Vitest/Jest/Bun test coverage and tryscript integration |
+| `python-to-rust-porting-rules.md` | `typescript-to-rust-porting-rules.md` | Compact TS→Rust mappings with fidelity labels and caveats |
+| `python-to-rust-cli-porting.md` | `typescript-to-rust-cli-porting.md` | Commander/yargs/oclif patterns mapped to clap + terminal behavior parity |
+| (none) | `typescript-to-rust-async-porting.md` | Async semantics and cancellation model differences |
+| `research-rust-cli-pypi-distribution.md` | `research-rust-cli-npm-distribution.md` | npm binary topology instead of wheel/maturin model |
 
 ## Implementation Plan
 
-### Phase 1: Core TypeScript Porting Documents
+### Phase 0: Finalize Constraints and Templates
 
-Create the essential documents that enable a TypeScript-to-Rust port. These are Tier 1
-from the design section.
+- [ ] Confirm runtime scope in this plan text (Node primary, Bun variant, Deno deferred).
+- [ ] Define standard section templates for D1-D7 so docs are structurally consistent.
+- [ ] Add reference discipline rule: version-sensitive claims need source + as-of date.
 
-- [ ] Create `typescript-to-rust-porting-rules.md` in `guidelines/` — the compact
-  agent-context guideline with type mappings, dependency mappings, module patterns, and
-  key pitfalls. (Consult tbd `typescript-rules`.)
-- [ ] Create `typescript-to-rust-mapping-reference.md` in `playbooks/` — exhaustive
-  construct-by-construct mapping with code examples for every TypeScript concept and its
-  Rust equivalent. (Consult tbd `typescript-rules`,
-  `typescript-sorting-patterns`, `typescript-yaml-handling-rules`.)
-- [ ] Create `typescript-to-rust-playbook.md` in `playbooks/` — the 8-phase process
-  adapted for TypeScript source projects. (Consult tbd `pnpm-monorepo-patterns`,
-  `bun-monorepo-patterns`.)
-- [ ] Create `typescript-to-rust-cli-porting.md` in `guidelines/` — CLI-specific
-  patterns for Commander.js/yargs/oclif → clap. (Consult tbd
-  `typescript-cli-tool-rules`.)
-- [ ] Create `typescript-to-rust-test-coverage-playbook.md` in `playbooks/` — pre-port
-  coverage strategy using Vitest/v8/c8. (Consult tbd `typescript-code-coverage`,
-  `golden-testing-guidelines`.)
+### Phase 1: Core TypeScript Path (D1-D5)
 
-### Phase 2: Supporting Documents and Research
+- [ ] Create `guidelines/typescript-to-rust-porting-rules.md` (D1).
+- [ ] Create `playbooks/typescript-to-rust-mapping-reference.md` (D2).
+- [ ] Create `playbooks/typescript-to-rust-playbook.md` (D3).
+- [ ] Create `guidelines/typescript-to-rust-cli-porting.md` (D4).
+- [ ] Create `playbooks/typescript-to-rust-test-coverage-playbook.md` (D5).
 
-Create the supporting documents that add depth and handle TypeScript-specific concerns.
+**Exit gate:** A TypeScript CLI project can be assessed, planned, ported, and validated
+using only existing Rust docs + D1-D5.
 
-- [ ] Create `typescript-to-rust-porting-guide.md` in `playbooks/` — detailed
-  methodology with TypeScript-specific pitfalls and solutions.
-- [ ] Create `typescript-to-rust-async-porting.md` in `guidelines/` — async-specific
-  porting patterns (Promises → futures, event loop → tokio).
-- [ ] Create `research-rust-cli-npm-distribution.md` in `docs/project/research/` —
-  survey of how Rust CLIs distribute via npm (Biome, esbuild, oxlint patterns).
+### Phase 2: Depth + Research (D6-D8)
 
-### Phase 3: Generalization and Integration
+- [ ] Create `playbooks/typescript-to-rust-porting-guide.md` (D6).
+- [ ] Create `guidelines/typescript-to-rust-async-porting.md` (D7).
+- [ ] Create `docs/project/research/research-rust-cli-npm-distribution.md` (D8).
 
-Generalize existing docs and update the top-level README.
+**Exit gate:** Deep pitfalls and npm distribution decisions are fully documented with
+primary-source evidence.
 
-- [ ] Generalize `porting-principles-and-antipatterns.md` — remove Python-specific
-  language, make examples language-agnostic or dual-language.
-- [ ] Generalize `test-coverage-for-porting.md` — add TypeScript tooling alongside
-  Python tooling references.
-- [ ] Generalize `cross-language-test-mapping.md` — update language to be
-  source-agnostic while keeping concrete examples.
-- [ ] Add TypeScript variant to `auto-sync-agent-prompt-template.md`.
-- [ ] Update `README.md` — add TypeScript path, update quick-start with TypeScript
-  bootstrap instructions, update tables and agent guidance.
+### Phase 2.5: Exemplar Audits and Dependency Plans (D11-D13)
 
-### Phase 4: Repository Reorganization (Optional / Deferred)
+- [ ] Acquire/update `tbd` exemplar using `tbd shortcut checkout-third-party-repo` flow
+  (`attic/tbd`).
+- [ ] Acquire/update `qmd` exemplar using `tbd shortcut checkout-third-party-repo` flow
+  (`attic/qmd`).
+- [ ] Produce `research-tbd-construct-coverage-matrix.md` with audited commit SHA and
+  construct inventory.
+- [ ] Produce `research-tbd-dependency-port-plan.md` with full dependency mapping and
+  migration strategy.
+- [ ] Produce `research-qmd-dependency-port-plan.md` with full dependency mapping and
+  migration strategy.
+- [ ] Produce `research-tbd-transitive-lockfile-appendix.md` with `pnpm-lock.yaml`
+  inventory and action coverage.
+- [ ] Produce `research-qmd-transitive-lockfile-appendix.md` with `bun.lock` inventory
+  and action coverage.
+- [ ] Map exemplar constructs and dependencies to target docs (D1-D8/shared docs) and
+  classify coverage.
+- [ ] Create explicit follow-up items for any uncovered or weakly covered construct or
+  dependency.
 
-Restructure directories for clean multi-language organization.
+**Exit gate:** No critical construct or dependency from `tbd`/`qmd` remains unmapped to
+the TS-to-Rust playbook without an action item.
 
-- [ ] Create subdirectory structure (`general/`, `python-to-rust/`,
-  `typescript-to-rust/`, `rust/`) under both `playbooks/` and `guidelines/`.
-- [ ] Move existing files into appropriate subdirectories.
-- [ ] Update all internal cross-references.
-- [ ] Verify no broken links.
-- [ ] Update `.claude/` and `.tbd/` configuration if needed.
+### Phase 3: Integration (D9)
 
-## Testing Strategy
+- [ ] Generalize shared docs and README so both source-language paths are first-class.
+- [ ] Add TS variant to sync prompt template.
 
-- **Link validation:** Run `lychee` or equivalent on all markdown files to verify no
-  broken cross-references after reorganization.
-- **Content review:** Each new TypeScript doc should be reviewed for:
-  - Completeness against its Python counterpart (same sections covered)
-  - Accuracy of TypeScript → Rust type/construct mappings
-  - Correctness of library equivalence claims
-  - No stale or wrong tbd guideline references
-- **Agent usability test:** Load the new TypeScript guidelines into an agent context and
-  verify they provide actionable guidance for a real TypeScript project assessment.
-- **Cross-reference audit:** Verify that all documents reference each other correctly
-  and that the README entry points work for both Python and TypeScript paths.
+**Exit gate:** README navigation is symmetric for Python and TypeScript users/agents.
 
-## Rollout Plan
+### Phase 4: Optional Reorganization (D10)
 
-1. **Phase 1 first:** Create the core 5 documents. These alone make the TypeScript path
-   usable.
-2. **Phase 2 next:** Add depth with the porting guide, async guide, and npm research.
-3. **Phase 3 after:** Generalize existing docs and update README. This is lower risk and
-   can be done incrementally.
-4. **Phase 4 deferred:** Directory reorganization is valuable but not blocking. Can be
-   done as a separate effort once the content is stable.
+- [ ] Implement directory move only after link and usability validation passes.
 
-## Open Questions
+**Exit gate:** No broken links; migration notes published.
 
-- Should we pursue a TypeScript-to-Rust case study in parallel with writing the docs?
-  (A small project like a TS CLI tool would validate the new docs and generate a case
-  study.)
-- For the directory restructuring (Phase 4), should we use symlinks or redirects for
-  backward compatibility, or just accept the one-time breakage?
-- Should the generalized 8-phase playbook be a standalone document that both
-  language-specific playbooks reference, or should each language-specific playbook be
-  self-contained?
-- Are there TypeScript-to-Rust porting projects in the wild that we should survey for
-  lessons? (Similar to how the Python path learned from the flowmark port.)
-- Should we cover Deno as a TypeScript runtime variant, or focus exclusively on
-  Node.js/Bun?
+## Validation Strategy
+
+### Accuracy and Citation Checks
+
+- [ ] Every version-sensitive claim has a source URL and as-of date.
+- [ ] Type/async mappings reviewed for semantic correctness (not just syntax similarity).
+- [ ] CLI behavior mappings validated against Node/Rust docs for terminal and exit
+  behavior.
+
+### Cross-Document Consistency Checks
+
+- [ ] Terminology is consistent (`source language`, `target language`, `parity`,
+  `cross-validation`).
+- [ ] No conflicting guidance between compact guidelines and deep playbooks.
+- [ ] All new docs link to relevant existing Rust/general docs.
+
+### Mechanical Checks
+
+- [ ] Run markdown link validation (e.g., `lychee`).
+- [ ] Run `rg` sweeps for stale Python-only phrasing in generalized docs.
+- [ ] Verify file references used by README and templates resolve correctly.
+
+### Agent Usability Check
+
+- [ ] Simulate a TS project assessment prompt and confirm D1-D5 produce actionable,
+  concrete steps.
+- [ ] Confirm generated guidance includes explicit caveats where mapping is lossy.
+
+### Exemplar Coverage Check (`attic/tbd`)
+
+- [ ] Verify all major construct families from `tbd` appear in D11 matrix and map to
+  specific docs.
+- [ ] For each `partially covered` or `not covered` family, verify a planned doc update
+  exists (with owner and phase).
+- [ ] Confirm high-risk runtime behaviors (signals, EPIPE, TTY/color precedence, pager,
+  subprocess+timeout, git worktree merge/conflict flows) are explicitly addressed in
+  TypeScript-path docs.
+
+### Dependency Coverage Check (`attic/tbd` and `attic/qmd`)
+
+- [ ] Verify every direct dependency from audited package manifests appears in D12 or D13.
+- [ ] Verify each runtime dependency has a concrete Rust target or explicit in-house
+  implementation plan.
+- [ ] Verify high-risk dependencies have spike plans and measurable exit criteria.
+- [ ] Verify every lock entry from `attic/tbd/pnpm-lock.yaml` and `attic/qmd/bun.lock`
+  appears in transitive inventory artifacts with action classification.
+- [ ] Verify lockfile alias/name mismatches (if any) are documented and normalized in
+  coverage checks.
+
+## Risks and Mitigations
+
+| Risk | Severity | Mitigation |
+| --- | --- | --- |
+| Overstated one-to-one TS→Rust mappings | High | Use fidelity tags and explicit redesign patterns |
+| Tool/version drift (TS, Node, Vitest, Actions, etc.) | High | Source + as-of policy; periodic refresh checklist |
+| Node/Bun differences create inconsistent advice | High | Node-primary baseline + clearly marked Bun variants |
+| Synthetic examples miss real-world construct complexity | High | Run D11 `tbd` exemplar coverage matrix and close uncovered areas |
+| Dependency blind spots (native/LLM/MCP/vector stacks) | High | Run D12/D13 full dependency plans and require spike gates for high-risk deps |
+| Reorganization breaks references | Medium | Defer move; validate links before and after |
+| Docs become too broad and lose practical focus | Medium | Keep CLI/filesystem tooling as primary scenario |
+
+## Rollout and Version Drift Policy
+
+1. Ship D1-D5 first (usable path).
+2. Add D6-D8 depth and research.
+3. Run D11-D13 exemplar audits and dependency plans (`tbd` + `qmd`) and close critical gaps.
+4. Integrate D9 and validate navigation.
+5. Consider D10 reorganization only after stability.
+
+Version drift policy:
+- Maintain an “as-of” date at the top of each research-heavy document.
+- Re-verify tool versions and workflow actions before each major refresh.
+- Prefer linking to official docs/release pages over tertiary summaries.
+
+## Open Questions (Non-Blocking)
+
+- Should Deno support become a separate Phase 5 after Node/Bun docs stabilize?
+- Should we add a small TS-to-Rust case study in parallel to validate D1-D7 sooner?
+- For optional reorganization, should we keep compatibility shim files for one release
+  cycle?
 
 ## References
 
-### Existing Playbook Docs
+### Existing Playbook Documents
 
-- `playbooks/python-to-rust-playbook.md` — primary model for TypeScript playbook
-- `playbooks/python-to-rust-mapping-reference.md` — primary model for mapping reference
-- `guidelines/python-to-rust-porting-rules.md` — primary model for porting rules
-- `guidelines/python-to-rust-cli-porting.md` — primary model for CLI porting
-- `guidelines/porting-principles-and-antipatterns.md` — to be generalized
-- `guidelines/test-coverage-for-porting.md` — to be generalized
+- `playbooks/python-to-rust-playbook.md`
+- `playbooks/python-to-rust-mapping-reference.md`
+- `playbooks/python-to-rust-porting-guide.md`
+- `playbooks/python-to-rust-test-coverage-playbook.md`
+- `guidelines/python-to-rust-porting-rules.md`
+- `guidelines/python-to-rust-cli-porting.md`
+- `guidelines/porting-principles-and-antipatterns.md`
+- `guidelines/test-coverage-for-porting.md`
 
 ### tbd Guidelines (Source Material)
 
-- `tbd guidelines typescript-rules` — TypeScript coding rules and best practices
-- `tbd guidelines typescript-cli-tool-rules` — CLI tool rules for Commander.js,
-  picocolors, TypeScript
-- `tbd guidelines typescript-code-coverage` — Vitest code coverage with v8 provider
-- `tbd guidelines typescript-sorting-patterns` — deterministic sorting patterns
-- `tbd guidelines typescript-yaml-handling-rules` — YAML parsing/serialization
-- `tbd guidelines pnpm-monorepo-patterns` — pnpm workspace architecture
-- `tbd guidelines bun-monorepo-patterns` — Bun workspace architecture
-- `tbd guidelines golden-testing-guidelines` — golden/snapshot testing
-- `tbd guidelines general-tdd-guidelines` — TDD methodology
-- `tbd guidelines general-testing-rules` — testing best practices
+- `tbd guidelines typescript-rules`
+- `tbd guidelines typescript-cli-tool-rules`
+- `tbd guidelines typescript-code-coverage`
+- `tbd guidelines typescript-sorting-patterns`
+- `tbd guidelines typescript-yaml-handling-rules`
+- `tbd guidelines pnpm-monorepo-patterns`
+- `tbd guidelines bun-monorepo-patterns`
+- `tbd guidelines golden-testing-guidelines`
+- `tbd guidelines general-tdd-guidelines`
+- `tbd guidelines general-testing-rules`
+- `tbd shortcut checkout-third-party-repo`
 
-### External References
+### External Primary Sources
 
-- TypeScript Handbook: https://www.typescriptlang.org/docs/handbook/
-- Rust Book: https://doc.rust-lang.org/book/
-- clap documentation: https://docs.rs/clap/latest/clap/
+- TypeScript Handbook: https://www.typescriptlang.org/docs/handbook/2/everyday-types.html
+- TypeScript Generics: https://www.typescriptlang.org/docs/handbook/2/generics.html
+- TypeScript Conditional Types: https://www.typescriptlang.org/docs/handbook/2/conditional-types.html
+- TypeScript Template Literal Types: https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html
+- TSConfig `strictNullChecks`: https://www.typescriptlang.org/tsconfig/strictNullChecks.html
+- Node package entry points (`exports`/`imports`): https://nodejs.org/api/packages.html
+- Node process/TTY behavior: https://nodejs.org/api/process.html
+- npm `package.json` fields (`optionalDependencies`, `os`, `cpu`, `libc`): https://docs.npmjs.com/cli/v11/configuring-npm/package-json
+- Rust `std::io::IsTerminal`: https://doc.rust-lang.org/std/io/trait.IsTerminal.html
+- Rust `std::process::ExitCode`: https://doc.rust-lang.org/std/process/struct.ExitCode.html
+- Rust `std::convert::Infallible`: https://doc.rust-lang.org/std/convert/enum.Infallible.html
+- Rust never type docs: https://doc.rust-lang.org/std/primitive.never.html
+- Tokio `join!`: https://docs.rs/tokio/latest/tokio/macro.join.html
+- Tokio `select!`: https://docs.rs/tokio/latest/tokio/macro.select.html
+- clap docs: https://docs.rs/clap/latest/clap/
 - Commander.js: https://github.com/tj/commander.js
-- Vitest: https://vitest.dev/
-- Biome (Rust CLI distributed via npm): https://biomejs.dev/
+- Vitest coverage guide: https://vitest.dev/guide/coverage.html
+- c8 package: https://www.npmjs.com/package/c8
+- Bun test coverage: https://bun.sh/docs/test/coverage
+- cargo-dist npm installers: https://opensource.axo.dev/cargo-dist/book/installers/npm.html
+- tryscript package/docs entry: https://www.npmjs.com/package/tryscript
+- esbuild package: https://www.npmjs.com/package/esbuild
+- Biome package: https://www.npmjs.com/package/@biomejs/biome
+- oxlint package: https://www.npmjs.com/package/oxlint
+- tbd exemplar repo: https://github.com/jlevy/tbd
+- qmd exemplar repo: https://github.com/tobi/qmd
