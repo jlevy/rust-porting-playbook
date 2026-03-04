@@ -26,7 +26,7 @@ flowchart TD
     G1 -->|"Critical dep has no<br/>Rust equivalent"| P0_deps
 
     subgraph P0["Phase 0: Remediation"]
-        P0_tests[Enhance test coverage<br/>(Test Coverage Playbook)]
+        P0_tests["Enhance test coverage<br/>(Test Coverage Playbook)"]
         P0_deps[Research dependency<br/>alternatives]
     end
 
