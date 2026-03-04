@@ -339,9 +339,9 @@ flowchart TD
     style execute fill:#e3f2fd,stroke:#1565C0
     style extract fill:#fff3e0,stroke:#E65100
     style integrate fill:#e8f5e9,stroke:#2E7D32
-    style OBS_T fill:#f3e5f5,stroke:#9C27B0
-    style TRI_T fill:#f3e5f5,stroke:#9C27B0
-    style IMP_LOG fill:#f3e5f5,stroke:#9C27B0
+    style OBS_T fill:#ffcdd2,stroke:#C62828
+    style TRI_T fill:#ffcdd2,stroke:#C62828
+    style IMP_LOG fill:#ffcdd2,stroke:#C62828
 ```
 
 ---
