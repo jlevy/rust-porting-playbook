@@ -6,7 +6,7 @@
 [Initial Port Checklist](port-checklist-initial-template.md) |
 [Update Checklist](port-checklist-update-template.md)
 
-Version: 1.2 | Last Updated: 2026-02-12
+Version: 1.3 | Last Updated: 2026-03-03
 
 Cross-referenced against real-world projects: flowmark-rs, ripgrep, bat, fd, jj.
 
@@ -693,21 +693,402 @@ convention over configuration.
 
 ### 6.4 Release CI Workflow
 
-A tag-triggered workflow that builds cross-platform binaries and creates a GitHub
-Release. Uses `softprops/action-gh-release@v2` (the standard action for GitHub Releases;
-`actions/create-release@v1` is archived and should not be used):
+A tag-triggered orchestrator workflow that builds cross-platform binaries, generates
+checksums, and creates a GitHub Release. Optionally invokes channel workflows for
+crates.io and PyPI publishing.
+
+**Design principles** (learned from flowmark-rs production release system):
+- Use `fail-fast: false` in the build matrix so one target failure doesn't cancel others
+- Use `+crt-static` for static linking on musl targets
+- Cross-compile Linux ARM64 via apt-get packages + RUSTFLAGS linker overrides (simpler
+  and more transparent than `cross` Docker containers)
+- Generate SHA256SUMS for all release artifacts
+- Use concurrency control to prevent parallel releases of the same tag
+- Authenticate with crates.io via OIDC (`rust-lang/crates-io-auth-action@v1`) instead
+  of long-lived `CARGO_REGISTRY_TOKEN` secrets
 
 ```yaml
 name: Release
 on:
   push:
-    tags: ["v*"]
+    tags: ["*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v0.2.5). Use dry-run for validation-only."
+        required: true
+        type: string
+        default: dry-run
+      publish:
+        description: "Publish channels + create GitHub Release"
+        type: boolean
+        default: false
 
-permissions:
-  contents: write
+defaults:
+  run:
+    shell: bash
 
 env:
   CARGO_TERM_COLOR: always
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref_name || inputs.tag || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.plan.outputs.release_tag }}
+      artifact_tag: ${{ steps.plan.outputs.artifact_tag }}
+      prerelease: ${{ steps.plan.outputs.prerelease }}
+      publish: ${{ steps.plan.outputs.publish }}
+      publish_channels: ${{ steps.plan.outputs.publish_channels }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Resolve release mode
+        id: plan
+        run: python3 ./scripts/resolve_release_plan.py ...
+        # See "Release Automation Scripts" section below for the script
+
+  package:
+    needs: [plan]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - aarch64-apple-darwin
+          - aarch64-unknown-linux-musl
+          - x86_64-apple-darwin
+          - x86_64-pc-windows-msvc
+          - x86_64-unknown-linux-musl
+        include:
+          - { target: aarch64-apple-darwin, os: macos-latest, target_rustflags: "" }
+          - { target: aarch64-unknown-linux-musl, os: ubuntu-latest,
+              target_rustflags: "--codegen linker=aarch64-linux-gnu-gcc" }
+          - { target: x86_64-apple-darwin, os: macos-latest, target_rustflags: "" }
+          - { target: x86_64-pc-windows-msvc, os: windows-latest, target_rustflags: "" }
+          - { target: x86_64-unknown-linux-musl, os: ubuntu-latest, target_rustflags: "" }
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install Linux ARM64 musl deps
+        if: matrix.target == 'aarch64-unknown-linux-musl'
+        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu musl-tools
+
+      - name: Install Linux x86_64 musl deps
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
+      - name: Add Rust target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Build
+        run: >-
+          RUSTFLAGS="--deny warnings --codegen target-feature=+crt-static
+          ${{ matrix.target_rustflags }}"
+          cargo build --release --locked --target ${{ matrix.target }}
+
+      - name: Package archive
+        id: package
+        run: python3 ./scripts/package_release_archive.py
+          --artifact-tag "${{ needs.plan.outputs.artifact_tag }}"
+          --target "${{ matrix.target }}"
+          --runner-os "${{ matrix.os }}"
+          --github-output "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-archives-${{ matrix.target }}
+          path: ${{ steps.package.outputs.archive }}
+
+  checksum:
+    needs: [plan, package]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-archives-*
+          merge-multiple: true
+          path: release
+      - run: (cd release && shasum -a 256 * > ../SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-checksums
+          path: SHA256SUMS
+
+  # Invoke reusable channel workflows (see Multi-Channel Distribution)
+  crates:
+    needs: [plan, package, checksum]
+    uses: ./.github/workflows/publish.yml
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      publish: ${{ needs.plan.outputs.publish_channels == 'true' }}
+
+  pypi:
+    needs: [plan, package, checksum]
+    uses: ./.github/workflows/pypi.yml
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      publish: ${{ needs.plan.outputs.publish_channels == 'true' }}
+
+  announce:
+    needs: [plan, checksum, crates, pypi]
+    if: needs.plan.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: release
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.plan.outputs.release_tag }}
+          prerelease: ${{ needs.plan.outputs.prerelease == 'true' }}
+          files: release/*
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+```
+
+**Key points:**
+- Use `softprops/action-gh-release@v2` for creating GitHub Releases (not the archived
+  `actions/create-release@v1`) with `fail_on_unmatched_files: true`
+- Cross-compile Linux ARM64 via `gcc-aarch64-linux-gnu` + RUSTFLAGS linker override
+  (no Docker containers needed). This is simpler and more transparent than `cross`.
+- Static linking with `--codegen target-feature=+crt-static` for musl targets
+- Use `actions/upload-artifact@v4` and `actions/download-artifact@v4` (current versions)
+  with `merge-multiple: true` for collecting artifacts from matrix jobs
+- SHA256SUMS file generated from all release archives
+- `concurrency` block prevents parallel releases of the same tag
+- `plan` job with script-driven logic resolves dry-run vs. publish mode
+- Channel workflows (`publish.yml`, `pypi.yml`) invoked as reusable `workflow_call`
+  workflows with conditional gating
+- `permissions: contents: read` at workflow level (least-privilege); `contents: write`
+  only on the `announce` job that creates the GitHub Release
+
+**crates.io authentication:** Use OIDC trusted publishing via
+`rust-lang/crates-io-auth-action@v1` instead of long-lived `CARGO_REGISTRY_TOKEN`
+secrets. This is the same approach used for PyPI trusted publishing — no secrets to
+rotate, no tokens to leak.
+
+```yaml
+# In publish.yml (crates.io channel)
+permissions:
+  id-token: write
+  contents: read
+
+steps:
+  - uses: rust-lang/crates-io-auth-action@v1
+    id: auth
+  - run: cargo publish --locked
+    if: steps.crate.outputs.already_published != 'true'
+    env:
+      CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+```
+
+### Release Automation Scripts
+
+Complex release workflow logic should live in testable Python scripts, not inline YAML
+bash. This is a key pattern from the flowmark-rs project that dramatically improves
+maintainability and debuggability of release workflows.
+
+**Why scripts, not YAML:**
+- YAML doesn't support conditionals, error handling, or structured output cleanly
+- Inline bash in YAML is hard to test, hard to read, and hard to debug
+- Python scripts can be unit-tested locally with `unittest`
+- Scripts produce structured `$GITHUB_OUTPUT` key-value pairs
+- Each script has a clear, single responsibility
+
+**Recommended scripts** (`scripts/` directory):
+
+| Script | Purpose | Key outputs |
+| --- | --- | --- |
+| `resolve_release_plan.py` | Determine release mode (dry-run vs. publish, stable vs. pre-release) from event type, tag, and inputs | `release_tag`, `artifact_tag`, `prerelease`, `publish`, `publish_channels` |
+| `package_release_archive.py` | Create platform-specific archives (.tar.gz/.zip) with LICENSE and README | `archive` (filename) |
+| `resolve_crate_metadata.py` | Extract name/version from Cargo.toml, query crates.io API to detect already-published versions | `crate_name`, `crate_version`, `already_published` |
+| `validate_wheel_entrypoints.py` | Verify expected binaries exist in all built wheels | (exits non-zero on failure) |
+| `pypi_smoke_test.py` | Install wheel, run `--version` check; auto-skip cross-compiled targets | (exits non-zero on failure) |
+
+**Common patterns in these scripts:**
+
+1. **GitHub Actions output:** All scripts write to `$GITHUB_OUTPUT` via a shared helper:
+   ```python
+   def _write_outputs(outputs: dict[str, str], github_output_path: str | None) -> None:
+       lines = [f"{key}={value}" for key, value in outputs.items()]
+       for line in lines:
+           print(line)
+       if github_output_path:
+           with Path(github_output_path).open("a") as f:
+               for line in lines:
+                   f.write(f"{line}\n")
+   ```
+
+2. **Idempotency detection:** The crate metadata script queries the registry API to
+   check if a version already exists before publishing:
+   ```python
+   def _crate_version_exists(registry_url: str, name: str, version: str) -> bool:
+       url = f"{registry_url.rstrip('/')}/{name}/{version}"
+       try:
+           urllib.request.urlopen(url, timeout=10)
+           return True
+       except urllib.error.HTTPError as exc:
+           if exc.code == 404:
+               return False
+           raise
+   ```
+
+3. **Platform-aware smoke testing:** The PyPI smoke test detects the runner's OS and
+   architecture, then skips tests for cross-compiled targets that can't run natively:
+   ```python
+   def _skip_reason(target: str, runner_os: str, runner_arch: str) -> str | None:
+       target_os, target_arch = _target_os_and_arch(target)
+       if target_os != runner_os:
+           return f"target OS {target_os} != runner OS {runner_os}"
+       if target_arch != runner_arch:
+           return f"target arch {target_arch} != runner arch {runner_arch}"
+       return None
+   ```
+
+4. **Unit tests for all scripts:** Each script has tests in `scripts/tests/`:
+   ```
+   scripts/
+   ├── resolve_release_plan.py
+   ├── package_release_archive.py
+   ├── resolve_crate_metadata.py
+   ├── validate_wheel_entrypoints.py
+   ├── pypi_smoke_test.py
+   └── tests/
+       ├── test_resolve_release_plan.py
+       ├── test_package_release_archive.py
+       ├── test_resolve_crate_metadata.py
+       └── test_validate_wheel_entrypoints.py
+   ```
+   Run in CI with: `python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v`
+
+**Archive naming convention** (compatible with `cargo-binstall`):
+`<project>-v<version>-<target>.tar.gz` (Unix) or `.zip` (Windows).
+Each archive includes the binary, LICENSE, and README.
+
+**Versioning**: Follow [Semantic Versioning](https://semver.org/) (semver)
+
+### 6.5 Multi-Channel Distribution
+
+For production Rust CLI tools, distribute through multiple channels to maximize reach.
+The flowmark-rs project provides a proven template: three coordinated channels
+(crates.io, PyPI, Homebrew) orchestrated by a single release workflow.
+
+**Channel overview:**
+
+| Channel | Audience | Install command | Mechanism |
+| --- | --- | --- | --- |
+| **PyPI via uv** | General users (recommended) | `uvx <name>` / `uv tool install <name>` / `pip install <name>` | maturin `bindings = "bin"` — packages Rust binary into Python wheel |
+| **crates.io** | Rust developers | `cargo install <name>` / `cargo binstall <name>` | `cargo publish` with OIDC trusted publisher |
+| **Homebrew** | macOS users | `brew install <tap>/<name>` | Personal tap with SHA256-pinned formula |
+| **GitHub Releases** | Direct downloads | Browser / curl | Binary archives (.tar.gz, .zip) + SHA256SUMS |
+
+#### Why PyPI/uv Is the Recommended Distribution Channel
+
+**PyPI via uv is the recommended primary distribution channel for Rust CLI binaries**
+that target a broad audience, not just Rust developers. The reasons:
+
+1. **Zero bootstrapping:** uv is now standard in modern Python environments. Most
+   developer machines already have uv or pip installed. In contrast, `cargo binstall`
+   requires a Rust toolchain or a separate install step.
+
+2. **Cross-platform out of the box:** `uvx <tool>` works on Linux, macOS, and Windows
+   with the same command. Platform selection is automatic via wheel tags.
+
+3. **Instant ephemeral execution:** `uvx <tool>` downloads and runs the binary in a
+   single command with no persistent install needed. There is no cargo equivalent to
+   this — `cargo install` compiles from source (takes minutes) and requires a full Rust
+   toolchain, while `cargo binstall` requires installing a separate tool first and has
+   no ephemeral run mode. `uvx` is the closest thing Rust CLIs have to `npx` — and it
+   works without any Rust infrastructure.
+
+4. **Established pattern:** This is how **ruff**, **uv**, and **maturin** itself are
+   distributed. These are among the most-installed Rust CLI tools in the world.
+
+5. **No Rust toolchain required:** Users do not need `rustc`, `cargo`, or any Rust
+   infrastructure. The binary is pre-compiled and packaged into a Python wheel.
+
+6. **Familiar to the Python ecosystem:** For Python-to-Rust ports, this preserves the
+   exact install experience that existing users expect (`pip install <tool>` or
+   `uvx <tool>`).
+
+For Rust developers, crates.io (`cargo install` / `cargo binstall`) remains the natural
+channel. For macOS power users, a Homebrew tap provides `brew install` convenience.
+But for general distribution, PyPI via uv has the broadest reach with the least friction.
+
+#### PyPI Distribution via Maturin
+
+Distributing Rust CLI binaries on PyPI via maturin packages the compiled binary into
+a Python wheel. This is the mechanism behind `uvx <tool>`, `uv tool install <tool>`,
+and `pip install <tool>` for Rust CLIs.
+
+**Minimal `pyproject.toml`** (at repo root, alongside `Cargo.toml`):
+```toml
+[build-system]
+requires = ["maturin>=1.9,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "myproject-rs"
+description = "Short description"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+dynamic = ["version"]       # Reads version from Cargo.toml automatically
+
+[tool.maturin]
+bindings = "bin"             # Standalone CLI binary, not a Python extension
+strip = true                 # Strip debug symbols for smaller wheels
+```
+
+**How it works:**
+- Maturin compiles the Rust binary and places it into the wheel's `.data/scripts/`
+- pip/uv installs it into the appropriate `bin/` directory
+- No Python code runs at binary invocation — it is pure Rust
+- Platform tags (e.g., `manylinux_2_17_x86_64`) ensure the correct wheel is selected
+
+**Versioning:** Use `dynamic = ["version"]` so maturin reads the version from
+`Cargo.toml`. This avoids maintaining version numbers in two places.
+Ruff and uv use manual sync instead (via rooster) because they are Cargo workspaces,
+but for single-crate projects, dynamic versioning is simpler and less error-prone.
+
+**Standard platform targets** (covers ~99% of users):
+
+| Target | Platform Tag | Runner |
+| --- | --- | --- |
+| `x86_64-unknown-linux-gnu` | `manylinux_2_17_x86_64` | `ubuntu-latest` |
+| `aarch64-unknown-linux-gnu` | `manylinux_2_17_aarch64` | `ubuntu-latest` |
+| `x86_64-apple-darwin` | `macosx_10_12_x86_64` | `macos-13` or `macos-14` |
+| `aarch64-apple-darwin` | `macosx_11_0_arm64` | `macos-14` |
+| `x86_64-pc-windows-msvc` | `win_amd64` | `windows-latest` |
+
+Add musl targets (`musllinux_1_2_*`) for Alpine Linux support if needed.
+
+**PyPI workflow** (`pypi.yml`, reusable):
+```yaml
+name: PyPI
+on:
+  workflow_call:
+    inputs:
+      publish:
+        type: boolean
+        default: false
+  workflow_dispatch:
 
 jobs:
   build:
@@ -716,73 +1097,175 @@ jobs:
     strategy:
       matrix:
         include:
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-          - target: x86_64-unknown-linux-musl
-            os: ubuntu-latest
-          - target: aarch64-unknown-linux-gnu
-            os: ubuntu-latest
-          - target: x86_64-apple-darwin
-            os: macos-latest
-          - target: aarch64-apple-darwin
-            os: macos-latest
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-latest, manylinux: "2_17" }
+          - { target: aarch64-unknown-linux-gnu, os: ubuntu-latest, manylinux: "2_17" }
+          - { target: x86_64-apple-darwin, os: macos-14 }
+          - { target: aarch64-apple-darwin, os: macos-14 }
+          - { target: x86_64-pc-windows-msvc, os: windows-latest }
     steps:
       - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: PyO3/maturin-action@v1
         with:
-          targets: ${{ matrix.target }}
-      - name: Install cross (Linux cross-compilation)
-        if: matrix.target == 'aarch64-unknown-linux-gnu' || matrix.target == 'x86_64-unknown-linux-musl'
-        run: cargo install cross --locked
-      - name: Build
-        run: |
-          if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]] || \
-             [[ "${{ matrix.target }}" == "x86_64-unknown-linux-musl" ]]; then
-            cross build --release --locked --target ${{ matrix.target }}
-          else
-            cargo build --release --locked --target ${{ matrix.target }}
-          fi
-        shell: bash
-      - name: Package
-        run: |
-          cd target/${{ matrix.target }}/release
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            7z a ../../../myproject-${{ matrix.target }}.zip myproject.exe
-          else
-            tar czf ../../../myproject-${{ matrix.target }}.tar.gz myproject
-          fi
-        shell: bash
+          command: build
+          args: --release --locked --out dist
+          target: ${{ matrix.target }}
+          manylinux: ${{ matrix.manylinux || 'auto' }}
       - uses: actions/upload-artifact@v4
         with:
-          name: myproject-${{ matrix.target }}
-          path: myproject-${{ matrix.target }}.*
+          name: wheels-${{ matrix.target }}
+          path: dist/*.whl
 
-  release:
-    name: Create Release
-    needs: build
+  sdist:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-sdist
+          path: dist/*.tar.gz
+
+  publish:
+    if: inputs.publish
+    needs: [build, sdist]
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+    steps:
+      - uses: astral-sh/setup-uv@v7
       - uses: actions/download-artifact@v4
         with:
+          pattern: wheels-*
           merge-multiple: true
-      - uses: softprops/action-gh-release@v2
-        with:
-          generate_release_notes: true
-          files: myproject-*
+          path: wheels/
+      - run: uv publish --trusted-publishing always --check-url wheels/*
 ```
 
 **Key points:**
-- Use `softprops/action-gh-release@v2` for creating GitHub Releases (not the archived
-  `actions/create-release@v1`)
-- Use `cross` for Linux targets that need cross-compilation (musl, aarch64)
-- Use `actions/upload-artifact@v4` and `actions/download-artifact@v4` (current versions)
-- Set `permissions: contents: write` for release creation
-- The `generate_release_notes: true` option auto-generates notes from commits
+- Use `PyO3/maturin-action@v1` for cross-platform wheel builds (pin the version)
+- Use `uv publish --trusted-publishing always` with OIDC (no long-lived API tokens)
+- Add `--check-url` to skip already-published versions (idempotent reruns)
+- Set up trusted publishing on PyPI: link your GitHub repo/workflow to the PyPI project
+- Include an sdist for users who want to build from source on unsupported platforms
 
-**Versioning**: Follow [Semantic Versioning](https://semver.org/) (semver)
+For detailed research on this pattern, see
+[research-rust-cli-pypi-distribution.md](../docs/project/research/research-rust-cli-pypi-distribution.md).
+
+#### Homebrew Tap Distribution
+
+For macOS users, a personal Homebrew tap provides `brew install` access.
+
+**Setup:**
+1. Create a tap repository: `<user>/homebrew-<project>`
+2. Add a formula that downloads the GitHub Release binary archive
+3. Pin SHA256 checksums from the release's `SHA256SUMS` file
+
+**Formula template** (`Formula/<project>.rb`):
+```ruby
+class MyProject < Formula
+  desc "Short description"
+  homepage "https://github.com/<user>/<project>"
+  version "X.Y.Z"
+  license "MIT"
+
+  on_macos do
+    on_arm do
+      url "https://github.com/<user>/<project>/releases/download/vX.Y.Z/<project>-vX.Y.Z-aarch64-apple-darwin.tar.gz"
+      sha256 "<sha256>"
+    end
+    on_intel do
+      url "https://github.com/<user>/<project>/releases/download/vX.Y.Z/<project>-vX.Y.Z-x86_64-apple-darwin.tar.gz"
+      sha256 "<sha256>"
+    end
+  end
+
+  def install
+    bin.install "<binary-name>"
+  end
+end
+```
+
+**Update process:** After each GitHub Release, extract SHA256 checksums from the release
+assets and update the formula version and hashes. This is typically a manual step to keep
+auditable.
+
+#### Orchestrated Multi-Channel Releases
+
+For projects publishing to multiple channels, use a single orchestrator workflow that
+coordinates all channels. The flowmark-rs pattern:
+
+```
+cargo release patch --execute
+  → tag push triggers release.yml (orchestrator)
+    ├── plan job: resolve release mode (dry-run vs. publish, stable vs. pre-release)
+    ├── package job: build 6 targets → GitHub Release artifacts + SHA256SUMS
+    ├── publish.yml (reusable): test → dry-run → crates.io publish
+    ├── pypi.yml (reusable): maturin build 5 targets → PyPI publish
+    └── announce job: create/update GitHub Release (gated on success)
+```
+
+**Key orchestration patterns:**
+
+1. **Reusable channel workflows:** Both `publish.yml` (crates.io) and `pypi.yml` (PyPI)
+   are reusable workflows (`workflow_call`) that can also be triggered independently via
+   `workflow_dispatch`. This enables testing channels in isolation.
+
+2. **Script-driven decision logic:** Complex release decisions (semver parsing,
+   dry-run detection, idempotency checks) live in testable Python scripts
+   (`scripts/*.py`), not inline YAML. Each script has unit tests.
+
+3. **Idempotent publishing:** Each channel detects already-published versions and skips:
+   - crates.io: API query before publish
+   - PyPI: `uv publish --check-url`
+   - GitHub Releases: naturally idempotent (updates existing)
+
+4. **Concurrency control:** Prevent parallel releases of the same tag:
+   ```yaml
+   concurrency:
+     group: release-${{ github.ref_name || inputs.tag }}
+     cancel-in-progress: false
+   ```
+
+5. **Conditional channel gating:** Orchestrator outputs control which channels publish:
+   ```yaml
+   crates:
+     uses: ./.github/workflows/publish.yml
+     with:
+       publish: ${{ needs.plan.outputs.publish_channels == 'true' }}
+   ```
+
+#### References (Multi-Channel Distribution)
+
+**Maturin and PyPI distribution:**
+- [Maturin User Guide — Distribution](https://www.maturin.rs/distribution.html)
+- [Maturin — Bindings](https://www.maturin.rs/bindings) (`bin` mode for CLI binaries)
+- [PyO3/maturin-action](https://github.com/PyO3/maturin-action) (GitHub Actions)
+- [PyPI Trusted Publishers](https://docs.pypi.org/trusted-publishers/) (OIDC setup)
+
+**Real-world examples (Rust CLIs distributed via PyPI):**
+- [astral-sh/ruff](https://github.com/astral-sh/ruff) — pyproject.toml, CI workflows
+- [astral-sh/uv](https://github.com/astral-sh/uv) — pyproject.toml, CI workflows
+- [jlevy/flowmark-rs](https://github.com/jlevy/flowmark-rs) — multi-channel publishing
+
+**GitHub Actions used in workflows:**
+- [actions/checkout@v6](https://github.com/actions/checkout)
+- [dtolnay/rust-toolchain](https://github.com/dtolnay/rust-toolchain)
+- [Swatinem/rust-cache@v2](https://github.com/Swatinem/rust-cache)
+- [softprops/action-gh-release@v2](https://github.com/softprops/action-gh-release)
+- [EmbarkStudios/cargo-deny-action@v2](https://github.com/EmbarkStudios/cargo-deny-action)
+- [obi1kenobi/cargo-semver-checks-action@v2](https://github.com/obi1kenobi/cargo-semver-checks-action)
+- [taiki-e/install-action](https://github.com/taiki-e/install-action) (cargo-llvm-cov)
+- [codecov/codecov-action@v5](https://github.com/codecov/codecov-action)
+- [rust-lang/crates-io-auth-action@v1](https://github.com/rust-lang/crates-io-auth-action) (OIDC)
+
+**Platform tags and wheel specifications:**
+- [PEP 600 — Future manylinux](https://peps.python.org/pep-0600/)
+- [PEP 656 — musllinux](https://peps.python.org/pep-0656/)
+- [Python Packaging: Platform Compatibility Tags](https://packaging.python.org/specifications/platform-compatibility-tags/)
 
 ## 7. Continuous Integration
 
@@ -791,15 +1274,17 @@ jobs:
 **Tier 1 (Required for all commits)**:
 ```yaml
 - cargo fmt --all -- --check
-- cargo clippy --all-targets --all-features -- -D warnings
-- cargo test --workspace
-- cargo audit
+- cargo clippy --locked --all-targets --all-features -- -D warnings
+- cargo test --all-features --workspace --locked
+- cargo deny check
 ```
 
 **Tier 2 (Required before release)**:
 ```yaml
-- cargo deny check
-- cargo doc --no-deps
+- cargo doc --locked --no-deps --all-features   # with RUSTDOCFLAGS="-D warnings"
+- MSRV check (cargo check with pinned toolchain)
+- cargo-semver-checks (on PRs)
+- Code coverage (cargo-llvm-cov + Codecov)
 ```
 
 **Tier 3 (Optional, run periodically)**:
@@ -811,26 +1296,38 @@ jobs:
 ### 7.2 GitHub Actions (Modern Pattern)
 
 Split CI into independent parallel jobs for fast feedback.
-This is the pattern used by flowmark-rs, jj, and delta.
-See [Rust Project Setup](../guidelines/rust-project-setup.md) for the full recommended
-workflow with all 7 jobs.
+This is the pattern used by flowmark-rs (13 jobs), jj, and delta.
+See [Rust Project Setup](../guidelines/rust-project-setup.md) for the condensed version.
 
-**Key patterns from real-world projects:**
+**CI environment variables** — set globally for all jobs:
+```yaml
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0            # Faster CI builds (no incremental overhead)
+  CARGO_PROFILE_TEST_DEBUG: 0     # Smaller test binaries, faster CI
+```
+
+These speed up CI builds significantly. `CARGO_INCREMENTAL: 0` disables incremental
+compilation (useless in CI where each build starts fresh) and
+`CARGO_PROFILE_TEST_DEBUG: 0` skips debug info for test binaries.
+
+**Complete CI workflow** (13 jobs from flowmark-rs production setup):
 
 ```yaml
 name: CI
 on:
   push:
-    branches: ["*"]
-  pull_request:
     branches: [main]
+  pull_request:
 
 env:
   CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_TEST_DEBUG: 0
 
 jobs:
   fmt:
-    name: Format Check
+    name: Format check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -840,7 +1337,7 @@ jobs:
       - run: cargo fmt --all -- --check
 
   clippy:
-    name: Clippy
+    name: Clippy lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -848,10 +1345,10 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy --all-targets --all-features -- -D warnings
+      - run: cargo clippy --locked --all-targets --all-features -- -D warnings
 
   test:
-    name: Tests (${{ matrix.os }})
+    name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -860,31 +1357,32 @@ jobs:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: "ci-${{ matrix.os }}"
-      - run: cargo test --all-features --workspace --locked
-      - run: cargo test --no-default-features --workspace --locked
+      - run: cargo test --locked --all-features
+        env:
+          RUSTFLAGS: "-D warnings"
+
+  test-lib-only:
+    name: Test library (no default features)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --locked --no-default-features
+        env:
+          RUSTFLAGS: "-D warnings"
 
   msrv:
-    name: MSRV Check
+    name: MSRV check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@1.85
+      - uses: dtolnay/rust-toolchain@1.85    # Pin to declared rust-version
       - uses: Swatinem/rust-cache@v2
-      - run: cargo test --all-features --workspace --locked
-
-  audit:
-    name: Security Audit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: rustsec/audit-check@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - run: cargo check --locked --all-features
 
   deny:
-    name: Dependency Check
+    name: Dependency audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -897,21 +1395,67 @@ jobs:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - run: cargo doc --no-deps --all-features
+      - run: cargo doc --locked --no-deps --all-features
         env:
           RUSTDOCFLAGS: "-D warnings"
+
+  coverage:
+    name: Code coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@cargo-llvm-cov
+      - run: cargo llvm-cov --locked --all-features --lcov --output-path lcov.info
+        env:
+          RUSTFLAGS: "-D warnings"
+      - uses: codecov/codecov-action@v5
+        with:
+          files: lcov.info
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  semver-checks:
+    name: Semver compatibility
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: obi1kenobi/cargo-semver-checks-action@v2
+
+  workflow-scripts:
+    name: Workflow script tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v
 ```
 
 **Key points:**
 - Use `actions/checkout@v6` (current), `dtolnay/rust-toolchain` (not deprecated
   `actions-rs`)
-- `Swatinem/rust-cache@v2` with `shared-key` per job type for cache isolation
-- `--locked` in test/build to enforce Cargo.lock reproducibility
-- Test with `--no-default-features` to verify library builds without CLI deps
-- MSRV job should run `cargo test`, not just `cargo check` (catches runtime issues)
-- Use `rustsec/audit-check@v2` action, not `cargo install cargo-audit` (faster)
+- `Swatinem/rust-cache@v2` for build caching across jobs
+- `--locked` on all cargo commands enforces Cargo.lock reproducibility
+- `RUSTFLAGS: "-D warnings"` in test/build jobs treats warnings as errors
+- `test-lib-only` verifies library builds without CLI feature deps
+- `coverage` uses `cargo-llvm-cov` with `taiki-e/install-action` (faster than
+  `cargo install`) and reports to Codecov
+- `semver-checks` runs only on PRs (needs `fetch-depth: 0` for baseline comparison)
+  to catch API-breaking changes before merge
+- `workflow-scripts` validates the testable release automation scripts
+  (see [Release Automation Scripts](#release-automation-scripts) below)
 - Use `EmbarkStudios/cargo-deny-action@v2` (no manual install needed)
 - Doc build with `-D warnings` catches broken doc links and missing docs
+- Set `CARGO_INCREMENTAL: 0` and `CARGO_PROFILE_TEST_DEBUG: 0` globally for faster
+  CI builds
 
 ### 7.3 Parity Drift Detection for Ports
 
