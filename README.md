@@ -214,6 +214,93 @@ The [playbook](playbooks/python-to-rust-playbook.md) covers these core phases:
 effort, and library workarounds account for roughly half of that.
 Thorough library evaluation in Phase 2 is the single highest-leverage activity.
 
+```mermaid
+flowchart TD
+    BEGIN([Phase 1 gate passed ✓]) --> P2
+
+    subgraph P2["Phase 2: Research & Library Evaluation"]
+        P2_fast{Low-dependency<br/>project?}
+        P2_fast -->|Yes| P2_quick[Map to standard equivalents<br/>regex, serde_json, clap]
+        P2_fast -->|No| P2_1[Evaluate 2-3 candidates<br/>per high-risk dep]
+        P2_1 --> P2_2[Create feature matrices]
+        P2_2 --> P2_3[Run proof-of-concept<br/>with real inputs]
+        P2_3 --> P2_4[Count and categorize diffs]
+        P2_4 --> P2_5[Document decisions<br/>rationale + fallback plans]
+        P2_quick --> P2_5
+        P2_5 --> P2_6[Optional: best-practices<br/>survey for app type]
+    end
+
+    P2 --> P3
+
+    subgraph P3["Phase 3: Plan"]
+        P3_1[Define architecture<br/>single crate vs workspace]
+        P3_2[Create feature parity matrix]
+        P3_3[Plan module porting order<br/>leaf → integration → CLI]
+        P3_4[Define acceptance criteria]
+        P3_5[Budget effort<br/>35-50% for workarounds]
+        P3_1 --> P3_2 --> P3_3 --> P3_4 --> P3_5
+    end
+
+    P3 --> P4
+
+    subgraph P4["Phase 4: Set Up"]
+        P4_1["cargo init project-rs"]
+        P4_2[Configure Cargo.toml<br/>edition, MSRV, lints]
+        P4_3[Add Python source<br/>as git submodule]
+        P4_4[Set up test fixtures<br/>input/ and expected/]
+        P4_5[Set up CI<br/>7+ parallel jobs]
+        P4_6[Track version correspondence<br/>in package.metadata]
+        P4_1 --> P4_2 --> P4_3 --> P4_4 --> P4_5 --> P4_6
+    end
+
+    P4 --> P5
+
+    subgraph P5["Phase 5: Port the Code"]
+        P5_loop["For each module (leaf → root):"]
+        P5_1[Port tests first]
+        P5_2[Implement until tests pass]
+        P5_3[Add traceability comments]
+        P5_4[Run cross-validation]
+        P5_5[Update parity tracking spec]
+        P5_loop --> P5_1 --> P5_2 --> P5_3 --> P5_4 --> P5_5
+        P5_5 -->|Next module| P5_loop
+    end
+
+    P5 --> P6
+
+    subgraph P6["Phase 6: Handle Library Differences"]
+        P6_1[Cross-validate all fixtures]
+        P6_2[Categorize every diff:<br/>porting bug / library diff /<br/>Python bug / improvement]
+        P6_3{Diff category?}
+        P6_1 --> P6_2 --> P6_3
+        P6_3 -->|Porting bug| P6_fix[Fix immediately]
+        P6_3 -->|Library diff| P6_workaround[Try: post-process →<br/>pre-process → accept →<br/>vendor → switch lib]
+        P6_3 -->|Python bug| P6_decide[Replicate for parity<br/>or fix in Rust?]
+        P6_3 -->|Improvement| P6_doc[Document and accept]
+        P6_fix --> P6_track
+        P6_workaround --> P6_track
+        P6_decide --> P6_track
+        P6_doc --> P6_track
+        P6_track[Track all with<br/>HACK:/FIXME: comments]
+    end
+
+    P6_track --> G6{"More than 3 unfixable diffs<br/>or core feature broken?"}
+    G6 -->|"No, or past 50%"| READY([Proceed to Phase 7 ▶])
+    G6 -->|"Yes, early enough"| G6_ret(["⟲ Return to Phase 2:<br/>re-evaluate library choices"])
+
+    style G6_ret fill:#efebe9,stroke:#795548
+    style P2 fill:#e8f4f8,stroke:#2196F3
+    style P3 fill:#e8f4f8,stroke:#2196F3
+    style P4 fill:#e8f4f8,stroke:#2196F3
+    style P5 fill:#fff3e0,stroke:#FF9800
+    style P6 fill:#fff3e0,stroke:#FF9800
+    style G6 fill:#fff9c4,stroke:#FFC107
+```
+
+For the full set of process flow diagrams (Phases 0-1, 2-6, and 7-8), resource
+dependency maps, and document relationships, see the
+[Playbook Flow Analysis](docs/project/playbook-flow-analysis.md).
+
 ## For AI Agents
 
 The `guidelines/` directory contains compact documents (~2-3k tokens each) designed to
