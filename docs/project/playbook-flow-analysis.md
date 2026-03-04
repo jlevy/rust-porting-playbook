@@ -9,13 +9,6 @@ This diagram shows the end-to-end process, including decision gates that block
 progression and feedback loops that send you back to earlier phases.
 
 ```mermaid
----
-config:
-  flowchart:
-    nodeSpacing: 30
-    rankSpacing: 50
-    wrappingWidth: 300
----
 flowchart TD
     START([Start: Python Project]) --> P1
 
@@ -29,16 +22,8 @@ flowchart TD
     end
 
     G1 -->|"Coverage >=80%<br/>All deps have Rust candidates<br/>Scope understood"| P2
-    G1 -->|"Not ready"| P0
-
-    subgraph P0["Phase 0: Remediation"]
-        P0_reason{"Gap?"}
-        P0_reason -->|"Coverage below<br/>threshold"| P0_tests["Enhance test coverage<br/>(Test Coverage Playbook)"]
-        P0_reason -->|"Critical dep has no<br/>Rust equivalent"| P0_deps["Research dependency<br/>alternatives"]
-    end
-
-    P0_tests -.-> P1_3
-    P0_deps -.-> P1_2
+    G1 -->|"Coverage gaps"| P0A(["⟲ Phase 0: Enhance test coverage<br/>(repeat gate when done)"])
+    G1 -->|"Missing Rust<br/>equivalents"| P0B(["⟲ Phase 0: Research alternatives<br/>(repeat gate when done)"])
 
     subgraph P2["Phase 2: Research & Library Evaluation"]
         P2_fast{Low-dependency<br/>project?}
@@ -107,8 +92,8 @@ flowchart TD
         P6_track --> G6{"More than 3 unfixable diffs<br/>or core feature broken?"}
     end
 
-    G6 -->|Yes, early enough| P2_fast
     G6 -->|"No, or past 50%"| P7
+    G6 -->|"Yes, early enough"| G6_ret(["⟲ Return to Phase 2:<br/>re-evaluate library choices"])
 
     subgraph P7["Phase 7: Finalize & Validate"]
         P7_1[Cross-validation gate:<br/>all fixtures pass]
@@ -136,7 +121,9 @@ flowchart TD
         P8_done -->|Next cycle| P8_mode
     end
 
-    style P0 fill:#efebe9,stroke:#795548
+    style P0A fill:#efebe9,stroke:#795548
+    style P0B fill:#efebe9,stroke:#795548
+    style G6_ret fill:#efebe9,stroke:#795548
     style P1 fill:#e8f4f8,stroke:#2196F3
     style P2 fill:#e8f4f8,stroke:#2196F3
     style P3 fill:#e8f4f8,stroke:#2196F3
@@ -150,7 +137,7 @@ flowchart TD
 ```
 
 **Phase color key:**
-- Tan (Phase 0): Remediation — loop back until gate conditions met
+- Tan (Phase 0 / loop-back nodes): Remediation — repeat gate until conditions met
 - Blue (Phases 1-4): Planning and preparation — ~25% of effort
 - Orange (Phases 5-6): Implementation and fixing — ~65% of effort
 - Green (Phase 7): Validation and release — ~10% of effort
