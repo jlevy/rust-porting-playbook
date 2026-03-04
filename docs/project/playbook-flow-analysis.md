@@ -156,26 +156,26 @@ see the inventory table in Section 8.
 ```mermaid
 flowchart LR
     subgraph core["Core References (All Phases)"]
-        PB_CORE["★ python-to-rust-playbook<br/>+ port-checklist-initial-template"]
+        PB_CORE["★ python-to-rust-playbook.md<br/>port-checklist-initial-template.md"]
     end
 
     subgraph playbooks["Playbooks"]
-        PB_TEST["test-coverage-playbook"]
-        PB_PORT["mapping-reference<br/>porting-guide<br/>cross-language-test-mapping"]
-        PB_INFRA["rust-cli-best-practices<br/>code-review-checklist"]
-        PB_SYNC["sync-release-workflow<br/>auto-sync-agent-prompt<br/>port-checklist-update"]
+        PB_TEST["python-to-rust-test-coverage-playbook.md"]
+        PB_PORT["python-to-rust-mapping-reference.md<br/>python-to-rust-porting-guide.md<br/>cross-language-test-mapping.md"]
+        PB_INFRA["rust-cli-best-practices.md<br/>rust-code-review-checklist.md"]
+        PB_SYNC["python-to-rust-sync-release-workflow.md<br/>auto-sync-agent-prompt-template.md<br/>port-checklist-update-template.md"]
     end
 
     subgraph guidelines["Guidelines"]
-        G_TEST_DOC["test-coverage-for-porting"]
-        G_SETUP_DOC["rust-project-setup"]
-        G_IMPL["porting-rules<br/>rust-general-rules<br/>cli-app-patterns, cli-porting<br/>porting-principles<br/>filesystem-heavy-cli-porting"]
+        G_TEST_DOC["test-coverage-for-porting.md"]
+        G_SETUP_DOC["rust-project-setup.md"]
+        G_IMPL["python-to-rust-porting-rules.md<br/>rust-general-rules.md<br/>rust-cli-app-patterns.md<br/>python-to-rust-cli-porting.md<br/>porting-principles-and-antipatterns.md<br/>filesystem-heavy-cli-porting.md"]
     end
 
     subgraph evidence["Research & Case Study"]
-        CS_PLAN_EV["flowmark: analysis,<br/>decisions, library-choices"]
-        CS_VAL_EV["flowmark: cross-validation,<br/>metrics"]
-        R_DIST["research: binary +<br/>PyPI distribution"]
+        CS_PLAN_EV["flowmark-port-analysis.md<br/>flowmark-port-decision-log.md<br/>flowmark-port-library-choices.md"]
+        CS_VAL_EV["flowmark-port-cross-validation.md<br/>flowmark-port-metrics.md"]
+        R_DIST["research-rust-cli-binary-distribution.md<br/>research-rust-cli-pypi-distribution.md"]
     end
 
     PREP["Phases 1-4<br/>Preparation"]
@@ -332,9 +332,9 @@ flowchart TD
     DRAFT --> REVIEW_HUMAN
     UPDATE_LOG -->|"Next port uses<br/>improved playbook"| SELECT
 
-    OBS_T[["case-study-observations-<br/>template.md"]] -.->|Template for| OBSERVE
-    TRI_T[["case-study-improvement-<br/>triage-template.md"]] -.->|Template for| TRIAGE
-    IMP_LOG[["playbook-improvement-<br/>log.md"]] -.->|Append to| UPDATE_LOG
+    OBS_T[["case-study-observations-template.md"]] -.->|Template for| OBSERVE
+    TRI_T[["case-study-improvement-triage-template.md"]] -.->|Template for| TRIAGE
+    IMP_LOG[["playbook-improvement-log.md"]] -.->|Append to| UPDATE_LOG
 
     style execute fill:#e3f2fd,stroke:#1565C0
     style extract fill:#fff3e0,stroke:#E65100
