@@ -9,15 +9,14 @@ This diagram shows the end-to-end process, including decision gates that block
 progression and feedback loops that send you back to earlier phases.
 
 ```mermaid
+---
+config:
+  flowchart:
+    nodeSpacing: 30
+    rankSpacing: 50
+    wrappingWidth: 300
+---
 flowchart TD
-    subgraph P0["Phase 0: Remediation"]
-        P0_tests["Enhance test coverage<br/>(Test Coverage Playbook)"]
-        P0_deps["Research dependency<br/>alternatives"]
-    end
-
-    P0_tests --> P1_3
-    P0_deps --> P1_2
-
     START([Start: Python Project]) --> P1
 
     subgraph P1["Phase 1: Assess"]
@@ -30,8 +29,16 @@ flowchart TD
     end
 
     G1 -->|"Coverage >=80%<br/>All deps have Rust candidates<br/>Scope understood"| P2
-    G1 -->|"Coverage below threshold"| P0_tests
-    G1 -->|"Critical dep has no<br/>Rust equivalent"| P0_deps
+    G1 -->|"Not ready"| P0
+
+    subgraph P0["Phase 0: Remediation"]
+        P0_reason{"Gap?"}
+        P0_reason -->|"Coverage below<br/>threshold"| P0_tests["Enhance test coverage<br/>(Test Coverage Playbook)"]
+        P0_reason -->|"Critical dep has no<br/>Rust equivalent"| P0_deps["Research dependency<br/>alternatives"]
+    end
+
+    P0_tests -.-> P1_3
+    P0_deps -.-> P1_2
 
     subgraph P2["Phase 2: Research & Library Evaluation"]
         P2_fast{Low-dependency<br/>project?}
