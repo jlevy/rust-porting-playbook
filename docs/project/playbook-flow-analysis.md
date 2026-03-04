@@ -10,6 +10,14 @@ progression and feedback loops that send you back to earlier phases.
 
 ```mermaid
 flowchart TD
+    subgraph P0["Phase 0: Remediation"]
+        P0_tests["Enhance test coverage<br/>(Test Coverage Playbook)"]
+        P0_deps["Research dependency<br/>alternatives"]
+    end
+
+    P0_tests --> P1_3
+    P0_deps --> P1_2
+
     START([Start: Python Project]) --> P1
 
     subgraph P1["Phase 1: Assess"]
@@ -24,14 +32,6 @@ flowchart TD
     G1 -->|"Coverage >=80%<br/>All deps have Rust candidates<br/>Scope understood"| P2
     G1 -->|"Coverage below threshold"| P0_tests
     G1 -->|"Critical dep has no<br/>Rust equivalent"| P0_deps
-
-    subgraph P0["Phase 0: Remediation"]
-        P0_tests["Enhance test coverage<br/>(Test Coverage Playbook)"]
-        P0_deps[Research dependency<br/>alternatives]
-    end
-
-    P0_tests --> P1_3
-    P0_deps --> P1_2
 
     subgraph P2["Phase 2: Research & Library Evaluation"]
         P2_fast{Low-dependency<br/>project?}
@@ -100,7 +100,7 @@ flowchart TD
         P6_track --> G6{"More than 3 unfixable diffs<br/>or core feature broken?"}
     end
 
-    G6 -->|Yes, early enough| P2_1
+    G6 -->|Yes, early enough| P2_fast
     G6 -->|"No, or past 50%"| P7
 
     subgraph P7["Phase 7: Finalize & Validate"]
