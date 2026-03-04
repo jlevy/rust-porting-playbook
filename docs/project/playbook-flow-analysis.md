@@ -21,11 +21,17 @@ flowchart TD
         P1_4 --> G1{Gate: Ready to port?}
     end
 
-    G1 -->|"Coverage ≥80%<br/>All deps have Rust candidates<br/>Scope understood"| P2
-    G1 -->|"Coverage below threshold"| P0["Phase 0: Enhance Tests<br/>(Test Coverage Playbook)"]
-    G1 -->|"Critical dep has no<br/>Rust equivalent"| MORE_RESEARCH[More dependency research]
-    P0 --> P1_3
-    MORE_RESEARCH --> P1_2
+    G1 -->|"Coverage >=80%<br/>All deps have Rust candidates<br/>Scope understood"| P2
+    G1 -->|"Coverage below threshold"| P0_tests
+    G1 -->|"Critical dep has no<br/>Rust equivalent"| P0_deps
+
+    subgraph P0["Phase 0: Remediation"]
+        P0_tests[Enhance test coverage<br/>(Test Coverage Playbook)]
+        P0_deps[Research dependency<br/>alternatives]
+    end
+
+    P0_tests --> P1_3
+    P0_deps --> P1_2
 
     subgraph P2["Phase 2: Research & Library Evaluation"]
         P2_fast{Low-dependency<br/>project?}
@@ -123,6 +129,7 @@ flowchart TD
         P8_done -->|Next cycle| P8_mode
     end
 
+    style P0 fill:#ffcdd2,stroke:#C62828
     style P1 fill:#e8f4f8,stroke:#2196F3
     style P2 fill:#e8f4f8,stroke:#2196F3
     style P3 fill:#e8f4f8,stroke:#2196F3
