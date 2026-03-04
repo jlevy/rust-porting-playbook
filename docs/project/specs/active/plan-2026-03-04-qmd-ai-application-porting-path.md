@@ -9,10 +9,11 @@
 ## Overview
 
 Extend the Rust Porting Playbook to support **AI-application-class TypeScript projects**
-using `qmd` as the primary exemplar. This plan assumes the TypeScript-to-Rust core path
-(D1-D9 from `plan-2026-03-04-typescript-to-rust-porting-path.md`) is complete and
-focuses on the harder problems that go beyond CLI/filesystem tooling: LLM inference,
-MCP server protocols, SQLite with vector extensions, and cross-platform native packaging.
+using `qmd` as the primary exemplar.
+This plan assumes the TypeScript-to-Rust core path (D1-D9 from
+`plan-2026-03-04-typescript-to-rust-porting-path.md`) is complete and focuses on the
+harder problems that go beyond CLI/filesystem tooling: LLM inference, MCP server
+protocols, SQLite with vector extensions, and cross-platform native packaging.
 
 ## Dependency on Prior Plan
 
@@ -22,8 +23,8 @@ This plan depends on:
 - The `tbd` exemplar audit (D11-D12 from prior plan) as a simpler baseline
 
 The prior plan provides the core TS-to-Rust type mappings, CLI porting patterns, test
-coverage strategy, and async guidance. This plan extends those into application-tier
-complexity.
+coverage strategy, and async guidance.
+This plan extends those into application-tier complexity.
 
 ## Goals
 
@@ -42,7 +43,7 @@ complexity.
 
 - Executing an actual qmd port (that would be a case study).
 - Rewriting or duplicating guidance already covered by the core TS-to-Rust plan.
-- Full coverage of every possible AI/ML porting pattern (focus on qmd's specific stack).
+- Full coverage of every possible AI/ML porting pattern (focus on qmd’s specific stack).
 - Bun-specific porting — qmd uses Bun but the Rust target eliminates runtime branching.
 
 ## Background
@@ -80,7 +81,7 @@ Acquisition workflow:
 
 ### Existing Research (Already Produced)
 
-The following research artifacts were produced during the prior plan's exploratory phase
+The following research artifacts were produced during the prior plan’s exploratory phase
 and are inputs to this plan:
 
 - `docs/project/research/research-qmd-dependency-port-plan.md` — Direct dependency
@@ -123,7 +124,7 @@ TS-to-Rust plan (D1-D9):
 
 ### Risk-Ordered Dependency Analysis
 
-Based on the existing research, qmd's dependencies sort into three risk tiers:
+Based on the existing research, qmd’s dependencies sort into three risk tiers:
 
 **Tier 1 — Very High Risk (Require Dedicated Spikes):**
 
@@ -166,7 +167,7 @@ Must include:
 
 DoD:
 - Every construct family from the exemplar has at least one mapped destination doc.
-- No `not covered` item remains without an explicit planned update or "out of scope"
+- No `not covered` item remains without an explicit planned update or “out of scope”
   justification.
 
 ### QD2. Update `research-qmd-dependency-port-plan.md`
@@ -179,7 +180,8 @@ Must include:
 - Updated risk ratings based on spike findings.
 
 DoD:
-- Every runtime dependency has a validated Rust target (not just "cargo search" verified).
+- Every runtime dependency has a validated Rust target (not just “cargo search”
+  verified).
 - Spike results are incorporated with measurable exit criteria status.
 
 ### QD3. New Playbook Sections for AI-Application Patterns
@@ -197,8 +199,8 @@ These may be added as sections in existing docs or as new standalone docs depend
 size. Decide after QD1.
 
 DoD:
-- Every `not covered` gap from QD1 has corresponding guidance or an explicit "out of
-  scope" decision.
+- Every `not covered` gap from QD1 has corresponding guidance or an explicit “out of
+  scope” decision.
 
 ### QD4. Spike: LLM Backend Decision
 
@@ -249,7 +251,7 @@ Exit criteria:
 
 ### QD7. Spike: Glob/Pattern Parity
 
-Purpose: validate `globset`/`walkdir` against qmd's current file discovery behavior.
+Purpose: validate `globset`/`walkdir` against qmd’s current file discovery behavior.
 
 Evaluate:
 - Glob pattern behavior parity with `fast-glob` and `picomatch`.
@@ -294,7 +296,8 @@ Run spikes in priority order (QD4 is highest leverage):
 ### Construct Coverage Check
 
 - [ ] Every construct family from `qmd` maps to at least one playbook doc.
-- [ ] No `not covered` item remains without planned guidance or explicit scope exclusion.
+- [ ] No `not covered` item remains without planned guidance or explicit scope
+  exclusion.
 
 ### Dependency Coverage Check
 
@@ -318,7 +321,7 @@ Run spikes in priority order (QD4 is highest leverage):
 | LLM Rust bindings too immature for production use | Very High | Spike QD4 evaluates fallback to external server approach |
 | `rmcp` SDK lacks feature parity with JS MCP SDK | High | Spike QD5 produces gap list; worst case: partial hand-rolled transport |
 | sqlite-vec not available on all target platforms | High | Spike QD6 validates; graceful degradation is required behavior |
-| Scope creep into general AI-application porting patterns | Medium | Keep guidance focused on qmd's specific stack; generalize only if validated |
+| Scope creep into general AI-application porting patterns | Medium | Keep guidance focused on qmd’s specific stack; generalize only if validated |
 | This plan becomes stale if core TS plan (D1-D9) changes | Medium | Explicit dependency declaration; re-validate after D9 completion |
 
 ## Open Questions
@@ -327,10 +330,10 @@ Run spikes in priority order (QD4 is highest leverage):
   (llama.cpp only)?
 - Is `rmcp` mature enough to recommend, or should the playbook document a hand-rolled
   MCP transport as the primary path?
-- Should this plan produce a standalone "AI application porting" guideline, or should
+- Should this plan produce a standalone “AI application porting” guideline, or should
   findings be integrated as sections into existing docs?
 - After spikes complete, is qmd actually portable with reasonable effort, or should the
-  playbook explicitly document it as "beyond current scope"?
+  playbook explicitly document it as “beyond current scope”?
 
 ## References
 

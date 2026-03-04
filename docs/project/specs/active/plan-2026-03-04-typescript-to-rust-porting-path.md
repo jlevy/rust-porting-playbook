@@ -335,50 +335,50 @@ DoD:
 ### D9. Generalize Existing Shared Docs
 
 Purpose: ensure all general-purpose docs are language-neutral or explicitly mention both
-Python and TypeScript. Files that are legitimately Python-specific by name
-(`python-to-rust-*.md`) stay as-is.
+Python and TypeScript.
+Files that are legitimately Python-specific by name (`python-to-rust-*.md`) stay as-is.
 
 Required updates (with specific changes):
 
 **README.md:**
-- Remove "Currently focused on Python-to-Rust porting" caveat; state both languages
+- Remove “Currently focused on Python-to-Rust porting” caveat; state both languages
   supported.
-- Change "thoroughly testable Python apps" to language-neutral phrasing.
+- Change “thoroughly testable Python apps” to language-neutral phrasing.
 - Add TypeScript bootstrap instructions alongside Python ones (or make template
   language-agnostic with parameters).
-- Update "How to contribute a case study" to mention TypeScript projects.
+- Update “How to contribute a case study” to mention TypeScript projects.
 - Add TypeScript playbook entry points to reference docs table.
 
 **`guidelines/test-coverage-for-porting.md`:**
-- Change "High test coverage in the Python source" to language-neutral ("source
+- Change “High test coverage in the Python source” to language-neutral ("source
   implementation").
 - Add TypeScript coverage examples alongside Python ones (Vitest, c8).
 - Generalize fixture generation commands to show both Python and TS examples.
 
 **`guidelines/rust-cli-app-patterns.md`:**
-- Change "If you do not have a Python source to track" to "source language" (line ~458).
+- Change “If you do not have a Python source to track” to “source language” (line ~458).
 - Update CLI patterns reference to list both Python and TypeScript guideline links.
 
 **`guidelines/rust-project-setup.md`:**
-- Change "When porting from Python, include the source as a submodule" to
+- Change “When porting from Python, include the source as a submodule” to
   language-neutral with both Python and TypeScript examples.
 
 **`playbooks/port-checklist-initial-template.md`:**
 - Replace Python-specific language throughout with language-neutral phrasing ("source
-  module", "source implementation", "reference implementation").
-- Generalize: "Note Python version" → "Note source language version".
-- Generalize: "Identify Rust equivalent for each Python dependency" → "for each source
-  dependency".
+  module", “source implementation”, “reference implementation”).
+- Generalize: “Note Python version” → “Note source language version”.
+- Generalize: “Identify Rust equivalent for each Python dependency” → “for each source
+  dependency”.
 - Generalize: regex anchoring, dict ordering, and testing sections to be
   language-neutral with Python/TS as examples.
-- Generalize: "Processing speed 10-100x faster than Python" → relative to source
+- Generalize: “Processing speed 10-100x faster than Python” → relative to source
   language baseline.
 
 **`playbooks/port-checklist-update-template.md`:**
 - Add header note that this is a Python-specific template; TypeScript variant follows
   same structure with different tooling.
 - Generalize sync workflow references where possible ("source language changes" instead
-  of "Python changes").
+  of “Python changes”).
 
 **`playbooks/auto-sync-agent-prompt-template.md`:**
 - Make template language-agnostic: use `<SOURCE_REPO_PATH>`, `<SOURCE_LANGUAGE>` instead
@@ -386,8 +386,8 @@ Required updates (with specific changes):
 - Add note that template works for both Python and TypeScript source projects.
 
 **`playbooks/python-to-rust-sync-release-workflow.md`:**
-- Add header note that this is a Python-specific example; same workflow structure applies
-  to TypeScript with different tooling.
+- Add header note that this is a Python-specific example; same workflow structure
+  applies to TypeScript with different tooling.
 
 **No changes needed (already language-neutral or legitimately language-specific):**
 - `guidelines/porting-principles-and-antipatterns.md` — principles are universal despite
@@ -527,8 +527,8 @@ complete. See `plan-2026-03-04-qmd-ai-application-porting-path.md`.
 
 - [ ] Update `README.md`: remove Python-only caveat, add TypeScript bootstrap
   instructions, add TS playbook entry points to reference table.
-- [ ] Update `guidelines/test-coverage-for-porting.md`: language-neutral phrasing,
-  add TS coverage examples.
+- [ ] Update `guidelines/test-coverage-for-porting.md`: language-neutral phrasing, add
+  TS coverage examples.
 - [ ] Update `guidelines/rust-cli-app-patterns.md`: generalize source-language
   references.
 - [ ] Update `guidelines/rust-project-setup.md`: add TS submodule example alongside
