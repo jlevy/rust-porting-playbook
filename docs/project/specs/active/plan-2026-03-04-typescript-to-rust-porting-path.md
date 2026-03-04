@@ -12,18 +12,19 @@ Extend the Rust Porting Playbook to support **TypeScript as a source language** 
 comparable depth to the existing Python-to-Rust path.
 
 This effort adds TypeScript-specific playbooks/guidelines while keeping core process and
-Rust-target guidance shared. The result should be a reliable, citation-backed path an AI
-agent can use to port a real TypeScript project to Rust with strong parity and test
-rigor.
+Rust-target guidance shared.
+The result should be a reliable, citation-backed path an AI agent can use to port a real
+TypeScript project to Rust with strong parity and test rigor.
 
 ## Executive Decisions (2026-03-04)
 
 These decisions remove ambiguity and unblock writing:
 
-1. **Runtime scope:** Node.js is primary. Bun is supported as a variant where behavior is
-   materially different. Deno is explicitly deferred.
-2. **Project scope:** CLI tools and filesystem-heavy tooling are first-class. Browser/DOM
-   frameworks are out of scope for this iteration.
+1. **Runtime scope:** Node.js is primary.
+   Bun is supported as a variant where behavior is materially different.
+   Deno is explicitly deferred.
+2. **Project scope:** CLI tools and filesystem-heavy tooling are first-class.
+   Browser/DOM frameworks are out of scope for this iteration.
 3. **Structure strategy:** Deliver TypeScript docs in the current flat structure first.
    Directory reorganization is a separate follow-up after content stabilizes.
 4. **Evidence standard:** Any claim that is version-sensitive (tool versions, action
@@ -128,8 +129,8 @@ Construct families observed in `tbd` that the porting playbook must cover:
   grouped help, colorized help).
 - Terminal/runtime behavior (`NO_COLOR`, TTY checks, pager usage, EPIPE and SIGINT
   handling, JSON/text dual output).
-- Filesystem safety patterns (atomic writes via `atomically`, lock-directory coordination,
-  backups, migration paths).
+- Filesystem safety patterns (atomic writes via `atomically`, lock-directory
+  coordination, backups, migration paths).
 - YAML/Markdown/Zod stack (frontmatter parsing, YAML conflict detection, schema
   validation, canonical field ordering).
 - Git subprocess/worktree orchestration (isolated index, merge/retry flow, conflict
@@ -153,51 +154,7 @@ Initial mapping of exemplar constructs against this plan revision:
 | Dynamic imports for lazy/conditional loading | partial | D1, D6 | Add decision rule: preserve/lift/replace dynamic imports |
 | Vitest + tryscript golden testing + coverage merge | covered | D5 | Keep Node vs Bun tooling caveats explicit |
 
-The D11 matrix deliverable formalizes this snapshot at a fixed commit SHA and tracks gap
-closure.
-
-### Local Exemplar Codebase Audit Input: `tobi/qmd`
-
-To avoid overfitting the guidance to one exemplar, we audit `qmd` as a second real-world
-TypeScript CLI with heavy local-AI and SQLite usage.
-
-Acquisition workflow (required):
-1. Run `tbd shortcut checkout-third-party-repo` to load canonical instructions.
-2. Ensure local attic clone path exists and is gitignored (`attic/`).
-3. Clone `https://github.com/tobi/qmd` to `attic/qmd`.
-4. Record the audited commit SHA in the coverage matrix deliverable.
-
-Construct families observed in `qmd` that the porting playbook must cover:
-- Non-Commander CLI architecture (`util.parseArgs`, manual subcommand routing).
-- Terminal behavior and UX (`NO_COLOR`, TTY checks, hardcoded ANSI, progress bar OSC
-  sequences, SIGINT/SIGTERM cursor restoration).
-- SQLite-centric architecture (`better-sqlite3`, extension loading, schema/search flows).
-- Vector extension loading and platform packaging (`sqlite-vec` plus platform-specific
-  optional dependencies).
-- Local LLM inference integration (`node-llama-cpp`, model lifecycle, timeouts,
-  cancellation, reranking/embedding flows).
-- MCP server support over stdio and HTTP transports.
-- Cross-runtime Node/Bun conditionals and dynamic imports.
-- YAML configuration and context metadata management.
-- Child-process orchestration (`spawn`, `execSync`) for update/daemon workflows.
-
-#### Preliminary Coverage Snapshot (`attic/qmd`, 2026-03-04)
-
-Initial mapping of exemplar constructs against this plan revision:
-
-| Exemplar Construct Family | Coverage Status | Primary Destination Docs | Required Strengthening |
-| --- | --- | --- | --- |
-| parseArgs/manual CLI routing (no Commander) | partial | D3, D4 | Add non-Commander CLI-to-clap migration patterns |
-| ANSI/progress/cursor/signal handling | partial | D4, D6 | Add explicit terminal-control and signal parity guidance |
-| SQLite core (`better-sqlite3`) | partial | D2, D6 | Add DB abstraction and query parity migration recipes |
-| `sqlite-vec` optional/platform packaging | partial | D6, D8 | Add extension loading + platform distribution guidance |
-| local LLM runtime (`node-llama-cpp`) | partial | D7, D6 | Add backend strategy decision tree and timeout/cancellation mapping |
-| MCP stdio+HTTP server behavior | partial | D6 | Add MCP-specific porting section and protocol validation checklist |
-| Node/Bun runtime branching + dynamic import | partial | D1, D6 | Add cross-runtime simplification rules and mapping examples |
-| YAML config + schema validation | covered | D1, D2, D6 | Keep deterministic serialization and validation coverage strict |
-| Vitest-based test suite | covered | D5 | Extend with qmd-style integration fixtures and CLI parity harness |
-
-The D11/D12/D13 deliverables formalize this snapshot at fixed commit SHAs and track gap
+The D11 and D12 deliverables formalize this snapshot at a fixed commit SHA and track gap
 closure.
 
 ### Ecosystem Snapshot (As of 2026-03-04)
@@ -294,8 +251,8 @@ Purpose: full 8-phase workflow for TS→Rust execution.
 
 Must include:
 - Phase gates and pass/fail criteria per phase.
-- Source assessment for `package.json`, lockfiles, workspace topology, tsconfig,
-  test tooling.
+- Source assessment for `package.json`, lockfiles, workspace topology, tsconfig, test
+  tooling.
 - Port order strategy, parity matrix template, traceability requirements.
 - Sync/update workflow for upstream TypeScript releases.
 
@@ -310,7 +267,8 @@ Purpose: CLI-specific mapping for Commander/yargs/oclif to clap.
 Must include:
 - Option/flag mapping patterns and Commander gotchas (`--no-*` behavior).
 - Output/color behavior parity and precedence policy.
-- TTY, piping, pager integration, EPIPE/SIGPIPE, SIGINT, and exit-code parity expectations.
+- TTY, piping, pager integration, EPIPE/SIGPIPE, SIGINT, and exit-code parity
+  expectations.
 - Shell completion and help-output parity guidance.
 
 DoD:
@@ -336,10 +294,10 @@ DoD:
 Purpose: deep methodology and recurring pitfall handling.
 
 Must include:
-- JS numeric semantics, null/undefined behavior, prototype/class migration,
-  `this` binding pitfalls, module boundaries, error propagation patterns.
-- File safety and durability patterns: atomic writes, lock coordination, backup/migration
-  workflows.
+- JS numeric semantics, null/undefined behavior, prototype/class migration, `this`
+  binding pitfalls, module boundaries, error propagation patterns.
+- File safety and durability patterns: atomic writes, lock coordination,
+  backup/migration workflows.
 - Git subprocess + worktree orchestration patterns (including conflict and retry flows).
 - Dynamic import migration patterns (preserve vs replace).
 - Practical “investigate before fix” workflow for parity diffs.
@@ -407,10 +365,10 @@ Must include:
 - Audited `attic/tbd` commit SHA and audit date.
 - Construct inventory extracted from `tbd` (setup, runtime, filesystem, git, testing,
   typing patterns).
-- Coverage matrix mapping each construct family to specific playbook deliverables (D1-D8)
-  and existing shared docs.
-- For each construct family, explicit Rust-side destination mapping
-  (stdlib primitive, crate, and/or implementation pattern expected in the port).
+- Coverage matrix mapping each construct family to specific playbook deliverables
+  (D1-D8) and existing shared docs.
+- For each construct family, explicit Rust-side destination mapping (stdlib primitive,
+  crate, and/or implementation pattern expected in the port).
 - Gap classification (`covered`, `partially covered`, `not covered`) with required doc
   updates.
 - Prioritized follow-up checklist for uncovered/partial areas.
@@ -429,8 +387,8 @@ Must include:
   validation gates, and risk rating.
 - Explicit plans for CLI, markdown/frontmatter, YAML/schema, color/output, and
   test/coverage tool migration.
-- Companion lockfile-level transitive appendix with one-row-per-lock-entry inventory
-  and action classification.
+- Companion lockfile-level transitive appendix with one-row-per-lock-entry inventory and
+  action classification.
 
 DoD:
 - No direct dependency from `attic/tbd/package.json` and
@@ -439,29 +397,8 @@ DoD:
   preserving package-scope distinctions.
 - Every runtime dependency has either a Rust crate target or an explicit in-house
   implementation plan.
-- No lock entry from `attic/tbd/pnpm-lock.yaml` is left without an action
-  classification or owner mapping.
-
-### D13. `docs/project/research/research-qmd-dependency-port-plan.md`
-
-Purpose: dependency-by-dependency migration plan for all direct `qmd` dependencies.
-
-Must include:
-- Full direct dependency inventory (runtime, optional, peer, dev/build toolchain).
-- For each dependency: current role, Rust target (crate/pattern), migration steps,
-  validation gates, and risk rating.
-- Explicit high-risk plans for LLM runtime, sqlite-vec packaging, MCP transports, and
-  glob/pattern behavior.
-- Companion lockfile-level transitive appendix with one-row-per-lock-entry inventory
-  and action classification.
-
-DoD:
-- No direct dependency from `attic/qmd/package.json` is omitted.
-- Dependency tables are one row per dependency entry (no grouped dependency rows).
-- High-risk dependencies (`node-llama-cpp`, `sqlite-vec`, MCP SDK) each have a spike
-  plan and exit criteria.
-- No lock entry from `attic/qmd/bun.lock` is left without an action classification or
-  owner mapping.
+- No lock entry from `attic/tbd/pnpm-lock.yaml` is left without an action classification
+  or owner mapping.
 
 ## Content Mapping: Python Documents to TypeScript Counterparts
 
@@ -480,7 +417,8 @@ DoD:
 
 ### Phase 0: Finalize Constraints and Templates
 
-- [ ] Confirm runtime scope in this plan text (Node primary, Bun variant, Deno deferred).
+- [ ] Confirm runtime scope in this plan text (Node primary, Bun variant, Deno
+  deferred).
 - [ ] Define standard section templates for D1-D7 so docs are structurally consistent.
 - [ ] Add reference discipline rule: version-sensitive claims need source + as-of date.
 
@@ -504,29 +442,27 @@ using only existing Rust docs + D1-D5.
 **Exit gate:** Deep pitfalls and npm distribution decisions are fully documented with
 primary-source evidence.
 
-### Phase 2.5: Exemplar Audits and Dependency Plans (D11-D13)
+### Phase 2.5: Exemplar Audit and Dependency Plan (D11-D12)
 
 - [ ] Acquire/update `tbd` exemplar using `tbd shortcut checkout-third-party-repo` flow
   (`attic/tbd`).
-- [ ] Acquire/update `qmd` exemplar using `tbd shortcut checkout-third-party-repo` flow
-  (`attic/qmd`).
 - [ ] Produce `research-tbd-construct-coverage-matrix.md` with audited commit SHA and
   construct inventory.
 - [ ] Produce `research-tbd-dependency-port-plan.md` with full dependency mapping and
   migration strategy.
-- [ ] Produce `research-qmd-dependency-port-plan.md` with full dependency mapping and
-  migration strategy.
 - [ ] Produce `research-tbd-transitive-lockfile-appendix.md` with `pnpm-lock.yaml`
   inventory and action coverage.
-- [ ] Produce `research-qmd-transitive-lockfile-appendix.md` with `bun.lock` inventory
-  and action coverage.
 - [ ] Map exemplar constructs and dependencies to target docs (D1-D8/shared docs) and
   classify coverage.
 - [ ] Create explicit follow-up items for any uncovered or weakly covered construct or
   dependency.
 
-**Exit gate:** No critical construct or dependency from `tbd`/`qmd` remains unmapped to
-the TS-to-Rust playbook without an action item.
+**Exit gate:** No critical construct or dependency from `tbd` remains unmapped to the
+TS-to-Rust playbook without an action item.
+
+Note: A separate plan spec covers `qmd` as a more complex AI-application exemplar (LLM
+inference, MCP server, vector DB). That work depends on D1-D9 from this plan being
+complete. See `plan-2026-03-04-qmd-ai-application-porting-path.md`.
 
 ### Phase 3: Integration (D9)
 
@@ -546,7 +482,8 @@ the TS-to-Rust playbook without an action item.
 ### Accuracy and Citation Checks
 
 - [ ] Every version-sensitive claim has a source URL and as-of date.
-- [ ] Type/async mappings reviewed for semantic correctness (not just syntax similarity).
+- [ ] Type/async mappings reviewed for semantic correctness (not just syntax
+  similarity).
 - [ ] CLI behavior mappings validated against Node/Rust docs for terminal and exit
   behavior.
 
@@ -579,16 +516,14 @@ the TS-to-Rust playbook without an action item.
   subprocess+timeout, git worktree merge/conflict flows) are explicitly addressed in
   TypeScript-path docs.
 
-### Dependency Coverage Check (`attic/tbd` and `attic/qmd`)
+### Dependency Coverage Check (`attic/tbd`)
 
-- [ ] Verify every direct dependency from audited package manifests appears in D12 or D13.
+- [ ] Verify every direct dependency from audited package manifests appears in D12.
 - [ ] Verify each runtime dependency has a concrete Rust target or explicit in-house
   implementation plan.
 - [ ] Verify high-risk dependencies have spike plans and measurable exit criteria.
-- [ ] Verify every lock entry from `attic/tbd/pnpm-lock.yaml` and `attic/qmd/bun.lock`
-  appears in transitive inventory artifacts with action classification.
-- [ ] Verify lockfile alias/name mismatches (if any) are documented and normalized in
-  coverage checks.
+- [ ] Verify every lock entry from `attic/tbd/pnpm-lock.yaml` appears in transitive
+  inventory artifacts with action classification.
 
 ## Risks and Mitigations
 
@@ -598,7 +533,7 @@ the TS-to-Rust playbook without an action item.
 | Tool/version drift (TS, Node, Vitest, Actions, etc.) | High | Source + as-of policy; periodic refresh checklist |
 | Node/Bun differences create inconsistent advice | High | Node-primary baseline + clearly marked Bun variants |
 | Synthetic examples miss real-world construct complexity | High | Run D11 `tbd` exemplar coverage matrix and close uncovered areas |
-| Dependency blind spots (native/LLM/MCP/vector stacks) | High | Run D12/D13 full dependency plans and require spike gates for high-risk deps |
+| Dependency blind spots in `tbd` runtime stack | High | Run D12 full dependency plan and require spike gates for high-risk deps |
 | Reorganization breaks references | Medium | Defer move; validate links before and after |
 | Docs become too broad and lose practical focus | Medium | Keep CLI/filesystem tooling as primary scenario |
 
@@ -606,7 +541,7 @@ the TS-to-Rust playbook without an action item.
 
 1. Ship D1-D5 first (usable path).
 2. Add D6-D8 depth and research.
-3. Run D11-D13 exemplar audits and dependency plans (`tbd` + `qmd`) and close critical gaps.
+3. Run D11-D12 exemplar audit and dependency plan (`tbd`) and close critical gaps.
 4. Integrate D9 and validate navigation.
 5. Consider D10 reorganization only after stability.
 
@@ -651,17 +586,24 @@ Version drift policy:
 
 ### External Primary Sources
 
-- TypeScript Handbook: https://www.typescriptlang.org/docs/handbook/2/everyday-types.html
+- TypeScript Handbook:
+  https://www.typescriptlang.org/docs/handbook/2/everyday-types.html
 - TypeScript Generics: https://www.typescriptlang.org/docs/handbook/2/generics.html
-- TypeScript Conditional Types: https://www.typescriptlang.org/docs/handbook/2/conditional-types.html
-- TypeScript Template Literal Types: https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html
-- TSConfig `strictNullChecks`: https://www.typescriptlang.org/tsconfig/strictNullChecks.html
+- TypeScript Conditional Types:
+  https://www.typescriptlang.org/docs/handbook/2/conditional-types.html
+- TypeScript Template Literal Types:
+  https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html
+- TSConfig `strictNullChecks`:
+  https://www.typescriptlang.org/tsconfig/strictNullChecks.html
 - Node package entry points (`exports`/`imports`): https://nodejs.org/api/packages.html
 - Node process/TTY behavior: https://nodejs.org/api/process.html
-- npm `package.json` fields (`optionalDependencies`, `os`, `cpu`, `libc`): https://docs.npmjs.com/cli/v11/configuring-npm/package-json
+- npm `package.json` fields (`optionalDependencies`, `os`, `cpu`, `libc`):
+  https://docs.npmjs.com/cli/v11/configuring-npm/package-json
 - Rust `std::io::IsTerminal`: https://doc.rust-lang.org/std/io/trait.IsTerminal.html
-- Rust `std::process::ExitCode`: https://doc.rust-lang.org/std/process/struct.ExitCode.html
-- Rust `std::convert::Infallible`: https://doc.rust-lang.org/std/convert/enum.Infallible.html
+- Rust `std::process::ExitCode`:
+  https://doc.rust-lang.org/std/process/struct.ExitCode.html
+- Rust `std::convert::Infallible`:
+  https://doc.rust-lang.org/std/convert/enum.Infallible.html
 - Rust never type docs: https://doc.rust-lang.org/std/primitive.never.html
 - Tokio `join!`: https://docs.rs/tokio/latest/tokio/macro.join.html
 - Tokio `select!`: https://docs.rs/tokio/latest/tokio/macro.select.html
@@ -670,10 +612,11 @@ Version drift policy:
 - Vitest coverage guide: https://vitest.dev/guide/coverage.html
 - c8 package: https://www.npmjs.com/package/c8
 - Bun test coverage: https://bun.sh/docs/test/coverage
-- cargo-dist npm installers: https://opensource.axo.dev/cargo-dist/book/installers/npm.html
+- cargo-dist npm installers:
+  https://opensource.axo.dev/cargo-dist/book/installers/npm.html
 - tryscript package/docs entry: https://www.npmjs.com/package/tryscript
 - esbuild package: https://www.npmjs.com/package/esbuild
 - Biome package: https://www.npmjs.com/package/@biomejs/biome
 - oxlint package: https://www.npmjs.com/package/oxlint
 - tbd exemplar repo: https://github.com/jlevy/tbd
-- qmd exemplar repo: https://github.com/tobi/qmd
+- qmd exemplar repo (deferred to separate plan): https://github.com/tobi/qmd
