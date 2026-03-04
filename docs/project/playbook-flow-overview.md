@@ -477,11 +477,11 @@ flowchart TD
 | # | Document | Layer | Primary phases | Purpose |
 | --- | --- | --- | --- | --- |
 | 1 | `python-to-rust-playbook.md` | Playbook | All | Canonical 8-phase process |
-| 2 | `python-to-rust-mapping-reference.md` | Playbook | 2, 5 | Type and API mappings |
+| 2 | `python-to-rust-mapping-reference.md` | Reference | 2, 5 | Type and API mappings |
 | 3 | `python-to-rust-porting-guide.md` | Playbook | 5, 6 | Deep methodology and pitfalls |
-| 4 | `rust-cli-best-practices.md` | Playbook | 4, 7 | CI, linting, releases, distribution |
-| 5 | `rust-code-review-checklist.md` | Playbook | 7 | 150+ quality checks |
-| 6 | `cross-language-test-mapping.md` | Playbook | 5, 6, 7 | YAML test traceability + CI gates |
+| 4 | `rust-cli-best-practices.md` | Reference | 4, 7 | CI, linting, releases, distribution |
+| 5 | `rust-code-review-checklist.md` | Reference | 7 | 150+ quality checks |
+| 6 | `cross-language-test-mapping.md` | Reference | 5, 6, 7 | YAML test traceability + CI gates |
 | 7 | `python-to-rust-test-coverage-playbook.md` | Playbook | 1 (Phase 0) | Pre-port test enhancement |
 | 8 | `port-checklist-initial-template.md` | Playbook | 1-7 | Copy-and-fill execution checklist |
 | 9 | `port-checklist-update-template.md` | Playbook | 8 | Sync execution checklist |
@@ -490,7 +490,7 @@ flowchart TD
 | 12 | `python-to-rust-porting-rules.md` | Guideline | 5 | Core rules for agent context |
 | 13 | `python-to-rust-cli-porting.md` | Guideline | 5, 7 | CLI-specific porting patterns |
 | 14 | `rust-general-rules.md` | Guideline | 5 | Edition 2024+ best practices |
-| 15 | `rust-cli-app-patterns.md` | Guideline | 5 | CLI patterns (clap, errors, testing) |
+| 15 | `rust-cli-app-patterns.md` | Reference | 5 | CLI patterns (clap, errors, testing) |
 | 16 | `rust-project-setup.md` | Guideline | 4 | Cargo.toml, CI, release automation |
 | 17 | `test-coverage-for-porting.md` | Guideline | 1 | Test strategy for agent context |
 | 18 | `porting-principles-and-antipatterns.md` | Guideline | 5, 6 | 8 non-negotiable principles |

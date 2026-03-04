@@ -161,23 +161,24 @@ rust-porting-playbook/
 │       ├── README.md
 │       ├── active/
 │       └── done/
-├── playbooks/                 # Core playbook and detailed reference docs
+├── playbooks/                 # Step-by-step process guides
 │   ├── python-to-rust-playbook.md        ** START HERE **
-│   ├── python-to-rust-mapping-reference.md
 │   ├── python-to-rust-porting-guide.md
-│   ├── rust-cli-best-practices.md
-│   ├── rust-code-review-checklist.md
-│   ├── cross-language-test-mapping.md
 │   ├── python-to-rust-test-coverage-playbook.md
+│   ├── python-to-rust-sync-release-workflow.md
 │   ├── port-checklist-initial-template.md
 │   ├── port-checklist-update-template.md
-│   ├── auto-sync-agent-prompt-template.md
-│   └── python-to-rust-sync-release-workflow.md
+│   └── auto-sync-agent-prompt-template.md
+├── references/                # Lookup tables, checklists, and pattern catalogs
+│   ├── python-to-rust-mapping-reference.md
+│   ├── rust-cli-best-practices.md
+│   ├── rust-cli-app-patterns.md
+│   ├── rust-code-review-checklist.md
+│   └── cross-language-test-mapping.md
 ├── guidelines/                # Compact rules for AI agent context (~2-3k tokens each)
 │   ├── python-to-rust-porting-rules.md
 │   ├── python-to-rust-cli-porting.md
 │   ├── rust-general-rules.md
-│   ├── rust-cli-app-patterns.md
 │   ├── rust-project-setup.md
 │   ├── test-coverage-for-porting.md
 │   ├── porting-principles-and-antipatterns.md
@@ -202,7 +203,8 @@ rust-porting-playbook/
 
 | Layer | Directory | Purpose | When to use |
 | --- | --- | --- | --- |
-| **Playbook + Reference** | `playbooks/` | Step-by-step process, detailed mappings, checklists | Start here. The playbook is the primary doc. |
+| **Playbooks** | `playbooks/` | Step-by-step process guides and checklists | Start here. The playbook is the primary doc. |
+| **References** | `references/` | Lookup tables, checklists, and pattern catalogs | Ctrl-F during implementation |
 | **Guidelines** | `guidelines/` | Compact rules optimized for AI agent context windows | Load into agent context before porting |
 | **Research** | `docs/project/research/` | In-depth investigation of specific topics (distribution, packaging) | When you need deep research on a specific area |
 | **Case Studies** | `case-studies/` | Real-world examples with decisions, metrics, lessons | When you hit a specific problem and want to see how it was handled |
@@ -212,6 +214,7 @@ rust-porting-playbook/
 
 - **Playbook:** normative end-to-end process (what to do, in order)
 - **Guide:** deep explanatory detail and implementation patterns
+- **Reference:** lookup tables, checklists, and pattern catalogs (ctrl-F during work)
 - **Checklist template:** copy-and-fill execution checklist for a run
 - **Guideline:** compact high-signal rules for agent context windows
 - **Case study:** empirical evidence from a real port
@@ -333,7 +336,7 @@ context. The key guidelines for porting are:
 - `guidelines/python-to-rust-porting-rules.md` — Core porting rules
 - `guidelines/rust-project-setup.md` — Project setup patterns
 - `guidelines/rust-general-rules.md` — General Rust best practices
-- `guidelines/rust-cli-app-patterns.md` — CLI application patterns
+- `references/rust-cli-app-patterns.md` — CLI application patterns
 - `guidelines/python-to-rust-cli-porting.md` — CLI-specific porting rules
 - `guidelines/test-coverage-for-porting.md` — Test coverage strategy
 - `guidelines/porting-principles-and-antipatterns.md` — Principles and antipatterns
@@ -348,11 +351,11 @@ automation, test organization, maturin/PyPI distribution, and more).
 | Document | What it covers |
 | --- | --- |
 | [python-to-rust-playbook.md](playbooks/python-to-rust-playbook.md) | The complete phased porting process |
-| [python-to-rust-mapping-reference.md](playbooks/python-to-rust-mapping-reference.md) | Type mappings, project setup equivalences, dependency tables |
+| [python-to-rust-mapping-reference.md](references/python-to-rust-mapping-reference.md) | Type mappings, project setup equivalences, dependency tables |
 | [python-to-rust-porting-guide.md](playbooks/python-to-rust-porting-guide.md) | Detailed methodology with pitfalls and automation scripts |
-| [rust-cli-best-practices.md](playbooks/rust-cli-best-practices.md) | Modern Rust CLI project setup (CI, linting, releases, tooling) |
-| [rust-code-review-checklist.md](playbooks/rust-code-review-checklist.md) | Code review checklist for Rust ports |
-| [cross-language-test-mapping.md](playbooks/cross-language-test-mapping.md) | YAML-based test mapping with CI enforcement |
+| [rust-cli-best-practices.md](references/rust-cli-best-practices.md) | Modern Rust CLI project setup (CI, linting, releases, tooling) |
+| [rust-code-review-checklist.md](references/rust-code-review-checklist.md) | Code review checklist for Rust ports |
+| [cross-language-test-mapping.md](references/cross-language-test-mapping.md) | YAML-based test mapping with CI enforcement |
 | [python-to-rust-test-coverage-playbook.md](playbooks/python-to-rust-test-coverage-playbook.md) | Pre-port test coverage strategy and tooling |
 | [port-checklist-initial-template.md](playbooks/port-checklist-initial-template.md) | Expanded execution checklist template (copy and fill in) |
 | [port-checklist-update-template.md](playbooks/port-checklist-update-template.md) | Ongoing sync checklist template |

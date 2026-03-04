@@ -8,7 +8,7 @@ of any Python construct.
 For porting **methodology** (principles, workflow, pitfalls, acceptance criteria), see
 [Python-to-Rust Porting Rules](../guidelines/python-to-rust-porting-rules.md).
 
-**Related:** [Python-to-Rust Porting Guide](python-to-rust-porting-guide.md)
+**Related:** [Python-to-Rust Porting Guide](../playbooks/python-to-rust-porting-guide.md)
 
 **Last update:** 2026-02-12
 

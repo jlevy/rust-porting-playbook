@@ -17,7 +17,7 @@ Then fill in the copy, so that this template can be reused for each subsequent s
 cycle.
 
 **Related:** [Initial Port Checklist](port-checklist-initial-template.md) |
-[Rust CLI Best Practices](rust-cli-best-practices.md)
+[Rust CLI Best Practices](../references/rust-cli-best-practices.md)
 
 **Applicability profile:** This checklist is CLI-forward because flowmark is a CLI case
 study. For non-CLI ports, mark CLI-only items as **N/A** and substitute equivalent

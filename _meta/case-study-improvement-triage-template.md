@@ -79,7 +79,7 @@ Copy this file and fill it in during Phase B of the meta-playbook process.
 [Phase N from observations] **Severity:** [High / Medium / Low] **Impact:**
 [How many future ports affected — All / Most / Some / Niche]
 
-**Target file:** `[e.g., playbooks/python-to-rust-mapping-reference.md]` **Section:**
+**Target file:** `[e.g., references/python-to-rust-mapping-reference.md]` **Section:**
 [Section heading]
 
 **Current text:**

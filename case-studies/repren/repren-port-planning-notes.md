@@ -43,7 +43,7 @@ implemented in the playbook before beginning the repren port itself.
 
 The playbook has decent but shallow regex coverage spread across three files:
 
-- `playbooks/python-to-rust-mapping-reference.md` lines 261-278: A function mapping
+- `references/python-to-rust-mapping-reference.md` lines 261-278: A function mapping
   table (`re.compile` → `Regex::new`, `re.match` → anchored `Regex`, etc.) with seven
   entries, plus the critical `re.match()` anchoring warning. Also mentions `fancy-regex`
   for look-ahead/behind.
@@ -117,13 +117,13 @@ but is missing the full behavioral mapping that any regex-heavy port needs:
 
 ### What the playbook already has
 
-- `guidelines/rust-cli-app-patterns.md` lines 148-173: A minimal `atomic_write()` example
+- `references/rust-cli-app-patterns.md` lines 148-173: A minimal `atomic_write()` example
   using `tempfile::NamedTempFile` + `persist()`, and a `write_with_backup()` snippet
   using `std::fs::copy` + `path.with_extension()`. Only covers the simplest scenario.
-- `playbooks/python-to-rust-mapping-reference.md` lines 225-238: Basic I/O mapping table
+- `references/python-to-rust-mapping-reference.md` lines 225-238: Basic I/O mapping table
   (`open(path).read()` → `std::fs::read_to_string()`, `os.path.join` → `path.join()`,
   etc.). Five operations total.
-- `playbooks/rust-cli-best-practices.md` line 230: mentions `walkdir` and `tempfile` in a
+- `references/rust-cli-best-practices.md` line 230: mentions `walkdir` and `tempfile` in a
   dependency list, no usage patterns.
 
 ### What's missing
@@ -216,8 +216,8 @@ library evaluation is minimal (zero runtime deps means no library risk to evalua
 
 | Change | Target file | Type |
 | --- | --- | --- |
-| Expand regex section with flags, replacement syntax, Unicode, features, perf | `playbooks/python-to-rust-mapping-reference.md` | Expand |
-| Expand I/O section with exhaustive filesystem operation mapping | `playbooks/python-to-rust-mapping-reference.md` | Expand |
+| Expand regex section with flags, replacement syntax, Unicode, features, perf | `references/python-to-rust-mapping-reference.md` | Expand |
+| Expand I/O section with exhaustive filesystem operation mapping | `references/python-to-rust-mapping-reference.md` | Expand |
 | New guideline for filesystem-heavy CLI porting patterns | `guidelines/filesystem-heavy-cli-porting.md` | New file |
 | Add pre-port test enhancement section | `playbooks/python-to-rust-test-coverage-playbook.md` | Expand |
 | Add test-sufficiency gate to Phase 1 and fast-path to Phase 2 | `playbooks/python-to-rust-playbook.md` | Expand |

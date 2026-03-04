@@ -195,7 +195,7 @@ configuration, release workflow.
 This prevents rework from poor initial choices.
 
 See [Rust Project Setup](../guidelines/rust-project-setup.md) and
-[Rust CLI Best Practices](rust-cli-best-practices.md) for CLI projects.
+[Rust CLI Best Practices](../references/rust-cli-best-practices.md) for CLI projects.
 
 * * *
 
@@ -410,7 +410,7 @@ that tracks:
 - **Current status** (mapped tests, passing tests, known gaps)
 - **All known discrepancies** with status (fixed, accepted, open)
 - **Test mapping coverage** (see
-  [Cross-Language Test Mapping](cross-language-test-mapping.md))
+  [Cross-Language Test Mapping](../references/cross-language-test-mapping.md))
 
 This document serves as the single source of truth for the porting effort’s progress and
 prevents drift across multiple agent sessions.
@@ -592,7 +592,7 @@ install experience:
 - **Homebrew tap:** Personal tap with SHA256-pinned formula for macOS users.
 - **crates.io:** Standard Rust distribution (`cargo install` / `cargo binstall`).
 
-See [Rust CLI Best Practices](rust-cli-best-practices.md#65-multi-channel-distribution)
+See [Rust CLI Best Practices](../references/rust-cli-best-practices.md#65-multi-channel-distribution)
 for workflow templates and the
 [PyPI distribution research](../docs/project/research/research-rust-cli-pypi-distribution.md)
 for detailed guidance on the maturin approach.

@@ -8,7 +8,7 @@ Methodology and process for systematically porting Python applications to Rust.
 Covers principles, workflow, pitfalls, and acceptance criteria.
 
 For construct-by-construct lookup (types, I/O, regex, project setup), see the
-[Mapping Reference](../playbooks/python-to-rust-mapping-reference.md).
+[Mapping Reference](../references/python-to-rust-mapping-reference.md).
 
 **Read first:**
 [Porting Principles and Anti-Patterns](porting-principles-and-antipatterns.md)
@@ -40,9 +40,9 @@ For Python rules, see `tbd guidelines python-rules`.
 ## Type and Error Mappings
 
 See
-[Mapping Reference § Types](../playbooks/python-to-rust-mapping-reference.md#types)
+[Mapping Reference § Types](../references/python-to-rust-mapping-reference.md#types)
 and
-[Mapping Reference § Error Handling](../playbooks/python-to-rust-mapping-reference.md#error-handling)
+[Mapping Reference § Error Handling](../references/python-to-rust-mapping-reference.md#error-handling)
 for exhaustive mapping tables with code examples.
 
 **Porting-specific principles:**
@@ -112,7 +112,7 @@ pub fn fill_markdown(text: &str, config: &Config) -> Result<String> {
 ## Dependency Mapping
 
 See
-[Mapping Reference § Dependency Mapping](../playbooks/python-to-rust-mapping-reference.md#dependency-mapping-flowmark-specific)
+[Mapping Reference § Dependency Mapping](../references/python-to-rust-mapping-reference.md#dependency-mapping-flowmark-specific)
 for the full library equivalence table.
 
 ### Library Evaluation Checklist
@@ -154,7 +154,7 @@ For each Python module:
 Rust regex is unanchored by default -- the #1 source of porting bugs.
 Add `^` for `re.match()`, wrap with `^...$` for `re.fullmatch()`.
 See
-[Mapping Reference § Regex](../playbooks/python-to-rust-mapping-reference.md#regex)
+[Mapping Reference § Regex](../references/python-to-rust-mapping-reference.md#regex)
 for the full regex porting guide including replacement syntax, flags, and unicode
 behavior.
 
@@ -307,7 +307,7 @@ stale as the Rust code evolves independently. Schedule a cleanup pass:
 
 After porting is complete, audit `pub` visibility. During porting, agents tend to make
 everything `pub` for convenience. Convert internal-only items to `pub(crate)`. See
-[Code Review Checklist](../playbooks/rust-code-review-checklist.md) for details.
+[Code Review Checklist](../references/rust-code-review-checklist.md) for details.
 
 ## Acceptance Criteria
 

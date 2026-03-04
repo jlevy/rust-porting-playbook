@@ -7,7 +7,7 @@ fixtures.
 **Checklists:** [Initial Port](port-checklist-initial-template.md) |
 [Subsequent Updates](port-checklist-update-template.md)
 
-**Related:** [Rust CLI Best Practices](rust-cli-best-practices.md)
+**Related:** [Rust CLI Best Practices](../references/rust-cli-best-practices.md)
 
 **Last update:** 2025-11-02
 

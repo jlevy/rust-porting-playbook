@@ -313,7 +313,7 @@ packaging/distribution workstream was a significant effort that produced reusabl
 patterns now documented in the playbook.
 
 For detailed guidance, see:
-- [Rust CLI Best Practices: Multi-Channel Distribution](../../playbooks/rust-cli-best-practices.md#65-multi-channel-distribution)
+- [Rust CLI Best Practices: Multi-Channel Distribution](../../references/rust-cli-best-practices.md#65-multi-channel-distribution)
 - [Research: PyPI Distribution](../../docs/project/research/research-rust-cli-pypi-distribution.md)
 - [Research: Binary Distribution](../../docs/project/research/research-rust-cli-binary-distribution.md)
 

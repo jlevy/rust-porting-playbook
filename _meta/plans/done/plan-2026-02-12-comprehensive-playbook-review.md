@@ -96,13 +96,13 @@ Core playbook and reference material — the most critical documents.
 
 - [ ] Review `playbooks/python-to-rust-playbook.md` (619 lines) — the primary document;
   8-phase process, effort estimates, dependency tables, phase gate criteria
-- [ ] Review `playbooks/python-to-rust-mapping-reference.md` (788 lines) — type
+- [ ] Review `references/python-to-rust-mapping-reference.md` (788 lines) — type
   mappings, control flow, error handling, classes, testing, project setup, dependencies
 - [ ] Review `playbooks/python-to-rust-porting-guide.md` (807 lines) — detailed
   methodology, automation scripts, version tracking, pitfalls, cross-validation
-- [ ] Review `playbooks/rust-cli-best-practices.md` (832 lines) — CI/CD, linting,
+- [ ] Review `references/rust-cli-best-practices.md` (832 lines) — CI/CD, linting,
   releases, tooling, GitHub Actions workflows
-- [ ] Review `playbooks/rust-code-review-checklist.md` (285 lines) — review checklist
+- [ ] Review `references/rust-code-review-checklist.md` (285 lines) — review checklist
   categories, items, severity levels
 - [ ] Review `playbooks/python-to-rust-test-coverage-playbook.md` (312 lines) — pre-port
   test strategy, coverage tooling, gap analysis
@@ -127,7 +127,7 @@ Compact rules for AI agent context — must be accurate, concise, and self-conta
   porting patterns, argument mapping, output handling
 - [ ] Review `guidelines/rust-general-rules.md` (286 lines) — general Rust rules,
   edition 2024, error handling, testing patterns
-- [ ] Review `guidelines/rust-cli-app-patterns.md` (403 lines) — CLI architecture, error
+- [ ] Review `references/rust-cli-app-patterns.md` (403 lines) — CLI architecture, error
   handling, configuration, logging, version strings
 - [ ] Review `guidelines/rust-project-setup.md` (626 lines) — Cargo.toml, CI, linting,
   deny.toml, release workflows, GitHub Actions
