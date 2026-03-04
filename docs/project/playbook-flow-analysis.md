@@ -148,99 +148,69 @@ satisfying their conditions.
 
 ## 2. Resource Dependency Map
 
-This diagram shows which documents are consumed by each phase. Arrows flow from
-resource → phase (meaning "this resource is needed during this phase").
+This diagram groups the 34 documents by function and maps them to lifecycle
+stages. Solid arrows show primary usage; dotted arrows show secondary usage
+(only some docs in the group apply). For exact per-document phase mappings,
+see the inventory table in Section 8.
 
 ```mermaid
 flowchart LR
-    subgraph playbooks["Playbooks (Core Process)"]
-        MAIN["python-to-rust-<br/>playbook.md<br/><b>★ Primary</b>"]
-        MAPPING["python-to-rust-<br/>mapping-reference.md"]
-        GUIDE["python-to-rust-<br/>porting-guide.md"]
-        CLI_BP["rust-cli-<br/>best-practices.md"]
-        REVIEW["rust-code-review-<br/>checklist.md"]
-        TEST_MAP["cross-language-<br/>test-mapping.md"]
-        TEST_COV["python-to-rust-test-<br/>coverage-playbook.md"]
-        CHK_INIT["port-checklist-<br/>initial-template.md"]
-        CHK_UPD["port-checklist-<br/>update-template.md"]
-        SYNC_WF["python-to-rust-sync-<br/>release-workflow.md"]
-        AUTO_SYNC["auto-sync-agent-<br/>prompt-template.md"]
+    subgraph core["Core References (All Phases)"]
+        PB_CORE["★ python-to-rust-playbook<br/>+ port-checklist-initial-template"]
     end
 
-    subgraph guidelines["Guidelines (Agent Context)"]
-        G_PORT["python-to-rust-<br/>porting-rules.md"]
-        G_CLI["python-to-rust-<br/>cli-porting.md"]
-        G_RUST["rust-general-<br/>rules.md"]
-        G_CLI_PAT["rust-cli-app-<br/>patterns.md"]
-        G_SETUP["rust-project-<br/>setup.md"]
-        G_TEST["test-coverage-<br/>for-porting.md"]
-        G_PRINC["porting-principles-<br/>and-antipatterns.md"]
-        G_FS["filesystem-heavy-<br/>cli-porting.md"]
+    subgraph playbooks["Playbooks"]
+        PB_TEST["test-coverage-playbook"]
+        PB_PORT["mapping-reference<br/>porting-guide<br/>cross-language-test-mapping"]
+        PB_INFRA["rust-cli-best-practices<br/>code-review-checklist"]
+        PB_SYNC["sync-release-workflow<br/>auto-sync-agent-prompt<br/>port-checklist-update"]
     end
 
-    subgraph research["Research"]
-        R_BIN["research-rust-cli-<br/>binary-distribution.md"]
-        R_PYPI["research-rust-cli-<br/>pypi-distribution.md"]
+    subgraph guidelines["Guidelines"]
+        G_TEST_DOC["test-coverage-for-porting"]
+        G_SETUP_DOC["rust-project-setup"]
+        G_IMPL["porting-rules<br/>rust-general-rules<br/>cli-app-patterns, cli-porting<br/>porting-principles<br/>filesystem-heavy-cli-porting"]
     end
 
-    subgraph casestudy["Case Study: Flowmark"]
-        CS_ANALYSIS["flowmark-port-<br/>analysis.md"]
-        CS_METRICS["flowmark-port-<br/>metrics.md"]
-        CS_DECISIONS["flowmark-port-<br/>decision-log.md"]
-        CS_LIBS["flowmark-port-<br/>library-choices.md"]
-        CS_XVAL["flowmark-port-<br/>cross-validation.md"]
+    subgraph evidence["Research & Case Study"]
+        CS_PLAN_EV["flowmark: analysis,<br/>decisions, library-choices"]
+        CS_VAL_EV["flowmark: cross-validation,<br/>metrics"]
+        R_DIST["research: binary +<br/>PyPI distribution"]
     end
 
-    subgraph phases["Porting Phases"]
-        PH1["Phase 1<br/>Assess"]
-        PH2["Phase 2<br/>Research"]
-        PH3["Phase 3<br/>Plan"]
-        PH4["Phase 4<br/>Set Up"]
-        PH5["Phase 5<br/>Port"]
-        PH6["Phase 6<br/>Fix"]
-        PH7["Phase 7<br/>Finalize"]
-        PH8["Phase 8<br/>Sync"]
-    end
+    PREP["Phases 1-4<br/>Preparation"]
+    IMPL_PH["Phases 5-6<br/>Implementation"]
+    VAL_PH["Phase 7<br/>Validation"]
+    SYNC_PH["Phase 8<br/>Sync"]
 
-    %% Playbook → Phase connections
-    MAIN --> PH1 & PH2 & PH3 & PH4 & PH5 & PH6 & PH7 & PH8
-    TEST_COV --> PH1
-    MAPPING --> PH2 & PH5
-    GUIDE --> PH5 & PH6
-    CLI_BP --> PH4 & PH7
-    TEST_MAP --> PH5 & PH6 & PH7
-    REVIEW --> PH7
-    CHK_INIT --> PH1 & PH2 & PH3 & PH4 & PH5 & PH6 & PH7
-    CHK_UPD --> PH8
-    SYNC_WF --> PH8
-    AUTO_SYNC --> PH8
+    %% Primary connections (solid)
+    PB_TEST --> PREP
+    G_TEST_DOC --> PREP
+    G_SETUP_DOC --> PREP
+    CS_PLAN_EV --> PREP
 
-    %% Guideline → Phase connections
-    G_PORT --> PH5
-    G_CLI --> PH5 & PH7
-    G_RUST --> PH5
-    G_CLI_PAT --> PH5
-    G_SETUP --> PH4
-    G_TEST --> PH1
-    G_PRINC --> PH5 & PH6
-    G_FS --> PH2 & PH5
+    PB_PORT --> IMPL_PH
+    G_IMPL --> IMPL_PH
 
-    %% Research → Phase connections
-    R_BIN --> PH7
-    R_PYPI --> PH7
+    PB_INFRA --> VAL_PH
+    CS_VAL_EV --> VAL_PH
+    R_DIST --> VAL_PH
 
-    %% Case study → Phase connections
-    CS_LIBS --> PH2
-    CS_DECISIONS --> PH2 & PH3
-    CS_ANALYSIS --> PH3
-    CS_XVAL --> PH6
-    CS_METRICS --> PH7
+    PB_SYNC --> SYNC_PH
 
-    style phases fill:#f5f5f5,stroke:#333
+    %% Secondary connections (dotted)
+    PB_INFRA -.-> PREP
+    PB_PORT -.-> VAL_PH
+    G_IMPL -.-> PREP
+
+    style PREP fill:#e8f4f8,stroke:#2196F3
+    style IMPL_PH fill:#fff3e0,stroke:#FF9800
+    style VAL_PH fill:#e8f5e9,stroke:#4CAF50
+    style SYNC_PH fill:#f3e5f5,stroke:#9C27B0
+    style core fill:#fff9c4,stroke:#F9A825
     style playbooks fill:#e3f2fd,stroke:#1565C0
     style guidelines fill:#e8f5e9,stroke:#2E7D32
-    style research fill:#fff3e0,stroke:#E65100
-    style casestudy fill:#fce4ec,stroke:#C62828
+    style evidence fill:#fff3e0,stroke:#E65100
 ```
 
 ---
@@ -362,13 +332,16 @@ flowchart TD
     DRAFT --> REVIEW_HUMAN
     UPDATE_LOG -->|"Next port uses<br/>improved playbook"| SELECT
 
-    OBS_T["📄 case-study-observations-<br/>template.md"] -.->|Template for| OBSERVE
-    TRI_T["📄 case-study-improvement-<br/>triage-template.md"] -.->|Template for| TRIAGE
-    IMP_LOG["📄 playbook-improvement-<br/>log.md"] -.->|Append to| UPDATE_LOG
+    OBS_T[["case-study-observations-<br/>template.md"]] -.->|Template for| OBSERVE
+    TRI_T[["case-study-improvement-<br/>triage-template.md"]] -.->|Template for| TRIAGE
+    IMP_LOG[["playbook-improvement-<br/>log.md"]] -.->|Append to| UPDATE_LOG
 
     style execute fill:#e3f2fd,stroke:#1565C0
     style extract fill:#fff3e0,stroke:#E65100
     style integrate fill:#e8f5e9,stroke:#2E7D32
+    style OBS_T fill:#f3e5f5,stroke:#9C27B0
+    style TRI_T fill:#f3e5f5,stroke:#9C27B0
+    style IMP_LOG fill:#f3e5f5,stroke:#9C27B0
 ```
 
 ---
