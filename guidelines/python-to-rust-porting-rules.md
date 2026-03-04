@@ -1,11 +1,14 @@
 ---
 title: Python-to-Rust Porting Rules
-description: General patterns, type mappings, and pitfalls for porting Python applications to Rust
+description: Porting methodology -- principles, workflow, pitfalls, and acceptance criteria
 ---
 # Python-to-Rust Porting Rules
 
-Rules and patterns for systematically porting Python applications to Rust.
-Focuses on maintaining exact behavioral parity through test-driven porting.
+Methodology and process for systematically porting Python applications to Rust.
+Covers principles, workflow, pitfalls, and acceptance criteria.
+
+For construct-by-construct lookup (types, I/O, regex, project setup), see the
+[Mapping Reference](../playbooks/python-to-rust-mapping-reference.md).
 
 **Read first:**
 [Porting Principles and Anti-Patterns](porting-principles-and-antipatterns.md)
@@ -34,52 +37,23 @@ For Python rules, see `tbd guidelines python-rules`.
    If a difference is unavoidable (e.g., library behavior), document it explicitly and
    mark the test `#[ignore]` with an explanation.
 
-## Type Mappings
+## Type and Error Mappings
 
-### Basic Types
+See
+[Mapping Reference § Types](../playbooks/python-to-rust-mapping-reference.md#types)
+and
+[Mapping Reference § Error Handling](../playbooks/python-to-rust-mapping-reference.md#error-handling)
+for exhaustive mapping tables with code examples.
 
-| Python | Rust | Notes |
-| --- | --- | --- |
-| `str` | `String` / `&str` | Accept `&str`, return `String` |
-| `int` | `i32` / `i64` / `usize` | Match the semantic range |
-| `float` | `f64` |  |
-| `bool` | `bool` |  |
-| `None` | `Option<T>` | Never use sentinel values |
-| `bytes` | `Vec<u8>` / `&[u8]` |  |
-| `str` (sometimes modified) | `Cow<'_, str>` | Avoids allocation when input unchanged |
+**Porting-specific principles:**
 
-### Collections
-
-| Python | Rust | Notes |
-| --- | --- | --- |
-| `list[T]` | `Vec<T>` |  |
-| `dict[K, V]` | `HashMap<K, V>` | Python dict preserves insertion order since 3.7; `HashMap` does **not**. Use `IndexMap` if order matters |
-| `set[T]` | `HashSet<T>` | Or `BTreeSet` for sorted |
-| `tuple[A, B]` | `(A, B)` | Named struct if >3 elements |
-| `deque` | `VecDeque<T>` |  |
-| `defaultdict` | `HashMap` with `.entry().or_default()` |  |
-
-### Optional and Union Types
-
-| Python | Rust | Notes |
-| --- | --- | --- |
-| `Optional[T]` / `T \| None` | `Option<T>` |  |
-| `Union[A, B]` | Enum with variants |  |
-| `Any` | Generics or `Box<dyn Trait>` | Avoid if possible |
-
-### Error Handling
-
-| Python | Rust | Notes |
-| --- | --- | --- |
-| `try / except` | `Result<T, E>` with `?` |  |
-| `raise ValueError(...)` | `return Err(Error::Validation(...))` |  |
-| `assert` (invariant check) | `debug_assert!` | Only for debug-only invariants in hot paths |
-| `assert` (validation) | `assert!` or explicit `Result`-based check | Default for porting |
-| Exception classes | `thiserror` (library) / `anyhow` (binary) | Standard error handling |
-| Functions that never raise | Return `T` directly, NOT `Result<T>` | Match Python exactly |
-
-**Critical rule:** If the Python function never raises an exception, the Rust function
-should NOT return `Result`. Match the Python signature exactly.
+- Use `Cow<'_, str>` when a function sometimes modifies its input and sometimes returns
+  it unchanged -- avoids allocation in the pass-through case.
+- Use `Option<T>` for Python `None`. Never use sentinel values.
+- `HashMap` does **not** preserve insertion order (Python `dict` does since 3.7).
+  Use `IndexMap` if order matters for behavioral parity.
+- **Critical rule:** If the Python function never raises an exception, the Rust function
+  should NOT return `Result`. Match the Python signature exactly.
 
 ## Module Mapping
 
@@ -137,28 +111,9 @@ pub fn fill_markdown(text: &str, config: &Config) -> Result<String> {
 
 ## Dependency Mapping
 
-### Common Python-to-Rust Library Mappings
-
-| Python | Rust | Quality | Notes |
-| --- | --- | --- | --- |
-| argparse / click / typer | clap | Excellent | Use derive API |
-| PyYAML | serde_yaml_ng | Good | serde_yaml is archived; use serde_yaml_ng 0.10+ |
-| json | serde_json | Excellent |  |
-| re | regex | Excellent | Different anchoring behavior! |
-| re (look-arounds) | fancy-regex | Good | Only when needed |
-| pathlib | std::path | Built-in |  |
-| os / shutil | std::fs | Built-in |  |
-| textwrap | textwrap (crate) | Good | Or roll your own |
-| pytest | cargo test (built-in) | Excellent |  |
-| typing | Rust type system | Built-in |  |
-| dataclasses | struct + derive macros | Built-in | Minimum: `#[derive(Debug, Clone, PartialEq)]`; add `Eq`, `Hash`, `Serialize`, `Deserialize` as needed |
-| abc (ABCs) | traits | Built-in |  |
-| Exception hierarchy | thiserror (library) / anyhow (binary) | Excellent | thiserror for typed errors; anyhow for ad-hoc |
-| marko (Markdown) | comrak / pulldown-cmark | Varies | See parser selection guide |
-| logging | tracing / log | Excellent | tracing is preferred for new code |
-| asyncio | tokio | Excellent | De facto async runtime |
-| threading | std::thread / rayon | Excellent | rayon for data parallelism |
-| subprocess | std::process::Command | Excellent | stdlib |
+See
+[Mapping Reference § Dependency Mapping](../playbooks/python-to-rust-mapping-reference.md#dependency-mapping-flowmark-specific)
+for the full library equivalence table.
 
 ### Library Evaluation Checklist
 
@@ -196,32 +151,12 @@ For each Python module:
 
 ### 1. Regex Anchoring
 
-Python and Rust regex have different anchoring behavior.
-All three Python regex functions need careful translation:
-
-- `re.match(pat)` -- anchors to start of string.
-  Prepend `^` (or `\A` for multiline safety).
-- `re.search(pat)` -- matches anywhere.
-  Use pattern as-is (both are unanchored).
-- `re.fullmatch(pat)` -- matches entire string.
-  Wrap with `^...$` (or `\A...\z`).
-
-```python
-# Python
-re.match(r"\w+", "$hello")      # None (anchored to start)
-re.search(r"\w+", "$hello")     # Match (anywhere)
-re.fullmatch(r"\w+", "hello")   # Match (entire string)
-```
-```rust
-// Rust -- all unanchored by default, must add anchors explicitly
-Regex::new(r"\w+").unwrap().is_match("$hello")      // true! (wrong for re.match)
-Regex::new(r"^\w+").unwrap().is_match("$hello")      // false (correct for re.match)
-Regex::new(r"\w+").unwrap().is_match("$hello")       // true (correct for re.search)
-Regex::new(r"^\w+$").unwrap().is_match("hello")      // true (correct for re.fullmatch)
-```
-
-**Rule:** Add `^` to EVERY pattern used with Python `re.match()`. Wrap with `^...$` for
-`re.fullmatch()`. Use `\A`/`\z` instead of `^`/`$` when multiline mode is active.
+Rust regex is unanchored by default -- the #1 source of porting bugs.
+Add `^` for `re.match()`, wrap with `^...$` for `re.fullmatch()`.
+See
+[Mapping Reference § Regex](../playbooks/python-to-rust-mapping-reference.md#regex)
+for the full regex porting guide including replacement syntax, flags, and unicode
+behavior.
 
 ### 2. String Preservation
 

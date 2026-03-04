@@ -2,10 +2,13 @@
 
 Exhaustive mapping table for Python-to-Rust constructs.
 Organized by category with code examples for each mapping.
-Use this as a lookup reference during porting.
+Use this as a **lookup reference** during porting -- ctrl-F to find the Rust equivalent
+of any Python construct.
 
-**Related:** [Python-to-Rust Porting Guide](python-to-rust-porting-guide.md) |
-[Python-to-Rust Porting Rules](../guidelines/python-to-rust-porting-rules.md)
+For porting **methodology** (principles, workflow, pitfalls, acceptance criteria), see
+[Python-to-Rust Porting Rules](../guidelines/python-to-rust-porting-rules.md).
+
+**Related:** [Python-to-Rust Porting Guide](python-to-rust-porting-guide.md)
 
 **Last update:** 2026-02-12
 
