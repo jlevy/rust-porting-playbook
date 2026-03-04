@@ -5,8 +5,10 @@ dependencies, and document relationships.
 
 ## 1. Process Flow: The 8-Phase Porting Lifecycle
 
-This diagram shows the end-to-end process, including decision gates that block
+These diagrams show the end-to-end process, including decision gates that block
 progression and feedback loops that send you back to earlier phases.
+
+### Preliminaries (Phases 0-1)
 
 ```mermaid
 flowchart TD
@@ -21,9 +23,21 @@ flowchart TD
     end
 
     P1_4 --> G1{Gate: Ready to port?}
-    G1 -->|"Coverage >=80%<br/>All deps have Rust candidates<br/>Scope understood"| P2
+    G1 -->|"Coverage >=80%<br/>All deps have Rust equivalents<br/>Scope understood"| READY([Proceed to Phase 2 ▶])
     G1 -->|"Coverage gaps"| P0A(["⟲ Phase 0: Enhance test coverage<br/>(repeat gate when done)"])
     G1 -->|"Missing Rust<br/>equivalents"| P0B(["⟲ Phase 0: Research alternatives<br/>(repeat gate when done)"])
+
+    style P0A fill:#efebe9,stroke:#795548
+    style P0B fill:#efebe9,stroke:#795548
+    style P1 fill:#e8f4f8,stroke:#2196F3
+    style G1 fill:#fff9c4,stroke:#FFC107
+```
+
+### Porting (Phases 2-8)
+
+```mermaid
+flowchart TD
+    BEGIN([Phase 1 gate passed ✓]) --> P2
 
     subgraph P2["Phase 2: Research & Library Evaluation"]
         P2_fast{Low-dependency<br/>project?}
@@ -121,10 +135,7 @@ flowchart TD
         P8_done -->|Next cycle| P8_mode
     end
 
-    style P0A fill:#efebe9,stroke:#795548
-    style P0B fill:#efebe9,stroke:#795548
     style G6_ret fill:#efebe9,stroke:#795548
-    style P1 fill:#e8f4f8,stroke:#2196F3
     style P2 fill:#e8f4f8,stroke:#2196F3
     style P3 fill:#e8f4f8,stroke:#2196F3
     style P4 fill:#e8f4f8,stroke:#2196F3
@@ -132,7 +143,6 @@ flowchart TD
     style P6 fill:#fff3e0,stroke:#FF9800
     style P7 fill:#e8f5e9,stroke:#4CAF50
     style P8 fill:#f3e5f5,stroke:#9C27B0
-    style G1 fill:#fff9c4,stroke:#FFC107
     style G6 fill:#fff9c4,stroke:#FFC107
 ```
 
