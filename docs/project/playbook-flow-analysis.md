@@ -33,7 +33,7 @@ flowchart TD
     style G1 fill:#fff9c4,stroke:#FFC107
 ```
 
-### Porting (Phases 2-8)
+### Porting (Phases 2-6)
 
 ```mermaid
 flowchart TD
@@ -106,8 +106,23 @@ flowchart TD
     end
 
     P6_track --> G6{"More than 3 unfixable diffs<br/>or core feature broken?"}
-    G6 -->|"No, or past 50%"| P7
+    G6 -->|"No, or past 50%"| READY([Proceed to Phase 7 ▶])
     G6 -->|"Yes, early enough"| G6_ret(["⟲ Return to Phase 2:<br/>re-evaluate library choices"])
+
+    style G6_ret fill:#efebe9,stroke:#795548
+    style P2 fill:#e8f4f8,stroke:#2196F3
+    style P3 fill:#e8f4f8,stroke:#2196F3
+    style P4 fill:#e8f4f8,stroke:#2196F3
+    style P5 fill:#fff3e0,stroke:#FF9800
+    style P6 fill:#fff3e0,stroke:#FF9800
+    style G6 fill:#fff9c4,stroke:#FFC107
+```
+
+### Packaging and Maintenance (Phases 7-8)
+
+```mermaid
+flowchart TD
+    BEGIN([Phase 6 gate passed ✓]) --> P7
 
     subgraph P7["Phase 7: Finalize & Validate"]
         P7_1[Cross-validation gate:<br/>all fixtures pass]
@@ -135,15 +150,8 @@ flowchart TD
         P8_done -->|Next cycle| P8_mode
     end
 
-    style G6_ret fill:#efebe9,stroke:#795548
-    style P2 fill:#e8f4f8,stroke:#2196F3
-    style P3 fill:#e8f4f8,stroke:#2196F3
-    style P4 fill:#e8f4f8,stroke:#2196F3
-    style P5 fill:#fff3e0,stroke:#FF9800
-    style P6 fill:#fff3e0,stroke:#FF9800
     style P7 fill:#e8f5e9,stroke:#4CAF50
     style P8 fill:#f3e5f5,stroke:#9C27B0
-    style G6 fill:#fff9c4,stroke:#FFC107
 ```
 
 **Phase color key:**
