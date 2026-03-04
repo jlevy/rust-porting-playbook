@@ -1,6 +1,6 @@
-# Playbook Flow Analysis
+# Playbook Flow Overview
 
-A visual map of the Rust Porting Playbook's process flow, decision gates, resource
+A visual map of the Rust Porting Playbook’s process flow, decision gates, resource
 dependencies, and document relationships.
 
 ## 1. Process Flow: The 8-Phase Porting Lifecycle
@@ -164,14 +164,14 @@ flowchart TD
 **Decision gates** (yellow diamonds) are blocking — you cannot proceed without
 satisfying their conditions.
 
----
+* * *
 
 ## 2. Resource Dependency Map
 
-This diagram groups the 34 documents by function and maps them to lifecycle
-stages. Solid arrows show primary usage; dotted arrows show secondary usage
-(only some docs in the group apply). For exact per-document phase mappings,
-see the inventory table in Section 8.
+This diagram groups the 34 documents by function and maps them to lifecycle stages.
+Solid arrows show primary usage; dotted arrows show secondary usage (only some docs in
+the group apply). For exact per-document phase mappings, see the inventory table in
+Section 8.
 
 ```mermaid
 flowchart LR
@@ -244,12 +244,12 @@ flowchart LR
     style evidence fill:#f5f5f5,stroke:#9E9E9E
 ```
 
----
+* * *
 
 ## 3. Document Relationship Map
 
-This shows how documents reference each other — the internal link structure
-of the playbook itself.
+This shows how documents reference each other — the internal link structure of the
+playbook itself.
 
 ```mermaid
 flowchart TD
@@ -328,7 +328,7 @@ flowchart TD
     style META fill:#e0f2f1,stroke:#00897B,stroke-width:2px
 ```
 
----
+* * *
 
 ## 4. Meta-Improvement Feedback Loop
 
@@ -375,7 +375,7 @@ flowchart TD
     style IMP_LOG fill:#e0f2f1,stroke:#00897B
 ```
 
----
+* * *
 
 ## 5. Effort Distribution
 
@@ -395,11 +395,12 @@ Implementation (5-6): 65%  ├─ Key insight: most effort is in
 Validation (7):     10%  ─┘   implementation + library workarounds
 ```
 
----
+* * *
 
 ## 6. Entry Points and Reading Order
 
-Different users need different starting points. Here's a decision tree.
+Different users need different starting points.
+Here’s a decision tree.
 
 ```mermaid
 flowchart TD
@@ -429,12 +430,12 @@ flowchart TD
     style META_DOCS fill:#e0f2f1,stroke:#00897B
 ```
 
----
+* * *
 
 ## 7. Two-Mode Release Cycle (Phase 8 Detail)
 
-Mature ports alternate between two release modes. This prevents coupling
-Rust improvements with upstream sync risk.
+Mature ports alternate between two release modes.
+This prevents coupling Rust improvements with upstream sync risk.
 
 ```mermaid
 flowchart TD
@@ -469,12 +470,12 @@ flowchart TD
     style TRIGGER fill:#fff9c4,stroke:#F9A825
 ```
 
----
+* * *
 
 ## 8. Complete Document Inventory
 
 | # | Document | Layer | Primary phases | Purpose |
-|---|----------|-------|----------------|---------|
+| --- | --- | --- | --- | --- |
 | 1 | `python-to-rust-playbook.md` | Playbook | All | Canonical 8-phase process |
 | 2 | `python-to-rust-mapping-reference.md` | Playbook | 2, 5 | Type and API mappings |
 | 3 | `python-to-rust-porting-guide.md` | Playbook | 5, 6 | Deep methodology and pitfalls |

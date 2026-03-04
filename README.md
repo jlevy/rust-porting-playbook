@@ -2,8 +2,8 @@
 
 A comprehensive, step-by-step **agent playbook** for **automated porting** of
 applications to Rust.
-It is a collection of **20 in-depth docs** (about 300 pages!) all agent written but
-pretty carefully curated, to guide agents in the porting process.
+It is a collection of **20 in-depth docs** (about 300 pages!)
+all agent written but pretty carefully curated, to guide agents in the porting process.
 
 I suggest using the playbook with a strong model (I’ve used Opus 4.6 or Codex 5.3 Extra
 High), and beads (I use my own [tbd](https://github.com/jlevy/tbd) but
@@ -16,7 +16,7 @@ This is new! But it seems to work quite well.
 This [Markdown auto-formatter](https://github.com/jlevy/flowmark-rs) was automatically
 ported and imho it’s now the best and fastest auto-formatter for Markdown.
 
-In addition to guidelines and playbooks, it’s structurted with meta-playbooks to self
+In addition to guidelines and playbooks, it’s structured with meta-playbooks to self
 improve as we do more ports.
 If you do a port, have it track a case study, using my last port as an example, and then
 the meta playbook will help improve the overall porting playbook!
@@ -28,7 +28,7 @@ Notes and caveats:
   languages.)
 
 - This requires **thoroughly testable** Python apps where all features can be mapped to
-  Rust. (You don’t need prefect tests to begin with, as long as the agent can add them
+  Rust. (You don’t need perfect tests to begin with, as long as the agent can add them
   and write equivalent tests in Rust.)
 
 - Ports of libraries and CLI applications are great if they can have
@@ -39,34 +39,56 @@ Notes and caveats:
 - Even if you don’t use the whole playbook, you’ll find giving agents these docs will
   make their coding quality really improve.
 
-The overall idea is
+Key elements of the approach:
+
 - Increasing test coverage (if needed) on the original app
+
 - Systematically mapping tests from the original to the target Rust application’s tests
+
 - Making heavy use of reusable guidelines to streamline project setup and avoid pitfalls
-- Using **case studies** for ports to refine the overall process
-- Codifying the process for future port updates into into two kinds: improvements to
-  Rust port (type A) and port synchronization with a new release (type B)
+
+- Using **case studies** from other ports to refine the overall process
+
+- Codifying the process for ongoing port updates into two kinds: improvements to Rust
+  port (type A) and port synchronization with a new release (type B)
 
 ## Case Study: Flowmark
 
-Here’s the first nontrivial use of this playbook.
+The idea of the playbook is it improves via case studies of each porting process.
+A good case study is the port of Flowmark, a Markdown formatter.
 The result demonstrates full-port execution plus ongoing upstream sync discipline.
-It was mostly Opus 4.6.
 
 - Source project: [flowmark (Python)](https://github.com/jlevy/flowmark)
 
 - Ported project: [flowmark-rs (Rust)](https://github.com/jlevy/flowmark-rs)
 
-This is packaged here as a [case study](case-studies/flowmark/) with
-[details and lessons](case-studies/flowmark/flowmark-port-analysis.md) to illustrate:
+With the exception of a few paragraphs in the project README, all code, specs, and docs
+in `flowmark-rs` were written entirely by Opus 4.6 and GPT-5.3 Codex.
 
-- Full Python→Rust lifecycle, including post-port synchronization
+Opus 4.6 was the vast majority but I did hand off a few sessions to GPT-5.3 for review.
+My involvement was in the prompting meta-loop, over about a dozen sessions, telling it
+to continue following the playbook.
 
-- Decision logs, library tradeoffs, discrepancy handling, and cross-validation
+See the [case study](case-studies/flowmark/) and
+[the full port analysis](case-studies/flowmark/flowmark-port-analysis.md) for details:
 
-All this is docs that help an agent make better Rust ports!
-The case studies can be reused for helping agents on the meta-process of playbook
-improvement.
+- Full Python-to-Rust test mapping discipline
+
+- Library evaluation methodology
+
+- Log of technical decisions and workaround strategies for library issues
+
+- Cross-language parity validation and CI enforcement
+
+- Ongoing upstream sync workflow
+
+- A meta-analysis of what can be automated in porting workflows
+
+Beyond the case study docs here, the `flowmark-rs` repo is very useful to agents as a
+working reference for what a completed port looks like, including CI workflows, release
+automation, test structure, deny.toml, build.rs, and PyPI distribution via maturin.
+The bootstrap instructions above include it as a submodule so your agents have direct
+access.
 
 ## Quick Start
 
@@ -77,40 +99,40 @@ The agent will set up the workspace, pull in the playbook as a submodule, and th
 the playbook itself to drive the rest of the process.
 
 > **Bootstrap a Python-to-Rust port**
->
+> 
 > I want to port `<PYTHON_PROJECT>` (at `<PYTHON_REPO_URL>`) to Rust.
 > Follow these steps to set up the workspace, then use the playbook to drive the port.
->
+> 
 > **Step 1 — Create the Rust project and workspace**
->
+> 
 > ```bash
 > cargo init <PROJECT>-rs
 > cd <PROJECT>-rs
 > ```
->
-> **Step 2 — Add the Python source, porting playbook, and reference project as submodules**
->
+> 
+> **Step 2 — Add the Python source, porting playbook, and reference project as
+> submodules**
+> 
 > ```bash
 > mkdir repos
 > git submodule add <PYTHON_REPO_URL> repos/<PYTHON_PROJECT>
 > git submodule add https://github.com/jlevy/rust-porting-playbook.git repos/rust-porting-playbook
 > git submodule add https://github.com/jlevy/flowmark-rs.git repos/flowmark-rs
 > ```
->
+> 
 > The `flowmark-rs` repo is included as a **working reference project** — a real,
 > production Rust port built with this playbook.
-> Use it to see concrete examples of Cargo.toml config, CI workflows, release automation,
-> test organization, deny.toml, build.rs, maturin/PyPI setup, and more.
->
+> Use it to see concrete examples of Cargo.toml config, CI workflows, release
+> automation, test organization, deny.toml, build.rs, maturin/PyPI setup, and more.
+> 
 > **Step 3 — Read the playbook and begin the port**
->
+> 
 > Read `repos/rust-porting-playbook/playbooks/python-to-rust-playbook.md` and follow it
-> from Phase 1.
-> Load guidelines as needed from `repos/rust-porting-playbook/guidelines/`.
-> Use the case study at `repos/rust-porting-playbook/case-studies/flowmark/` for decisions
-> and tradeoffs, and browse `repos/flowmark-rs/` for working examples of every config file
-> and workflow.
->
+> from Phase 1. Load guidelines as needed from
+> `repos/rust-porting-playbook/guidelines/`. Use the case study at
+> `repos/rust-porting-playbook/case-studies/flowmark/` for decisions and tradeoffs, and
+> browse `repos/flowmark-rs/` for working examples of every config file and workflow.
+> 
 > *(If using [tbd](https://github.com/jlevy/tbd) for task tracking, also run
 > `tbd setup --auto --prefix=<PREFIX>`.)*
 
@@ -299,15 +321,14 @@ flowchart TD
 
 For the full set of process flow diagrams (Phases 0-1, 2-6, and 7-8), resource
 dependency maps, and document relationships, see the
-[Playbook Flow Analysis](docs/project/playbook-flow-analysis.md).
+[Playbook Flow Overview](docs/project/playbook-flow-overview.md).
 
 ## For AI Agents
 
 The `guidelines/` directory contains compact documents (~2-3k tokens each) designed to
 be loaded into an AI agent’s context window before starting work.
 Include the raw markdown files from `guidelines/` in your agent’s system prompt or
-context.
-The key guidelines for porting are:
+context. The key guidelines for porting are:
 
 - `guidelines/python-to-rust-porting-rules.md` — Core porting rules
 - `guidelines/rust-project-setup.md` — Project setup patterns
@@ -321,33 +342,6 @@ For a **working reference project**, check out
 [flowmark-rs](https://github.com/jlevy/flowmark-rs) — it demonstrates all of these
 patterns in a real, production codebase (Cargo.toml, CI workflows, deny.toml, release
 automation, test organization, maturin/PyPI distribution, and more).
-
-## Case Study: Flowmark
-
-The `case-studies/flowmark/` directory documents the port of
-[flowmark](https://github.com/jlevy/flowmark) (a Python Markdown formatter) to
-[flowmark-rs](https://github.com/jlevy/flowmark-rs).
-Current outcomes include:
-
-- A non-trivial Python CLI codebase successfully ported to Rust
-- Full Python test-to-Rust mapping discipline
-- Cross-language parity validation and CI enforcement
-- Documented workaround tracking and ongoing upstream sync workflow
-
-(See `case-studies/flowmark/` for detailed methodology.
-Canonical metrics are in
-[`case-studies/flowmark/flowmark-port-metrics.md`](case-studies/flowmark/flowmark-port-metrics.md).)
-
-The case study covers library evaluation methodology, all technical decisions,
-workaround strategies, and a meta-analysis of what can be automated in porting
-workflows.
-
-**For agents:** Beyond the case study docs here, the
-[flowmark-rs repo itself](https://github.com/jlevy/flowmark-rs) is the best working
-reference for what a completed port looks like — including CI workflows, release
-automation, test structure, deny.toml, build.rs, and PyPI distribution via maturin.
-The bootstrap instructions above include it as a submodule so your agent has direct
-access.
 
 ## Reference Docs
 
@@ -409,7 +403,7 @@ the full process.
 ## Contributing
 
 This playbook is built from real porting experience.
-If you’re ported a project to Rust and have lessons to share, PR them or especially try
+If you’ve ported a project to Rust and have lessons to share, PR them or especially try
 adding an entire new case study so the process keeps improving.
 
 ## License
