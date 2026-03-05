@@ -138,19 +138,21 @@ Agents can figure out many things on their own, but pre-curated knowledge and gu
 dramatically reduces slow web searches and common confusions that suck up tokens and
 waste context.
 
-Agents read these docs before and during the port:
+Agents use these 19 docs (~190 pages) before and during the port:
 
-- **Guidelines:** Porting principles and anti-patterns (the “north star” demanding
-  *exact parity*), test coverage requirements, and porting workflow with acceptance
+- **Guidelines** (7 docs, ~60 pages) are compact rules: porting principles and
+  anti-patterns (the “north star” demanding *exact parity* and *forbidding* things like
+  changing scope or skipping tests), test coverage requirements, and acceptance
   criteria.
 
-- **References:** A Python-to-Rust construct mapping, CLI app patterns (clap, tracing,
-  error handling), cross-language test mapping with CI enforcement, and distribution
-  best practices.
+- **References** (5 docs, ~70 pages) are lookup tables and pattern catalogs: an
+  exhaustive Python-to-Rust construct mapping (types, collections, error handling,
+  async), CLI app patterns (clap, tracing, error handling), cross-language test mapping
+  with CI enforcement, and distribution best practices.
 
-- **Playbooks:** Step-by-step process guides for the end-to-end port.
-  A key insight: ~50% of effort goes to library workarounds and cross-validation, not
-  the initial implementation.
+- **Playbooks** (4 playbooks + 3 templates, ~60 pages) are step-by-step process guides
+  and checklists for the end-to-end port. A key insight: ~50% of effort goes to library
+  workarounds and cross-validation, not the initial implementation.
 
 ## Golden Testing
 

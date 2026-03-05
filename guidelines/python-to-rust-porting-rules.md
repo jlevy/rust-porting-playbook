@@ -1,18 +1,20 @@
 ---
 title: Python-to-Rust Porting Rules
-description: Porting methodology -- principles, workflow, pitfalls, and acceptance criteria
+description: Porting rules -- principles, patterns, pitfalls, and acceptance criteria
 ---
 # Python-to-Rust Porting Rules
 
-Methodology and process for systematically porting Python applications to Rust.
-Covers principles, workflow, pitfalls, and acceptance criteria.
+Rules for systematically porting Python applications to Rust.
+Covers principles, patterns, pitfalls, and acceptance criteria.
+For the step-by-step porting process, see the
+[Python-to-Rust Playbook](../playbooks/python-to-rust-playbook.md).
 
 For construct-by-construct lookup (types, I/O, regex, project setup), see the
 [Mapping Reference](../references/python-to-rust-mapping-reference.md).
 
 **Read first:**
-[Porting Principles and Anti-Patterns](porting-principles-and-antipatterns.md)
-— non-negotiable principles that override all other guidance.
+[Porting Principles and Anti-Patterns](porting-principles-and-antipatterns.md) —
+non-negotiable principles that override all other guidance.
 
 See also: [CLI-Specific Porting Patterns](python-to-rust-cli-porting.md),
 [Rust General Rules](rust-general-rules.md),
@@ -39,8 +41,7 @@ For Python rules, see `tbd guidelines python-rules`.
 
 ## Type and Error Mappings
 
-See
-[Mapping Reference § Types](../references/python-to-rust-mapping-reference.md#types)
+See [Mapping Reference § Types](../references/python-to-rust-mapping-reference.md#types)
 and
 [Mapping Reference § Error Handling](../references/python-to-rust-mapping-reference.md#error-handling)
 for exhaustive mapping tables with code examples.
@@ -50,8 +51,8 @@ for exhaustive mapping tables with code examples.
 - Use `Cow<'_, str>` when a function sometimes modifies its input and sometimes returns
   it unchanged -- avoids allocation in the pass-through case.
 - Use `Option<T>` for Python `None`. Never use sentinel values.
-- `HashMap` does **not** preserve insertion order (Python `dict` does since 3.7).
-  Use `IndexMap` if order matters for behavioral parity.
+- `HashMap` does **not** preserve insertion order (Python `dict` does since 3.7). Use
+  `IndexMap` if order matters for behavioral parity.
 - **Critical rule:** If the Python function never raises an exception, the Rust function
   should NOT return `Result`. Match the Python signature exactly.
 
@@ -152,11 +153,9 @@ For each Python module:
 ### 1. Regex Anchoring
 
 Rust regex is unanchored by default -- the #1 source of porting bugs.
-Add `^` for `re.match()`, wrap with `^...$` for `re.fullmatch()`.
-See
-[Mapping Reference § Regex](../references/python-to-rust-mapping-reference.md#regex)
-for the full regex porting guide including replacement syntax, flags, and unicode
-behavior.
+Add `^` for `re.match()`, wrap with `^...$` for `re.fullmatch()`. See
+[Mapping Reference § Regex](../references/python-to-rust-mapping-reference.md#regex) for
+the full regex porting guide including replacement syntax, flags, and unicode behavior.
 
 ### 2. String Preservation
 
@@ -179,6 +178,7 @@ pub fn process(text: &str) -> String {
 def split_frontmatter(text: str) -> tuple[str, str]:
     return ("", text)  # Returns tuple, never None
 ```
+
 ```rust
 // WRONG: different return type
 fn split_frontmatter(text: &str) -> Option<(String, String)> { ... }
@@ -291,22 +291,25 @@ Research alternatives early.
 
 During porting, agents add comments mapping Rust code back to Python (e.g.,
 `// Python: self._format_line(text)`). After the port stabilizes, many of these become
-stale as the Rust code evolves independently. Schedule a cleanup pass:
+stale as the Rust code evolves independently.
+Schedule a cleanup pass:
 
 1. **Verify each Python reference comment is still accurate.** If the Rust
    implementation has diverged, update or remove the comment.
-2. **Keep module-level mapping comments** (`//! Ported from Python: flowmark/filling.py`)
-   — these remain valuable for traceability.
+2. **Keep module-level mapping comments**
+   (`//! Ported from Python: flowmark/filling.py`) — these remain valuable for
+   traceability.
 3. **Remove per-line Python comments** that describe implementation details no longer
-   relevant to the Rust code. Rust code should explain itself idiomatically, not as a
-   translation of Python.
-4. **Keep comments that explain non-obvious behavioral parity** — e.g., "matches Python's
-   behavior of returning empty string for None input."
+   relevant to the Rust code.
+   Rust code should explain itself idiomatically, not as a translation of Python.
+4. **Keep comments that explain non-obvious behavioral parity** — e.g., “matches
+   Python’s behavior of returning empty string for None input.”
 
 ### Visibility Audit
 
-After porting is complete, audit `pub` visibility. During porting, agents tend to make
-everything `pub` for convenience. Convert internal-only items to `pub(crate)`. See
+After porting is complete, audit `pub` visibility.
+During porting, agents tend to make everything `pub` for convenience.
+Convert internal-only items to `pub(crate)`. See
 [Code Review Checklist](../references/rust-code-review-checklist.md) for details.
 
 ## Acceptance Criteria
