@@ -56,7 +56,7 @@ The community replacement is `serde_yaml_ng`.
   `pyyaml | YAML parsing | serde_yaml | Low` to
   `pyyaml | YAML parsing | serde_yaml_ng | Low`
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` line 555: Change
+- [ ] `references/python-to-rust-mapping-reference.md` line 555: Change
   `PyYAML | serde_yaml 0.9 | Good | Used for config/frontmatter` to
   `PyYAML | serde_yaml_ng 0.10+ | Good | serde_yaml is archived`
 
@@ -79,7 +79,7 @@ flagship feature. Using `resolver = "2"` is wrong for Edition 2024 workspaces.
 - [ ] `guidelines/rust-project-setup.md` line 79: Change `resolver = "2"` to
   `resolver = "3"`
 
-- [ ] `playbooks/rust-cli-best-practices.md`: Search for `resolver` references and
+- [ ] `references/rust-cli-best-practices.md`: Search for `resolver` references and
   update
 
 - [ ] Any case study files that reference workspace resolver
@@ -112,7 +112,7 @@ returning `Option<String>` (from `.ok().and_then()`), which is a type mismatch.
   example — the `.or_else()` chain should use `.unwrap_or_else()` consistently, and add
   `println!("cargo:rerun-if-changed=python-source")` for correctness
 
-- [ ] `guidelines/rust-cli-app-patterns.md` lines 319-324: The
+- [ ] `references/rust-cli-app-patterns.md` lines 319-324: The
   `concat!(env!(...), env!(...))` pattern here is correct but the
   `PYTHON_SOURCE_VERSION` env var it references needs to come from a working `build.rs`
   — add a comment pointing to the build.rs pattern
@@ -142,7 +142,7 @@ impossible to understand.
 #### 1.5 Fix `assert` → `debug_assert!` — dangerous default
 
 In both `guidelines/python-to-rust-porting-rules.md` (line 69) and
-`playbooks/python-to-rust-mapping-reference.md` (line 148), Python `assert` is mapped to
+`references/python-to-rust-mapping-reference.md` (line 148), Python `assert` is mapped to
 `debug_assert!` as the primary recommendation.
 `debug_assert!` is stripped from release builds, silently removing runtime checks.
 
@@ -152,7 +152,7 @@ In both `guidelines/python-to-rust-porting-rules.md` (line 69) and
   `assert (invariant) | debug_assert! | Only for debug-only invariants` and
   `assert (validation) | explicit Result-based check | Default for porting`
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` line 148: Change
+- [ ] `references/python-to-rust-mapping-reference.md` line 148: Change
   `debug_assert_eq!(x, y) | Not for production checks` to
   `assert_eq!(x, y) | debug_assert_eq! only for hot-path invariants`
 
@@ -160,7 +160,7 @@ In both `guidelines/python-to-rust-porting-rules.md` (line 69) and
 
 #### 1.6 Fix version constraint mappings (swapped)
 
-In `playbooks/python-to-rust-mapping-reference.md`:
+In `references/python-to-rust-mapping-reference.md`:
 
 - Line 339: `~=1.4` maps to `"~1.4"` — WRONG. Python `~=1.4` means `>=1.4, <2.0`. Cargo
   `~1.4` means `>=1.4, <1.5`. The correct mapping is `"1.4"` (caret).
@@ -171,7 +171,7 @@ The two rows are swapped.
 
 **Files to change:**
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` lines 339-340: Swap the Cargo
+- [ ] `references/python-to-rust-mapping-reference.md` lines 339-340: Swap the Cargo
   equivalents: `~=1.4` → `"1.4"` (caret) and `==1.4.*` → `"~1.4"` (tilde)
 
 * * *
@@ -187,7 +187,7 @@ The replacement is `softprops/action-gh-release@v2` or `ncipollo/release-action@
 - [ ] `guidelines/rust-project-setup.md` lines 390-398: Replace
   `actions/create-release@v1` with `softprops/action-gh-release@v2`
 
-- [ ] `playbooks/rust-cli-best-practices.md`: Same fix if this action appears
+- [ ] `references/rust-cli-best-practices.md`: Same fix if this action appears
 
 * * *
 
@@ -218,7 +218,7 @@ This is the most common source of subtle bugs in Python→Rust ports.
 - [ ] `guidelines/python-to-rust-porting-rules.md` line 49: Add note:
   `HashMap<K, V> | **No insertion order!** Use IndexMap if order matters`
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` line 31: Same fix plus add
+- [ ] `references/python-to-rust-mapping-reference.md` line 31: Same fix plus add
   `IndexMap` to notes
 
 * * *
@@ -265,14 +265,14 @@ different places for the same metrics.
 
 #### 1.12 Fix `main()` error handling contradiction
 
-In `guidelines/rust-cli-app-patterns.md` lines 172-183, `main()` returns
+In `references/rust-cli-app-patterns.md` lines 172-183, `main()` returns
 `color_eyre::Result<()>` but then manually catches errors with `if let Err(e)` and calls
 `process::exit(1)`. If main returns Result, the error is already reported by the Result
 return. These are two conflicting patterns mixed together.
 
 **Files to change:**
 
-- [ ] `guidelines/rust-cli-app-patterns.md` lines 169-183: Choose one pattern: Either
+- [ ] `references/rust-cli-app-patterns.md` lines 169-183: Choose one pattern: Either
   `fn main() -> Result<()>` (let eyre report errors) OR `fn main()` with manual error
   handling. Don’t mix both.
 
@@ -309,11 +309,11 @@ Since the playbook targets Rust 1.85+, `LazyLock` (stable since 1.80) is in stdl
 
 **Files to change:**
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` line 295: Change
+- [ ] `references/python-to-rust-mapping-reference.md` line 295: Change
   `@pytest.fixture | Setup in test function or once_cell` to
   `@pytest.fixture | Setup in test function or LazyLock`
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` line 420: Same
+- [ ] `references/python-to-rust-mapping-reference.md` line 420: Same
 
 - [ ] `playbooks/python-to-rust-porting-guide.md`: Search for `once_cell` and replace
   with `std::sync::LazyLock`
@@ -350,11 +350,11 @@ The regex pitfall only covers `re.match()`. Engineers will also encounter `re.se
   - `re.search(pat)` → use pattern as-is (both unanchored)
   - `re.fullmatch(pat)` → wrap with `^...$` (or `\A...\z`)
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` line 214: Fix — `re.match()`
+- [ ] `references/python-to-rust-mapping-reference.md` line 214: Fix — `re.match()`
   doesn’t map to `is_match()` when the Python code uses groups.
   Add `regex.captures(s)` for when Match object fields are accessed.
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` line 217: Fix — `find_iter()`
+- [ ] `references/python-to-rust-mapping-reference.md` line 217: Fix — `find_iter()`
   returns `Vec<Match>`, not `Vec<&str>`. Correct to:
   `regex.find_iter(s).map(|m| m.as_str()).collect::<Vec<_>>()`
 
@@ -362,13 +362,13 @@ The regex pitfall only covers `re.match()`. Engineers will also encounter `re.se
 
 #### 2.5 Add `match command.as_str()` pattern
 
-In `playbooks/python-to-rust-mapping-reference.md` lines 92-98,
+In `references/python-to-rust-mapping-reference.md` lines 92-98,
 `match command { "quit" => ... }` won’t compile if `command` is `String`. Need
 `match command.as_str()`.
 
 **Files to change:**
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` line 93: Change to
+- [ ] `references/python-to-rust-mapping-reference.md` line 93: Change to
   `match command.as_str() {` and add a comment explaining String vs &str in match
 
 * * *
@@ -428,13 +428,13 @@ Standard markers are `TODO:`, `FIXME:`, `HACK:`.
 
 #### 3.4 Fix `frozenset` note — misleading
 
-`playbooks/python-to-rust-mapping-reference.md` line 33 says `frozenset` maps to
+`references/python-to-rust-mapping-reference.md` line 33 says `frozenset` maps to
 `HashSet<T>` “(immutable by default)”. Rust `HashSet` is mutable with `let mut`. Python
 `frozenset` is genuinely immutable at the type level and is hashable.
 
 **Files to change:**
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` line 33: Change note to:
+- [ ] `references/python-to-rust-mapping-reference.md` line 33: Change note to:
   “Immutability via `let` binding, not the type.
   For use as hash key, need newtype implementing Hash”
 
@@ -442,12 +442,12 @@ Standard markers are `TODO:`, `FIXME:`, `HACK:`.
 
 #### 3.5 Fix `str.find()` — returns byte offset, not char index
 
-`playbooks/python-to-rust-mapping-reference.md` line 203: Python `str.find()` returns a
+`references/python-to-rust-mapping-reference.md` line 203: Python `str.find()` returns a
 character index; Rust `str::find()` returns a byte offset.
 
 **Files to change:**
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` line 203: Add note: “Returns byte
+- [ ] `references/python-to-rust-mapping-reference.md` line 203: Add note: “Returns byte
   offset, not char index!
   Different for non-ASCII”
 
@@ -487,18 +487,18 @@ new features). While still functional, this should be noted.
 
 - [ ] `guidelines/rust-general-rules.md` line 79: Add note about maintenance status
 
-- [ ] `guidelines/rust-cli-app-patterns.md` line 172: Add note
+- [ ] `references/rust-cli-app-patterns.md` line 172: Add note
 
 * * *
 
 #### 3.9 Add `Callable` → three Rust function traits explanation
 
-`playbooks/python-to-rust-mapping-reference.md` line 51: `Callable[[A], B]` maps to
+`references/python-to-rust-mapping-reference.md` line 51: `Callable[[A], B]` maps to
 `Fn(A) -> B` but doesn’t explain `FnMut` and `FnOnce`.
 
 **Files to change:**
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` line 51: Expand to show:
+- [ ] `references/python-to-rust-mapping-reference.md` line 51: Expand to show:
   - `Fn` — no mutation of captures, callable repeatedly (most Python callbacks)
   - `FnMut` — mutates captures (closures modifying outer state)
   - `FnOnce` — consumes captures, callable once (ownership transfer)
@@ -507,24 +507,24 @@ new features). While still functional, this should be noted.
 
 #### 3.10 Fix `TypedDict` coupling with serde
 
-`playbooks/python-to-rust-mapping-reference.md` line 49: `TypedDict` maps to “Struct
+`references/python-to-rust-mapping-reference.md` line 49: `TypedDict` maps to “Struct
 with `serde::Deserialize`” but serde is only needed for deserialization.
 
 **Files to change:**
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` line 49: Change to: “Struct with
+- [ ] `references/python-to-rust-mapping-reference.md` line 49: Change to: “Struct with
   named fields. Add serde derives only if deserializing from data formats”
 
 * * *
 
 #### 3.11 Note `Protocol` structural vs nominal difference
 
-`playbooks/python-to-rust-mapping-reference.md` line 48: Python `Protocol` is structural
+`references/python-to-rust-mapping-reference.md` line 48: Python `Protocol` is structural
 (implicit satisfaction); Rust `trait` is nominal (explicit `impl` required).
 
 **Files to change:**
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` line 48: Add note: “Rust traits
+- [ ] `references/python-to-rust-mapping-reference.md` line 48: Add note: “Rust traits
   are nominal — must write explicit `impl Trait for Type`”
 
 * * *
@@ -552,7 +552,7 @@ comrak is 0.50+. The API has changed significantly (Text type, plugin system, et
   evaluation was done against comrak 0.29 and the library has evolved significantly
   since then
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` line 553: Update `comrak 0.47` to
+- [ ] `references/python-to-rust-mapping-reference.md` line 553: Update `comrak 0.47` to
   note current version availability
 
 * * *
@@ -568,7 +568,7 @@ Every class port needs it.
 
 **Files to change:**
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` after line 283 (Classes section):
+- [ ] `references/python-to-rust-mapping-reference.md` after line 283 (Classes section):
   Add a table mapping:
   - `__str__()` → `impl fmt::Display`
   - `__repr__()` → `#[derive(Debug)]`
@@ -591,7 +591,7 @@ Python generators are extremely common and have no trivial Rust equivalent.
 
 **Files to change:**
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md`: Add section showing:
+- [ ] `references/python-to-rust-mapping-reference.md`: Add section showing:
   - Simple generators → `impl Iterator<Item = T>` with closures
   - Stateful generators → struct implementing `Iterator` trait
   - `std::iter::from_fn` for simple cases
@@ -601,12 +601,12 @@ Python generators are extremely common and have no trivial Rust equivalent.
 
 #### 4.3 Add context managers → RAII mapping with examples
 
-`playbooks/python-to-rust-mapping-reference.md` line 147 mentions “Scope + `Drop`” but
+`references/python-to-rust-mapping-reference.md` line 147 mentions “Scope + `Drop`” but
 gives no code example.
 
 **Files to change:**
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` after line 147: Add examples:
+- [ ] `references/python-to-rust-mapping-reference.md` after line 147: Add examples:
   - `with open(f) as fh:` → `std::fs::read_to_string(path)?` (RAII)
   - `with lock:` → `let _guard = mutex.lock().unwrap();`
   - Custom context managers → `impl Drop` or closure-based APIs
@@ -617,7 +617,7 @@ gives no code example.
 
 **Files to change:**
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md`: Add example showing `@dataclass`
+- [ ] `references/python-to-rust-mapping-reference.md`: Add example showing `@dataclass`
   → `#[derive(Debug, Clone, PartialEq)]`, `frozen=True` → no `&mut self` methods,
   `order=True` → `#[derive(PartialOrd, Ord)]`
 
@@ -627,7 +627,7 @@ gives no code example.
 
 **Files to change:**
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md`: Add example showing string enums
+- [ ] `references/python-to-rust-mapping-reference.md`: Add example showing string enums
   with `strum` crate for `Display`/`FromStr` derives
 
 * * *
@@ -636,7 +636,7 @@ gives no code example.
 
 **Files to change:**
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md`: Add table:
+- [ ] `references/python-to-rust-mapping-reference.md`: Add table:
   - `async def foo()` → `async fn foo()`
   - `await bar()` → `bar().await`
   - `asyncio.run(main())` → `#[tokio::main]`
@@ -648,7 +648,7 @@ gives no code example.
 
 **Files to change:**
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md`: Add table:
+- [ ] `references/python-to-rust-mapping-reference.md`: Add table:
   - `multiprocessing.Pool.map` → `items.par_iter().map` (rayon)
   - `threading.Thread` → `std::thread::spawn`
   - `concurrent.futures` → `rayon::ThreadPool` or `tokio::spawn`
@@ -717,12 +717,12 @@ Add file paths in parentheses.
 
 #### 5.2 Fix `for/else` mapping — show idiomatic iterator solution
 
-`playbooks/python-to-rust-mapping-reference.md` line 109: “Use flag variable” is
+`references/python-to-rust-mapping-reference.md` line 109: “Use flag variable” is
 un-idiomatic. The idiomatic Rust is `if let Some(item) = iter.find(|x| cond(x))`.
 
 **Files to change:**
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` line 109: Add the iterator
+- [ ] `references/python-to-rust-mapping-reference.md` line 109: Add the iterator
   solution alongside the flag variable option
 
 * * *
@@ -773,7 +773,7 @@ This is missing from both CLI docs.
 
 **Files to change:**
 
-- [ ] `guidelines/rust-cli-app-patterns.md`: Add note about SIGPIPE handling:
+- [ ] `references/rust-cli-app-patterns.md`: Add note about SIGPIPE handling:
   `#[cfg(unix)] unsafe { libc::signal(libc::SIGPIPE, libc::SIG_DFL); }` at the start of
   main, or use the `sigpipe` attribute (nightly)
 
@@ -787,9 +787,9 @@ This is missing from both CLI docs.
 
 **Files to change:**
 
-- [ ] `guidelines/rust-cli-app-patterns.md`: Add brief mention of `clap_complete`
+- [ ] `references/rust-cli-app-patterns.md`: Add brief mention of `clap_complete`
 
-- [ ] `playbooks/rust-cli-best-practices.md`: Add shell completions section
+- [ ] `references/rust-cli-best-practices.md`: Add shell completions section
 
 * * *
 
@@ -800,7 +800,7 @@ Modern Rust (1.61+) supports `fn main() -> ExitCode` as an alternative to
 
 **Files to change:**
 
-- [ ] `guidelines/rust-cli-app-patterns.md`: Add note about `ExitCode` as preferred
+- [ ] `references/rust-cli-app-patterns.md`: Add note about `ExitCode` as preferred
   pattern over `process::exit()`
 
 * * *
@@ -819,13 +819,13 @@ Modern Rust (1.61+) supports `fn main() -> ExitCode` as an alternative to
 
 #### 5.10 Add `pytest.approx` → `approx` crate mapping
 
-`playbooks/python-to-rust-mapping-reference.md` line 297: Manual
+`references/python-to-rust-mapping-reference.md` line 297: Manual
 `(x - y).abs() < epsilon` is error-prone near zero.
 The `approx` crate provides `assert_relative_eq!`.
 
 **Files to change:**
 
-- [ ] `playbooks/python-to-rust-mapping-reference.md` line 297: Add mention of the
+- [ ] `references/python-to-rust-mapping-reference.md` line 297: Add mention of the
   `approx` crate for `assert_relative_eq!` and `assert_abs_diff_eq!`
 
 * * *
@@ -911,5 +911,5 @@ Each phase can be committed independently:
 - Review beads: `tbd list --status closed` (23 beads with detailed close-reasons)
 - Detailed review transcripts for:
   - `guidelines/python-to-rust-porting-rules.md` (22 findings, 2 CRITICAL)
-  - `playbooks/python-to-rust-mapping-reference.md` (42 findings, 4 CRITICAL)
+  - `references/python-to-rust-mapping-reference.md` (42 findings, 4 CRITICAL)
   - `case-studies/flowmark/flowmark-port-decision-log.md` (21 findings, 1 CRITICAL)

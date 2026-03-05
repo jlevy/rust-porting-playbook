@@ -2,7 +2,7 @@
 
 Canonical metrics for the flowmark Python->Rust case study.
 
-**Last updated:** 2026-02-26
+**Last updated:** 2026-03-04
 
 **Scope note:** This file distinguishes:
 - historical initial-port metrics (2025-11 baseline)
@@ -12,14 +12,20 @@ Canonical metrics for the flowmark Python->Rust case study.
 
 | Metric | Value |
 | --- | --- |
-| Python app LOC | ~4,400 |
-| Rust app LOC | ~6,000 |
-| Rust/Python app ratio | ~1.36x |
+| Python app LOC | ~4,250 |
+| Rust app LOC | ~7,250 |
+| Rust/Python app ratio | ~1.7x |
+| Python test LOC | ~5,800 |
+| Rust test LOC | ~7,300 |
+| Python tryscript LOC | ~1,770 |
+| Rust tryscript LOC | ~1,520 |
+| Python total LOC | ~12,400 |
+| Rust total LOC | ~16,150 |
 | Python tests | 292 |
-| Rust tests | 442 |
+| Rust tests | 469 |
 | Python test mapping | 292/292 mapped (100%) |
 | Missing mapped Python tests | 0 |
-| Workaround comments | 65 (`COMRAK-WORKAROUND`/`FIXME:`) |
+| Workaround comments | 66 (`COMRAK-WORKAROUND1`–`13`) |
 | Performance improvement | 20-40x |
 
 ## Historical Baseline (initial port snapshot, 2025-11)

@@ -18,10 +18,48 @@ The Python test suite defines what the Rust port must do.
 Without tests, porting is guesswork.
 With them, 100% passing tests equals correctness by definition.
 
-For detailed reference on any step, see the companion docs listed in the
-[README](../README.md).
 To improve this playbook through your port, see the
 [meta-playbook](../_meta/meta-improving-this-playbook.md).
+
+* * *
+
+## Before You Begin
+
+Before starting Phase 1, confirm your workspace is set up:
+
+```
+<PROJECT>-rs/
+├── repos/
+│   ├── <PYTHON_PROJECT>/          # Python source (git submodule)
+│   ├── rust-porting-playbook/     # This playbook (git submodule)
+│   └── flowmark-rs/               # Working reference port (git submodule)
+├── src/
+└── Cargo.toml
+```
+
+**Load these guidelines** into your context before starting:
+
+- [Porting Principles and Anti-Patterns](../guidelines/porting-principles-and-antipatterns.md)
+  — non-negotiable rules that override all other guidance
+- [Python-to-Rust Porting Rules](../guidelines/python-to-rust-porting-rules.md) — rules,
+  patterns, pitfalls, and acceptance criteria
+- [Test Coverage for Porting](../guidelines/test-coverage-for-porting.md) — building
+  test coverage as the spec for the port
+
+**Reference resources** (consult as needed during specific phases):
+
+- [flowmark-rs](https://github.com/jlevy/flowmark-rs) (`repos/flowmark-rs/`) — a
+  production Rust port built with this playbook.
+  Use it for working examples of Cargo.toml config, CI workflows, deny.toml, release
+  automation, test structure, and maturin/PyPI distribution.
+- [Flowmark case study](../case-studies/flowmark/) — decisions, tradeoffs, and lessons
+  from the flowmark port.
+- Additional [guidelines](../guidelines/), [references](../references/), and
+  [playbooks](./) are cross-referenced from each phase below.
+
+**Task tracking** (optional but recommended for larger ports): If using
+[tbd](https://github.com/jlevy/tbd) or [beads](https://github.com/steveyegge/beads) for
+issue tracking, set it up now (`tbd setup --auto --prefix=<PREFIX>`).
 
 * * *
 
@@ -72,18 +110,19 @@ uv run pytest --cov=myproject --cov-branch --cov-report=term-missing
 
 If coverage is below these thresholds, **stop and enhance tests first** — follow
 [Phase 0 of the Test Coverage Playbook](python-to-rust-test-coverage-playbook.md) to
-systematically identify gaps and build out the test suite. Every untested code path is a
-potential bug in the Rust version that you won’t catch.
+systematically identify gaps and build out the test suite.
+Every untested code path is a potential bug in the Rust version that you won’t catch.
 
 **Test sufficiency gate (beyond coverage numbers):**
 
-Coverage numbers alone are insufficient. Also verify:
+Coverage numbers alone are insufficient.
+Also verify:
 - [ ] Every public CLI option/flag has at least one test exercising it
 - [ ] Error paths are tested (invalid input, missing files, bad arguments)
 - [ ] Edge cases are covered (empty input, Unicode, very large input)
 - [ ] If the project has bash-based golden tests, consider migrating them to
-  [tryscript](https://github.com/jlevy/tryscript) for better maintainability
-  (see Phase 0 of the Test Coverage Playbook for migration guidance)
+  [tryscript](https://github.com/jlevy/tryscript) for better maintainability (see Phase
+  0 of the Test Coverage Playbook for migration guidance)
 
 Test coverage investment before porting pays for itself many times over.
 
@@ -121,17 +160,18 @@ expected and valuable.
 Library choices made here predetermine how much time you’ll spend in Phase 6 (typically
 30-50% of total effort).
 
-**Time:** 30-60 minutes for complex dependency profiles. For projects with zero or
-minimal runtime dependencies, this phase can be completed in 10-15 minutes — see the
-fast-path below.
+**Time:** 30-60 minutes for complex dependency profiles.
+For projects with zero or minimal runtime dependencies, this phase can be completed in
+10-15 minutes — see the fast-path below.
 
 **Fast-path for low-dependency projects:** If the Python project has zero or few runtime
 dependencies (stdlib only, or only well-established libraries like `re`, `json`,
-`argparse`), the library risk is low and this phase is short. Map each to the standard
-Rust equivalent (`regex`, `serde_json`, `clap`) — these are mature and well-documented.
+`argparse`), the library risk is low and this phase is short.
+Map each to the standard Rust equivalent (`regex`, `serde_json`, `clap`) — these are
+mature and well-documented.
 Skip the multi-candidate evaluation process and proceed to creating a quick proof of
-concept that verifies behavioral equivalence on your project’s actual inputs. Focus the
-saved time on test coverage (Phase 1.3) and edge-case testing instead.
+concept that verifies behavioral equivalence on your project’s actual inputs.
+Focus the saved time on test coverage (Phase 1.3) and edge-case testing instead.
 
 For filesystem-heavy CLIs, also load the
 [Filesystem-Heavy CLI Porting guideline](../guidelines/filesystem-heavy-cli-porting.md).
@@ -150,6 +190,7 @@ For each dependency rated Medium or High risk:
 | Core feature 2 | Y | Y | N |
 | Feature you need | Y | Partial | Y |
 | AST/API access | Y | Full | Event-only |
+
 3. **Run proof-of-concept tests** (5-10 representative inputs from your actual project):
 
    ```bash
@@ -195,7 +236,7 @@ configuration, release workflow.
 This prevents rework from poor initial choices.
 
 See [Rust Project Setup](../guidelines/rust-project-setup.md) and
-[Rust CLI Best Practices](rust-cli-best-practices.md) for CLI projects.
+[Rust CLI Best Practices](../references/rust-cli-best-practices.md) for CLI projects.
 
 * * *
 
@@ -410,7 +451,7 @@ that tracks:
 - **Current status** (mapped tests, passing tests, known gaps)
 - **All known discrepancies** with status (fixed, accepted, open)
 - **Test mapping coverage** (see
-  [Cross-Language Test Mapping](cross-language-test-mapping.md))
+  [Cross-Language Test Mapping](../references/cross-language-test-mapping.md))
 
 This document serves as the single source of truth for the porting effort’s progress and
 prevents drift across multiple agent sessions.
@@ -592,7 +633,8 @@ install experience:
 - **Homebrew tap:** Personal tap with SHA256-pinned formula for macOS users.
 - **crates.io:** Standard Rust distribution (`cargo install` / `cargo binstall`).
 
-See [Rust CLI Best Practices](rust-cli-best-practices.md#65-multi-channel-distribution)
+See
+[Rust CLI Best Practices](../references/rust-cli-best-practices.md#65-multi-channel-distribution)
 for workflow templates and the
 [PyPI distribution research](../docs/project/research/research-rust-cli-pypi-distribution.md)
 for detailed guidance on the maturin approach.

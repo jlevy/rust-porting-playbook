@@ -2,9 +2,9 @@
 
 **A reference for building modern, production-ready Rust CLI applications**
 
-**Related:** [Python to Rust CLI Porting Guide](python-to-rust-porting-guide.md) |
-[Initial Port Checklist](port-checklist-initial-template.md) |
-[Update Checklist](port-checklist-update-template.md)
+**Related:** [Python to Rust CLI Porting Guide](../playbooks/python-to-rust-porting-guide.md) |
+[Initial Port Checklist](../playbooks/port-checklist-initial-template.md) |
+[Update Checklist](../playbooks/port-checklist-update-template.md)
 
 Version: 1.3 | Last Updated: 2026-03-03
 

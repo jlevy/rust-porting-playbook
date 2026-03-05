@@ -530,25 +530,24 @@ See [Library Choices](flowmark-port-library-choices.md) for the full workaround 
 
 ### Key Metrics (v2 Current, canonical)
 
-For canonical current values, use
-[flowmark-port-metrics.md](flowmark-port-metrics.md).
+For canonical current values, use [flowmark-port-metrics.md](flowmark-port-metrics.md).
 
 | Metric | Value |
 | --- | --- |
 | Python tests | 292 |
-| Rust tests | 442 |
+| Rust tests | 469 |
 | Test mapping | 292 mapped (100%), 0 missing |
-| Lines of Python (app) | ~4,400 |
-| Lines of Rust (app) | ~6,000 |
-| Rust/Python app code ratio | ~1.36x |
-| Workaround comments | 65 (`COMRAK-WORKAROUND`/`FIXME:`) |
+| Lines of Python (app) | ~4,250 |
+| Lines of Rust (app) | ~7,250 |
+| Rust/Python app code ratio | ~1.7x |
+| Workaround comments | 66 (`COMRAK-WORKAROUND1`–`13`) |
 
 ## Summary of Key Tactics
 
 1. **Research before coding.** Spend 30-60 min on ecosystem research.
    Write it down.
 2. **Plan comprehensively.** Feature matrix, library evaluation, architecture decisions.
-3. **Port tests first.** TDD ensures you know when you're done.
+3. **Port tests first.** TDD ensures you know when you’re done.
 4. **Port leaf modules first, integration modules last, CLI last.**
 5. **Expect parser differences.** Budget 50% of time for workarounds.
 6. **Use post-processing liberally.** A chain of `fix_*` functions is practical.
@@ -557,4 +556,4 @@ For canonical current values, use
 8. **Accept unfixable differences.** Document them clearly, move on.
 9. **Cross-validate continuously.** Run both implementations, diff outputs.
 10. **Keep the Rust version cleaner where it makes sense.** Matching Python bugs
-    verbatim isn't always the right call.
+    verbatim isn’t always the right call.

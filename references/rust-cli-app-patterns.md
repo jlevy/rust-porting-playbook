@@ -8,8 +8,8 @@ Patterns and conventions for building professional Rust CLI applications.
 Covers project structure, argument parsing, I/O handling, error reporting, and
 distribution.
 
-See also: [Rust General Rules](rust-general-rules.md),
-[Rust Project Setup](rust-project-setup.md).
+See also: [Rust General Rules](../guidelines/rust-general-rules.md),
+[Rust Project Setup](../guidelines/rust-project-setup.md).
 For Python CLI patterns (useful when porting), see `tbd guidelines python-cli-patterns`.
 
 ## Project Structure
@@ -533,8 +533,8 @@ See the [clap_complete documentation](https://docs.rs/clap_complete) for details
 
 ## Related Guidelines
 
-- [Rust General Rules](rust-general-rules.md)
-- [Rust Project Setup](rust-project-setup.md)
+- [Rust General Rules](../guidelines/rust-general-rules.md)
+- [Rust Project Setup](../guidelines/rust-project-setup.md)
 - For Python CLI patterns (porting source), see `tbd guidelines python-cli-patterns`
 - For TypeScript CLI patterns (parallel reference), see
   `tbd guidelines typescript-cli-tool-rules`

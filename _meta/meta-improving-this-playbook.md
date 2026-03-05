@@ -9,16 +9,16 @@ accurate and complete.
 [Observation Template](case-study-observations-template.md) |
 [Improvement Triage Template](case-study-improvement-triage-template.md) |
 [Improvement Log](playbook-improvement-log.md) |
-[Current Gap Map Plan](plans/done/plan-2026-02-25-playbook-meta-gap-map-and-structure.md) |
-[Auto-Sync Agent Prompt](../playbooks/auto-sync-agent-prompt-template.md)
+[Current Gap Map Plan](plans/done/plan-2026-02-25-playbook-meta-gap-map-and-structure.md)
+| [Auto-Sync Agent Prompt](../playbooks/auto-sync-agent-prompt-template.md)
 
 * * *
 
 ## Why Case Studies Matter
 
 The playbook was built primarily from the flowmark case study.
-Initial port baseline (2025-11) was ~2,000 lines Python app code; current flowmark
-state (2026-02-25) is ~4,400 lines Python app code and ~6,000 lines Rust app code.
+Initial port baseline (2025-11) was ~2,000 lines Python app code; current flowmark state
+(2026-03-04) is ~4,250 lines Python app code and ~7,250 lines Rust app code.
 While flowmark is a good test case, it represents a single data point.
 The playbook will improve significantly with additional case studies covering:
 
@@ -285,11 +285,11 @@ Begin from the update checklist and run a baseline-to-target diff first.
 
 When upstream Python releases a new version, follow this sequence:
 
-1. Identify baseline and target versions (currently ported Python version vs new release).
-2. Diff upstream changes from baseline to target:
-   modules/functions, tests, CLI/interface, dependencies.
-3. Categorize changes:
-   bug fix, new feature, test addition/update, refactor.
+1. Identify baseline and target versions (currently ported Python version vs new
+   release).
+2. Diff upstream changes from baseline to target: modules/functions, tests,
+   CLI/interface, dependencies.
+3. Categorize changes: bug fix, new feature, test addition/update, refactor.
 4. **Hard gate:** record baseline->target diff summary artifact before coding.
 5. Execute the update checklist end-to-end.
 6. Port changes with tests-first discipline.
@@ -298,8 +298,9 @@ When upstream Python releases a new version, follow this sequence:
 9. Record observations on update-playbook guidance quality (`FIX`, `ADD`, `CLARIFY`,
    `GENERALIZE`, `VALIDATE`).
 
-Use the [auto-sync agent prompt template](../playbooks/auto-sync-agent-prompt-template.md) to keep
-agent runs consistent and reproducible.
+Use the
+[auto-sync agent prompt template](../playbooks/auto-sync-agent-prompt-template.md) to
+keep agent runs consistent and reproducible.
 
 * * *
 

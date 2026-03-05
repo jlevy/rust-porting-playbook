@@ -16,7 +16,7 @@ Use a copy so this original template is not altered.
 (But only one copy should be needed per project.)
 
 **Related:** [Subsequent Update Checklist](port-checklist-update-template.md) |
-[Rust CLI Best Practices](rust-cli-best-practices.md)
+[Rust CLI Best Practices](../references/rust-cli-best-practices.md)
 
 * * *
 

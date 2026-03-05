@@ -11,7 +11,7 @@ development tooling.
 Cross-referenced against real-world projects: flowmark-rs, ripgrep, bat, fd, jj.
 
 See also: [Rust General Rules](rust-general-rules.md),
-[Rust CLI App Patterns](rust-cli-app-patterns.md).
+[Rust CLI App Patterns](../references/rust-cli-app-patterns.md).
 For commit conventions, see `tbd guidelines commit-conventions`.
 
 ## Cargo.toml Configuration
@@ -473,7 +473,7 @@ scripts (`scripts/*.py`) with unit tests. Scripts handle semver parsing, archive
 creation, idempotency checks, and wheel validation. Run tests in CI with
 `python3 -m unittest discover -s scripts/tests -p 'test_*.py'`.
 
-See [Rust CLI Best Practices](../playbooks/rust-cli-best-practices.md#64-release-ci-workflow)
+See [Rust CLI Best Practices](../references/rust-cli-best-practices.md#64-release-ci-workflow)
 for the complete release workflow template with plan job, concurrency control,
 checksum generation, and reusable channel workflows.
 
@@ -481,7 +481,7 @@ checksum generation, and reusable channel workflows.
 
 Beyond crates.io and GitHub Releases, distribute Rust CLI binaries through additional
 channels for broader reach. See
-[Rust CLI Best Practices](../playbooks/rust-cli-best-practices.md#65-multi-channel-distribution)
+[Rust CLI Best Practices](../references/rust-cli-best-practices.md#65-multi-channel-distribution)
 for full workflow templates.
 
 **PyPI via maturin is the recommended primary distribution channel** for Rust CLI
@@ -696,7 +696,7 @@ This lets agents read the Python source directly and provides an exact commit re
 ## Related Guidelines
 
 - [Rust General Rules](rust-general-rules.md)
-- [Rust CLI App Patterns](rust-cli-app-patterns.md)
+- [Rust CLI App Patterns](../references/rust-cli-app-patterns.md)
 - [Python-to-Rust Porting Rules](python-to-rust-porting-rules.md)
 - For commit conventions, see `tbd guidelines commit-conventions`
 - For release notes, see `tbd guidelines release-notes-guidelines`

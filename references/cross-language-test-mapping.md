@@ -283,5 +283,5 @@ before the next PR merges.
   organization, golden tests, coverage tools
 - [Porting Principles](../guidelines/porting-principles-and-antipatterns.md) — Principle 9
   covers dynamic corpus validation as a complement to static test mapping
-- [Python-to-Rust Playbook](python-to-rust-playbook.md) — Phase 5 references
+- [Python-to-Rust Playbook](../playbooks/python-to-rust-playbook.md) — Phase 5 references
   test coverage strategy

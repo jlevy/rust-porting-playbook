@@ -97,16 +97,16 @@ It catches issues that:
 ### 5. Workaround Tracking with Structured Comments
 
 Marking every workaround with `HACK:` or a project-specific label (e.g.,
-`COMRAK-WORKAROUND`) creates a searchable inventory of technical debt. Use `FIXME:` for
-items needing future resolution. Avoid `XXX:` as it is not recognized by most linters
-and IDEs. This pattern generalizes to any project where you're working around
-third-party library behavior.
+`COMRAK-WORKAROUND`) creates a searchable inventory of technical debt.
+Use `FIXME:` for items needing future resolution.
+Avoid `XXX:` as it is not recognized by most linters and IDEs.
+This pattern generalizes to any project where you’re working around third-party library
+behavior.
 
 ## Empirical Data from the Flowmark Port
 
 The following data comes from the actual flowmark port, verified against the source
-repos.
-Canonical current metrics are maintained in
+repos. Canonical current metrics are maintained in
 [flowmark-port-metrics.md](flowmark-port-metrics.md).
 The initial port (v1, Python v0.5.5 -> Rust v0.1.3) is documented below as historical
 baseline context.
@@ -127,12 +127,15 @@ significant end-to-end coverage beyond their line count.
 
 | Metric | Python | Rust |
 | --- | --- | --- |
-| Application code | ~4,400 lines | ~6,000 lines |
-| Rust/Python ratio | -- | ~1.36x |
+| Application code | ~4,250 lines | ~7,250 lines |
+| Test code | ~5,800 lines | ~7,300 lines |
+| Tryscript tests | ~1,770 lines | ~1,520 lines |
+| Total | ~12,400 lines | ~16,150 lines |
+| Rust/Python ratio | -- | ~1.7x app |
 | Python tests | 292 | -- |
-| Rust tests | -- | 442 |
+| Rust tests | -- | 469 |
 | Test mapping | 292 mapped (100%) | 0 missing |
-| Workaround comments | -- | 65 (`COMRAK-WORKAROUND`/`FIXME:`) |
+| Workaround comments | -- | 66 (`COMRAK-WORKAROUND1`–`13`) |
 
 ### Dependency Footprint
 
@@ -199,7 +202,8 @@ From the author’s account (source:
 ### The Ideal Agent-Driven Workflow
 
 1. **Agent reads guidelines**
-   ([Python-to-Rust Porting Rules](../../guidelines/python-to-rust-porting-rules.md), etc.)
+   ([Python-to-Rust Porting Rules](../../guidelines/python-to-rust-porting-rules.md),
+   etc.)
 2. **Agent sets up project** using templates and checklists
 3. **Agent evaluates libraries** using the evaluation framework
 4. **Agent ports tests first** (mechanical translation with type mapping)
@@ -280,8 +284,8 @@ Porting frequently reveals bugs in the original because:
 
 ## Multi-Channel Distribution Learnings
 
-The flowmark-rs project developed a production-grade multi-channel publishing system that
-distributes through four channels: crates.io, PyPI (via maturin), Homebrew tap, and
+The flowmark-rs project developed a production-grade multi-channel publishing system
+that distributes through four channels: crates.io, PyPI (via maturin), Homebrew tap, and
 GitHub Releases. This is especially relevant for Python-to-Rust ports where users expect
 the same install experience.
 
@@ -289,12 +293,14 @@ the same install experience.
 
 1. **PyPI distribution via maturin (`bindings = "bin"`):** The Rust binary is packaged
    into Python wheels, so `uvx flowmark-rs` works identically to the original Python
-   package. This is the same pattern used by ruff, uv, and maturin itself. For
-   Python-to-Rust ports, this preserves the install experience that existing users expect.
+   package. This is the same pattern used by ruff, uv, and maturin itself.
+   For Python-to-Rust ports, this preserves the install experience that existing users
+   expect.
 
 2. **Orchestrated release workflow:** A single `release.yml` orchestrator invokes
    reusable channel workflows (`publish.yml` for crates.io, `pypi.yml` for PyPI) via
-   `workflow_call`. Each channel can also be tested independently via `workflow_dispatch`.
+   `workflow_call`. Each channel can also be tested independently via
+   `workflow_dispatch`.
 
 3. **Testable release scripts:** Complex release decisions (semver parsing, dry-run
    detection, idempotency checks, wheel validation) are implemented as Python scripts
@@ -308,12 +314,12 @@ the same install experience.
    method.
 
 **Process retrospective:** The full port tracked 235 issues across 7 workstreams
-(architecture, parity, CI, packaging, performance, documentation, playbook). The
-packaging/distribution workstream was a significant effort that produced reusable
+(architecture, parity, CI, packaging, performance, documentation, playbook).
+The packaging/distribution workstream was a significant effort that produced reusable
 patterns now documented in the playbook.
 
 For detailed guidance, see:
-- [Rust CLI Best Practices: Multi-Channel Distribution](../../playbooks/rust-cli-best-practices.md#65-multi-channel-distribution)
+- [Rust CLI Best Practices: Multi-Channel Distribution](../../references/rust-cli-best-practices.md#65-multi-channel-distribution)
 - [Research: PyPI Distribution](../../docs/project/research/research-rust-cli-pypi-distribution.md)
 - [Research: Binary Distribution](../../docs/project/research/research-rust-cli-binary-distribution.md)
 

@@ -14,7 +14,7 @@ workflows, testable release scripts, and idempotent publishing.
 **Changes made:**
 
 - Added new section 6.5 "Multi-Channel Distribution" to
-  `playbooks/rust-cli-best-practices.md` covering:
+  `references/rust-cli-best-practices.md` covering:
   - PyPI distribution via maturin (`bindings = "bin"`) with full workflow template
   - Homebrew tap distribution with formula template
   - Orchestrated multi-channel release patterns (reusable workflows, script-driven
@@ -41,7 +41,7 @@ setup into playbook guidance.
 
 **Changes made:**
 
-- Rewrote CI section (7.2) in `playbooks/rust-cli-best-practices.md` with 13-job
+- Rewrote CI section (7.2) in `references/rust-cli-best-practices.md` with 13-job
   workflow from flowmark-rs: added `test-lib-only`, `coverage` (cargo-llvm-cov +
   Codecov), `semver-checks` (PR-only), `workflow-scripts` (unit tests for release
   scripts); added `CARGO_INCREMENTAL: 0` and `CARGO_PROFILE_TEST_DEBUG: 0` env vars;
