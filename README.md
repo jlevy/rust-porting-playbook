@@ -186,57 +186,40 @@ access.
 
 ### New Port (bootstrapping a Rust project from Python)
 
-Copy-paste the following **bootstrap instructions** to your agent to get started.
-The agent will set up the workspace, pull in the playbook as a submodule, and then use
-the playbook itself to drive the rest of the process.
+Copy-paste the following **bootstrap prompt** to your agent.
+It sets up the workspace and points the agent to the playbook, which guides everything
+from there.
 
 > **Bootstrap a Python-to-Rust port**
-> 
+>
 > I want to port `<PYTHON_PROJECT>` (at `<PYTHON_REPO_URL>`) to Rust.
-> Follow these steps to set up the workspace, then use the playbook to drive the port.
-> 
-> **Step 1 — Create the Rust project and workspace**
-> 
+>
 > ```bash
 > cargo init <PROJECT>-rs
 > cd <PROJECT>-rs
-> ```
-> 
-> **Step 2 — Add the Python source, porting playbook, and reference project as
-> submodules**
-> 
-> ```bash
 > mkdir repos
 > git submodule add <PYTHON_REPO_URL> repos/<PYTHON_PROJECT>
 > git submodule add https://github.com/jlevy/rust-porting-playbook.git repos/rust-porting-playbook
 > git submodule add https://github.com/jlevy/flowmark-rs.git repos/flowmark-rs
 > ```
-> 
-> The `flowmark-rs` repo is included as a **working reference project** — a real,
-> production Rust port built with this playbook.
-> Use it to see concrete examples of Cargo.toml config, CI workflows, release
-> automation, test organization, deny.toml, build.rs, maturin/PyPI setup, and more.
-> 
-> **Step 3 — Read the playbook and begin the port**
-> 
-> Read `repos/rust-porting-playbook/playbooks/python-to-rust-playbook.md` and follow it
-> from Phase 1. Load guidelines as needed from
-> `repos/rust-porting-playbook/guidelines/`. Use the case study at
-> `repos/rust-porting-playbook/case-studies/flowmark/` for decisions and tradeoffs, and
-> browse `repos/flowmark-rs/` for working examples of every config file and workflow.
-> 
-> *(If using [tbd](https://github.com/jlevy/tbd) for task tracking, also run
-> `tbd setup --auto --prefix=<PREFIX>`.)*
+>
+> Now read and follow
+> `repos/rust-porting-playbook/playbooks/python-to-rust-playbook.md`
+> from the beginning.
 
-Replace `<PYTHON_PROJECT>`, `<PYTHON_REPO_URL>`, `<PROJECT>`, and `<PREFIX>` with your
-actual values.
+Replace `<PYTHON_PROJECT>`, `<PYTHON_REPO_URL>`, and `<PROJECT>` with your actual
+values.
+
+The `flowmark-rs` repo is included as a **working reference project** — a production
+Rust port built with this playbook.
+The playbook's "Before You Begin" section explains what to load and how to use it.
 
 ### Existing Port (syncing with a new upstream release)
 
-- [`playbooks/port-checklist-update-template.md`](playbooks/port-checklist-update-template.md)
-  + [`playbooks/auto-sync-agent-prompt-template.md`](playbooks/auto-sync-agent-prompt-template.md)
-
-Everything else in this repo is supporting material referenced from these entry points.
+Follow
+[`playbooks/port-checklist-update-template.md`](playbooks/port-checklist-update-template.md),
+which references
+[`playbooks/auto-sync-agent-prompt-template.md`](playbooks/auto-sync-agent-prompt-template.md).
 
 ## How This Repo Is Organized
 
