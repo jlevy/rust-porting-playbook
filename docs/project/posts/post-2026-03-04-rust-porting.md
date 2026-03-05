@@ -124,7 +124,7 @@ published to crates.io with full CI passing.*
 *Overview of the porting methodology and playbook structure.*
 
 ![Test Results](article-2026-03-04-rust-porting.assets/test-results.png) *292 Python
-tests mapped to 442 Rust tests, with 100% mapping coverage.*
+tests mapped to 469 Rust tests, with 100% mapping coverage.*
 
 Now let’s walk through each technique.
 
@@ -151,8 +151,9 @@ Agents use these 19 docs (~190 pages) before and during the port:
   with CI enforcement, and distribution best practices.
 
 - **Playbooks** (4 playbooks + 3 templates, ~60 pages) are step-by-step process guides
-  and checklists for the end-to-end port. A key insight: ~50% of effort goes to library
-  workarounds and cross-validation, not the initial implementation.
+  and checklists for the end-to-end port.
+  A key insight: ~50% of effort goes to library workarounds and cross-validation, not
+  the initial implementation.
 
 ## Golden Testing
 
@@ -284,7 +285,7 @@ they don’t need additional mapping.
 The mapping tracks unit and integration tests, where the Python and Rust implementations
 naturally diverge in structure.
 
-In the flowmark port, this produced 292 Python tests mapped to 442 Rust tests, with 100%
+In the flowmark port, this produced 292 Python tests mapped to 469 Rust tests, with 100%
 mapping coverage enforced in CI.
 
 ## Codified Principles
