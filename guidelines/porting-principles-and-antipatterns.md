@@ -10,9 +10,9 @@ These principles override convenience, speed, and local judgment.
 There are no exceptions.
 
 See also: [Python-to-Rust Porting Rules](python-to-rust-porting-rules.md) and
-[Test Coverage for Porting](test-coverage-for-porting.md) (for implementation
-specifics: fixture organization, golden test patterns, coverage tools, and
-cross-validation mechanics).
+[Test Coverage for Porting](test-coverage-for-porting.md) (for implementation specifics:
+fixture organization, golden test patterns, coverage tools, and cross-validation
+mechanics).
 
 ## Key Principles
 
@@ -53,6 +53,16 @@ None are hypothetical.
    attempting any fix. If no equivalent test exists in the original, add one there first.
    Then investigate the class of behavior the disparity represents — one discovered gap
    usually means more are hiding nearby.
+
+   **Sub-rule (sync mode): empirical pre-port verification.** When the upstream project
+   ships a behavior fix accompanied by new tests, do not auto-port the implementation
+   change. First run the new tests against the *existing* Rust binary.
+   If they pass, port only the tests — the Rust port may use a different parser/library
+   that already implements the upstream fix, and adding a redundant Rust-side fix risks
+   introducing duplicate workarounds or regressions.
+   If they fail, follow the standard test-before-fix protocol.
+   This is especially common once a port is mature: a frequent shape of sync work is
+   “Python catches up to Rust” rather than “Rust catches up to Python”.
 
 * * *
 
@@ -134,15 +144,16 @@ The correct behavior seems obvious, and the agent reasons the user would want th
 improvement.
 
 **The fix:** Parity means parity, including bugs.
-The default is to match the original's behavior exactly.
+The default is to match the original’s behavior exactly.
 
 1. Match the buggy behavior in the port.
 2. Write a test that captures the (buggy) behavior and passes against both
    implementations.
 3. Note the bug in the spec or as a tracked issue — agents should absolutely document
-   bugs they discover in the original. But documenting is not fixing. The bug is a
-   separate issue to escalate as unresolved at the end of the current development
-   cycle, not a reason to diverge from the original now.
+   bugs they discover in the original.
+   But documenting is not fixing.
+   The bug is a separate issue to escalate as unresolved at the end of the current
+   development cycle, not a reason to diverge from the original now.
 4. If the user explicitly approves fixing the bug during the current cycle, fix it in
    both implementations and add the intentional divergence to the tolerated variations
    list.
@@ -623,7 +634,7 @@ Parity must also be validated dynamically by running both implementations agains
 corpus of real-world inputs and comparing outputs.**
 
 Static test assertions encode expected behavior at the time the test is written.
-If the expected value is wrong (because the developer misunderstood the original's
+If the expected value is wrong (because the developer misunderstood the original’s
 behavior), the test passes but parity is false.
 Dynamic corpus validation catches these cases because it compares live output from both
 implementations, not hardcoded strings.
@@ -635,58 +646,65 @@ The workflow:
    The corpus should be significantly larger than the unit test fixture set.
 
 2. **Run both implementations against the full corpus** after every merge to main.
-   Compare outputs byte-for-byte. Any diff is a parity failure.
+   Compare outputs byte-for-byte.
+   Any diff is a parity failure.
 
 3. **Extract corner-cases from the corpus into regression tests.** When a corpus diff
    reveals a bug, add a minimal reproducing input as a permanent unit test fixture.
    The corpus catches the bug; the regression test prevents it from recurring.
 
-4. **Prefer dynamic assertions over static ones** where possible. Instead of
-   `assert_eq!(result, "hardcoded expected output")`, prefer tests that run both
-   implementations and compare: `assert_eq!(rust_output, python_output)`. This ensures
-   parity even when the expected behavior is complex or hard to specify statically.
+4. **Prefer dynamic assertions over static ones** where possible.
+   Instead of `assert_eq!(result, "hardcoded expected output")`, prefer tests that run
+   both implementations and compare: `assert_eq!(rust_output, python_output)`. This
+   ensures parity even when the expected behavior is complex or hard to specify
+   statically.
 
 ### Anti-Pattern: False Parity Through Wrong Expected Values
 
 **What happens:** An agent writes tests with hardcoded expected values, but the expected
-values are wrong — they reflect the agent's assumption about the original's behavior,
-not its actual behavior. All tests pass. CI is green. The port is declared at parity.
+values are wrong — they reflect the agent’s assumption about the original’s behavior,
+not its actual behavior.
+All tests pass. CI is green.
+The port is declared at parity.
 Later, running the original implementation against the same inputs reveals the expected
 values were incorrect.
 
 **Example (real, PR #17):** An agent ported a set of formatting tests and encoded
-expected output based on reading the Python source code. The tests all passed against
-the Rust implementation. But when the Python implementation was actually run against the
-same inputs, its output differed from the encoded expected values in several cases. The
-tests were asserting parity with a fictional version of the Python output, not the real
-one.
+expected output based on reading the Python source code.
+The tests all passed against the Rust implementation.
+But when the Python implementation was actually run against the same inputs, its output
+differed from the encoded expected values in several cases.
+The tests were asserting parity with a fictional version of the Python output, not the
+real one.
 
 The root cause: the agent never ran the Python implementation to generate expected
 values. The agent read the code and inferred what it would produce, then encoded those
-inferences as the expected output. Several inferences were wrong.
+inferences as the expected output.
+Several inferences were wrong.
 
 **Why agents do this:** Running the original implementation requires setting up the
-environment (Python virtualenv, dependencies, etc.), which feels like overhead. Reading
-the code and deducing the output is faster. The agent trusts their understanding of the
-original code.
+environment (Python virtualenv, dependencies, etc.), which feels like overhead.
+Reading the code and deducing the output is faster.
+The agent trusts their understanding of the original code.
 
 **The fix:**
 
 1. **Expected values must come from running the original, never from reading its code.**
    Generate expected test outputs by actually executing the Python implementation.
-   Even "obvious" outputs should be generated, not hand-written.
+   Even “obvious” outputs should be generated, not hand-written.
 
 2. **Automate expected output generation.** Use a script or test harness that runs the
-   Python implementation, captures output, and writes it to fixture files. This
-   eliminates human judgment about what the output "should" be.
+   Python implementation, captures output, and writes it to fixture files.
+   This eliminates human judgment about what the output “should” be.
 
 3. **Use dynamic cross-validation as a backstop.** Even with correct static assertions,
    run corpus validation (see above) to catch cases where the static assertions
    themselves are wrong.
 
-4. **Never trust "all tests pass" as proof of parity** unless the tests were generated
-   from running the original implementation. Passing tests prove consistency with
-   expected values. They don't prove the expected values are correct.
+4. **Never trust “all tests pass” as proof of parity** unless the tests were generated
+   from running the original implementation.
+   Passing tests prove consistency with expected values.
+   They don’t prove the expected values are correct.
 
 * * *
 
@@ -767,8 +785,8 @@ prominently tracked before the work is considered done.
 
 - [ ] A corpus of real-world inputs exists and is significantly larger than the unit
   test fixture set.
-- [ ] Both implementations (Python and Rust) are run against the full corpus after
-  every merge, with byte-for-byte output comparison.
+- [ ] Both implementations (Python and Rust) are run against the full corpus after every
+  merge, with byte-for-byte output comparison.
 - [ ] Expected values in static tests were generated by running the original
   implementation, not by reading its code or by manual inference.
 - [ ] Corner-cases discovered through corpus validation have been extracted into

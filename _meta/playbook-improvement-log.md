@@ -2,6 +2,90 @@
 
 Chronological log of improvements to the Rust Porting Playbook and its meta-process.
 
+## 2026-05-07
+
+### Sync-workflow improvements from flowmark-rs v0.6.4 → v0.6.5 sync
+
+Real-world Mode B sync surfaced several gaps in the current sync guidance.
+Source case study: [flowmark-rs PR #55](https://github.com/jlevy/flowmark-rs/pull/55)
+and the
+[sync artifact](https://github.com/jlevy/flowmark-rs/blob/claude/review-python-porting-0i29L/docs/sync-artifacts/2026-05-07-sync-v0.6.4-to-v0.6.5.md).
+
+Changes (all `ADD` / `CLARIFY`):
+
+- **`guidelines/porting-principles-and-antipatterns.md`** — added a Sub-rule under
+  Principle 8 (Disparities tested before fixed) titled “Empirical pre-port
+  verification”. When an upstream behavior fix lands with new tests, the agent must run
+  the new tests against the *existing* Rust binary first.
+  If they pass, port only the tests; the Rust port may use a different parser/library
+  that already implements the upstream fix.
+  This was the most impactful gap exposed by this sync — every behavior change in v0.6.5
+  was already correct in Rust because comrak handles GFM flanking, so 100% of the diff
+  was test/metadata, not code.
+
+- **`playbooks/port-checklist-update-template.md`** —
+  - Added a new “Preflight” section at the top with
+    `git submodule update --init --recursive` as the very first step.
+  - Added a step to install the upstream binary at the **target** version so
+    cross-binary parity tests target the right baseline.
+  - Added a step to run a clean clippy on the current Rust HEAD before sync work begins;
+    CI uses a floating `dtolnay/rust-toolchain@stable` and a recent stable bump may add
+    new pedantic lints that flag pre-existing code unrelated to the sync.
+    Land those fixes first so they don’t get conflated.
+  - Added a new **Phase 0: Empirical Pre-Port Verification** as a hard gate before Phase
+    1 implementation.
+  - Added a “Refresh Test Mapping” sub-checklist in Phase 2 covering the
+    discover/init/check loop and the smoke-test count constants that drift on every
+    sync.
+  - Fixed broken link to `rust-cli-best-practices.md` (was pointing at non-existent
+    `../references/`).
+
+- **`playbooks/auto-sync-agent-prompt-template.md`** —
+  - Added an “Auto-detecting the target” snippet so agents can compute
+    baseline-vs-latest without being told the target tag.
+  - Inserted “Empirical pre-port verification” as step 4 in the prompt so the agent
+    records per-change Rust impact before writing code.
+  - Added a “library-replaced” reminder to Hard Requirements.
+  - Added a “Per-change Rust impact table format” with the exact table format the sync
+    report should use.
+  - Added a “Sync artifact naming convention”:
+    `<rust-repo>/docs/sync-artifacts/YYYY-MM-DD-sync-v<BASELINE>-to-v<TARGET>.md`.
+  - Added a “Cross-binary churn investigation” section: when users report diff churn
+    between Python and Rust binaries on real-world docs, first verify both binaries are
+    at the same parity surface; mismatched intermediate versions commonly produce
+    false-positive churn.
+
+- **`playbooks/python-to-rust-sync-release-workflow.md`** — Mode B step 1 now
+  cross-references the auto-detect snippet, and a new step 4 mandates empirical
+  verification before checklist execution.
+
+- **`references/cross-language-test-mapping.md`** —
+  - Added “Update smoke-test count constants” to the ongoing-sync workflow, calling out
+    that count assertions are not parity issues and just need to be bumped alongside the
+    YAML refresh.
+  - Added “Mapping new test files (not just new tests inside existing files)” with
+    concrete decisions: parallel Rust file, excluded with rationale, or partial.
+
+### Underlying observations
+
+- **OBS-1:** The v0.6.4 → v0.6.5 sync had zero Rust code changes — every upstream “fix”
+  already worked correctly under comrak.
+  Without the empirical pre-port gate, an agent would have ported the regex/find
+  override unnecessarily.
+- **OBS-2:** CI’s `Clippy lint` job failed on the initial sync push because Rust 1.95
+  stable added two new pedantic lints (`map_unwrap_or`, `unnecessary_trailing_comma`)
+  that flagged pre-existing code unrelated to the sync.
+  Trivial mechanical fixes, but the failure was confusing because the local toolchain
+  was 1.94.1.
+- **OBS-3:** Smoke-test count constants in the case-study repo
+  (`EXPECTED_PYTHON_TEST_COUNT`, etc.)
+  needed updating, but the playbook didn’t mention this.
+  Easy to miss.
+- **OBS-4:** A user reported diff churn between Python and Rust binaries on three
+  real-world docs. Investigation showed all three produced byte-identical output once
+  both binaries were at v0.6.5. The churn was version-mismatch, not parity.
+  The sync workflow should mention this troubleshooting routine.
+
 ## 2026-03-03
 
 ### Multi-channel distribution documentation (from flowmark-rs sync)
@@ -13,7 +97,7 @@ workflows, testable release scripts, and idempotent publishing.
 
 **Changes made:**
 
-- Added new section 6.5 "Multi-Channel Distribution" to
+- Added new section 6.5 “Multi-Channel Distribution” to
   `references/rust-cli-best-practices.md` covering:
   - PyPI distribution via maturin (`bindings = "bin"`) with full workflow template
   - Homebrew tap distribution with formula template
@@ -23,16 +107,16 @@ workflows, testable release scripts, and idempotent publishing.
   `guidelines/rust-project-setup.md`.
 - Expanded Phase 7.5 in `playbooks/python-to-rust-playbook.md` to recommend
   multi-channel distribution for Python-to-Rust ports (PyPI, Homebrew, crates.io).
-- Added "Multi-Channel Distribution Learnings" section to
+- Added “Multi-Channel Distribution Learnings” section to
   `case-studies/flowmark/flowmark-port-analysis.md` documenting key innovations.
 - Updated `README.md`:
   - Added `docs/project/research/` to structure map.
-  - Added "Research Docs" section to reference tables.
+  - Added “Research Docs” section to reference tables.
   - Updated documentation layers from four to five (adding Research layer).
 
 **Source of improvements:** flowmark-rs submodule review — specifically the publishing
-system (release.yml orchestrator, publish.yml for crates.io, pypi.yml for PyPI,
-scripts/ for testable release logic, docs/publishing.md runbook).
+system (release.yml orchestrator, publish.yml for crates.io, pypi.yml for PyPI, scripts/
+for testable release logic, docs/publishing.md runbook).
 
 ### CI workflow and release automation hardening (from flowmark-rs sync)
 
@@ -47,18 +131,19 @@ setup into playbook guidance.
   scripts); added `CARGO_INCREMENTAL: 0` and `CARGO_PROFILE_TEST_DEBUG: 0` env vars;
   added `--locked` on clippy; added `RUSTFLAGS: "-D warnings"` to test jobs.
 - Rewrote release workflow (6.4) to replace `cross` Docker approach with RUSTFLAGS
-  linker overrides + apt-get packages (simpler, more transparent). Added: plan job
-  with script-driven decision logic, concurrency control, SHA256SUMS checksum
-  generation, `fail-fast: false`, `fail_on_unmatched_files: true`, static linking
-  via `+crt-static`, reusable channel workflow invocation, crates.io OIDC auth via
-  `rust-lang/crates-io-auth-action@v1`.
-- Added "Release Automation Scripts" section documenting the pattern of extracting
+  linker overrides + apt-get packages (simpler, more transparent).
+  Added: plan job with script-driven decision logic, concurrency control, SHA256SUMS
+  checksum generation, `fail-fast: false`, `fail_on_unmatched_files: true`, static
+  linking via `+crt-static`, reusable channel workflow invocation, crates.io OIDC auth
+  via `rust-lang/crates-io-auth-action@v1`.
+- Added “Release Automation Scripts” section documenting the pattern of extracting
   workflow logic into testable Python scripts (resolve_release_plan, package_archive,
   resolve_crate_metadata, validate_wheel_entrypoints, pypi_smoke_test) with code
   examples and directory layout.
 - Updated `guidelines/rust-project-setup.md` CI workflow to match (13 jobs, env vars,
-  coverage, semver-checks, workflow-scripts). Rewrote release workflow section to
-  document RUSTFLAGS cross-compilation, OIDC auth, and script-driven automation.
+  coverage, semver-checks, workflow-scripts).
+  Rewrote release workflow section to document RUSTFLAGS cross-compilation, OIDC auth,
+  and script-driven automation.
 
 ## 2026-02-26
 
