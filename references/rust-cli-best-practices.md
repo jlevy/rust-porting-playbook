@@ -65,7 +65,7 @@ license = "MIT OR Apache-2.0"
 pedantic = { level = "warn", priority = -1 }
 
 [workspace.dependencies]
-clap = { version = "4.5", features = ["derive"] }
+clap = { version = "4.6", features = ["derive"] }
 ```
 Virtual workspaces (no root `[package]`) must set `resolver` explicitly since there is
 no `package.edition` to infer it from.
@@ -121,11 +121,11 @@ cli = ["clap", "color-eyre", "tracing", "tempfile", "indicatif", "ctrlc"]
 
 [dependencies]
 # Core deps (always included)
-regex = "1.10"
+regex = "1.12"
 thiserror = "2.0"
 
 # CLI deps (optional, behind feature gate)
-clap = { version = "4.5", features = ["derive", "cargo", "color"], optional = true }
+clap = { version = "4.6", features = ["derive", "cargo", "color"], optional = true }
 color-eyre = { version = "0.6", optional = true }
 ```
 
@@ -159,7 +159,7 @@ Test without default features in CI: `cargo test --no-default-features`
 
 **Argument Parsing**: `clap` (v4+)
 ```toml
-clap = { version = "4.5", features = ["derive", "cargo"] }
+clap = { version = "4.6", features = ["derive", "cargo"] }
 ```
 
 - Use **derive API** (recommended for modern projects) [^clap-derive]
@@ -576,7 +576,7 @@ cargo doc --no-deps --open    # Generate and open
 
 **`clap_complete`** - Generate shell completion scripts from clap definitions:
 ```toml
-clap_complete = "4.5"
+clap_complete = "4.6"
 ```
 
 Generate completions for bash, zsh, fish, elvish, and PowerShell at build time or via a

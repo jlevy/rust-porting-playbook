@@ -357,12 +357,12 @@ Use `persist_noclobber()` to fail instead of replace if the target exists.
 | Crate | Version | Purpose | When to use |
 | --- | --- | --- | --- |
 | `walkdir` | 2.5 | Recursive directory traversal | Any directory walking; prefer over manual `read_dir` recursion |
-| `tempfile` | 3.26 | Secure temp files and dirs | Atomic writes, test isolation |
+| `tempfile` | 3.27 | Secure temp files and dirs | Atomic writes, test isolation |
 | `dirs` | 6.0 | Platform directory locations | Home dir, config dir, etc. (`dirs-next` is abandoned — use `dirs`) |
 | `pathdiff` | 0.2 | Compute relative paths | When you need `os.path.relpath` equivalent |
 | `filetime` | 0.2 | Read/write file timestamps | Preserving timestamps across copy. For simple cases, `std::fs::File::set_times()` (stable since Rust 1.75) may suffice |
 | `glob` | 0.3 | Simple glob matching | Basic `*`, `?`, `[...]` patterns. For `{a,b}` or multi-pattern, use `globset` 0.4 |
-| `fs-err` | 3.1 | Better filesystem error messages | Drop-in `std::fs` replacement for applications; adds file paths to errors |
+| `fs-err` | 3.3 | Better filesystem error messages | Drop-in `std::fs` replacement for applications; adds file paths to errors |
 
 ## String Operations
 
@@ -989,7 +989,7 @@ cli = ["clap", "color-eyre", "tracing", "tempfile", "indicatif", "ctrlc"]
 
 # Dependencies gated behind features
 [dependencies]
-clap = { version = "4.5", features = ["derive"], optional = true }
+clap = { version = "4.6", features = ["derive"], optional = true }
 ```
 
 **Key difference:** Python optional dependencies exist at runtime -- you check if
@@ -1042,7 +1042,7 @@ Rust distributes config across separate files (`rustfmt.toml`, `deny.toml`,
 | Python Package | Rust Crate | Quality | Notes |
 | --- | --- | --- | --- |
 | marko (Markdown) | comrak 0.50+ | Good with workarounds | 12/15 differences worked around; check for API changes in 0.50+ |
-| argparse | clap 4.5 (derive) | Excellent | Perfect mapping |
+| argparse | clap 4.6 (derive) | Excellent | Perfect mapping |
 | PyYAML | serde_yaml_ng 0.10+ | Good | serde_yaml is archived |
 | re (regex) | regex 1.12+ | Excellent | Different anchoring and replacement syntax! See Regex section above |
 | re (look-arounds, backrefs) | fancy-regex 0.17+ | Good | Backtracking engine; only use when needed |
@@ -1054,6 +1054,6 @@ Rust distributes config across separate files (`rustfmt.toml`, `deny.toml`,
 | (none) | color-eyre 0.6 | Excellent | CLI error display |
 | (none) | tracing 0.1 | Excellent | Structured logging |
 | (none) | indicatif 0.18 | Good | Progress bars |
-| (none) | tempfile 3.10 | Excellent | Atomic file writes |
+| (none) | tempfile 3.27 | Excellent | Atomic file writes |
 | (none) | unicode-segmentation 1.11 | Excellent | Unicode-safe text ops |
 | (none) | proptest 1.4 | Excellent | Property-based testing |

@@ -254,9 +254,9 @@ continued)*
 
 - [ ] **Map and Add Core Dependencies**
 
-  - [ ] CLI parsing: `clap = { version = "4.5", features = ["derive", "cargo"] }`
+  - [ ] CLI parsing: `clap = { version = "4.6", features = ["derive", "cargo"] }`
 
-  - [ ] Error handling: `thiserror = "2"` (library errors), `color-eyre = "0.6"` or
+  - [ ] Error handling: `thiserror = "2.0"` (library errors), `color-eyre = "0.6"` or
     `anyhow = "1.0"` (application errors)
 
   - [ ] Logging: `tracing = "0.1"`,

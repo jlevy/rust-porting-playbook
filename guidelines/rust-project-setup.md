@@ -58,11 +58,11 @@ cli = ["clap", "color-eyre", "tracing", "tempfile", "indicatif", "ctrlc"]
 
 [dependencies]
 # Core deps (always included)
-regex = "1.10"
+regex = "1.12"
 thiserror = "2.0"
 
 # CLI deps (optional, behind feature gate)
-clap = { version = "4.5", features = ["derive", "cargo", "color"], optional = true }
+clap = { version = "4.6", features = ["derive", "cargo", "color"], optional = true }
 color-eyre = { version = "0.6", optional = true }
 ```
 

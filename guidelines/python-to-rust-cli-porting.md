@@ -253,7 +253,7 @@ Add `clap_complete` as an optional dependency so it does not bloat the binary fo
 who do not need completions:
 ```toml
 [dependencies]
-clap_complete = { version = "4", optional = true }
+clap_complete = { version = "4.6", optional = true }
 
 [features]
 completions = ["clap_complete"]
