@@ -40,7 +40,10 @@ Required sequence:
 3. Implement Rust-only changes.
 4. Run full validation:
    - Rust tests and quality gates
-   - parity/cross-validation against current Python baseline
+   - **differential parity sweep** vs the current Python baseline: both binaries over a
+     diverse corpus, full untruncated diff, plus class-level truth tables for any
+     discrepancy. This is how latent parity bugs (independent of any upstream change)
+     are found — a clean test suite does not prove parity.
    - mapping/completeness checks (if used by project)
 5. Prepare release notes clearly stating:
    - Python baseline unchanged
@@ -50,7 +53,7 @@ Required sequence:
 
 Mode A acceptance gates:
 - Python baseline metadata unchanged
-- zero unexplained parity diffs vs current baseline
+- differential parity sweep run; zero unexplained parity diffs vs current baseline
 - release pipeline green
 
 ## Mode B: Upstream Sync Release
@@ -70,18 +73,32 @@ Required sequence:
    - test changes
    - refactors/no-op behavior changes
 4. **For each upstream behavior change, verify against the existing Rust binary *before*
-   concluding code must change.** The Rust port may use a different parser/library that
-   already implements the upstream fix.
-   Port the tests regardless — they’re the parity contract going forward — but do not
-   auto-port the implementation change.
-5. Execute [port-checklist-update-template.md](port-checklist-update-template.md)
+   concluding code must change (bidirectional).** The divergence between a replaced
+   library and the original runs both ways:
+   - the Rust library may *already* implement the upstream fix → port the tests only,
+     do not auto-port the implementation change;
+   - the Rust library may carry its *own* divergence the original never had → a genuine
+     parity bug that the upstream diff will never reveal.
+   Port the upstream tests regardless — they are the parity contract going forward.
+5. **Run a mandatory differential parity sweep (step shared with Mode A).** Do not rely
+   on triage: run both binaries over a diverse corpus, diff every file with the full
+   (untruncated) output, and build a class-level truth table for any discrepancy. A
+   sync that touches no formatter code can still ship latent parity bugs because the
+   replacement library's behavior is independent of the upstream diff. For each real
+   divergence, consult upstream `main`/unreleased to decide which side is canonical,
+   then write a discriminating test (red→green) before fixing.
+6. For each new FEATURE: port the behavior, port ALL of its tests, and add the new
+   Python tests to the test-mapping manifest so completeness checks stay green.
+7. Execute [port-checklist-update-template.md](port-checklist-update-template.md)
    end-to-end.
-6. Update version correspondence metadata to target baseline.
-7. Cut release and publish sync report.
+8. Update version correspondence metadata to target baseline.
+9. Cut release and publish sync report.
 
 Mode B acceptance gates:
 - no skipped changed upstream tests without documented rationale
-- zero unexplained parity diffs
+- differential parity sweep run (corpus + class truth tables), with every diff either
+  resolved or recorded as an approved tolerated variation
+- new features: behavior + tests ported, mapping manifest updated, completeness green
 - version correspondence updated
 - release pipeline green
 

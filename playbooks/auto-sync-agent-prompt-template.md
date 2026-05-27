@@ -65,38 +65,73 @@ Required process:
    - new features
    - test additions/updates
    - refactors/no-op behavioral changes
-4. **Empirical pre-port verification.** Before porting any code change, run the
-   new upstream tests (or representative inputs) against the *existing* Rust
-   binary and record the result for each one. If the new tests already pass,
-   the upstream code change is not required in Rust — port the tests only.
-   This commonly happens when the Rust port uses a different parser/library
-   that already implements the upstream fix.
-5. Execute the full update workflow from:
+4. **Empirical pre-port verification (bidirectional).** Before porting any code
+   change, run the new upstream tests (or representative inputs) against the
+   *existing* Rust binary and record the result for each one.
+   - If the new tests already pass, the upstream code change is not required in
+     Rust — port the tests only. (Common when the Rust port uses a different
+     parser/library that already implements the upstream fix.)
+   - **But the replacement library can also DIVERGE the other way**: it may carry
+     its own behavior the original never had. Verifying "comrak already does the
+     upstream fix" is necessary but NOT sufficient. You must also confirm the Rust
+     binary does not differ from Python on inputs the upstream diff never touched.
+     That requires the differential sweep in step 5 — do not skip it just because
+     the triage says "no code change needed."
+5. **Mandatory differential parity sweep — even for "tests-only" / "metadata-only"
+   syncs.** A sync that touches no formatter code can still ship with latent parity
+   bugs, because the replacement library's behavior is independent of the upstream
+   diff. Run a real differential, do not reason about it:
+   - Corpus sweep: run BOTH binaries over a directory of diverse real documents and
+     diff every file. Capture the FULL diff (never truncate with `head`/`basename`/
+     `grep -c` — see Principle 2). Investigate every non-empty diff.
+   - Class sweep (truth table): for any discrepancy found, enumerate the whole class
+     it belongs to (e.g. every reference-link form: shortcut, collapsed, full,
+     label==text, uppercase, no-definition) and build a truth table of
+     `input → Python output → Rust output` before fixing. See Principle 8.
+   - For each real divergence, decide which side is canonical (step 6), write a
+     discriminating test (red→green), then fix.
+6. **Deciding which side is correct — consult upstream `main`/unreleased as an
+   oracle.** When Python and Rust differ and it is unclear which is right, check
+   whether upstream has already fixed it on `main` or in a release newer than the
+   target tag (e.g. `git log <target>..origin/main`, issue/PR references). An
+   existing upstream fix is the authoritative statement of intended behavior. Per
+   Principle 1, adopting a not-yet-released upstream fix (diverging from the pinned
+   baseline) requires maintainer approval; record it as a documented tolerated
+   variation when approved.
+7. Execute the full update workflow from:
    - playbooks/port-checklist-update-template.md
    - playbooks/python-to-rust-playbook.md (Phase 8)
    - relevant guidelines in guidelines/
-6. Port changes in Rust with tests-first discipline and parity validation.
-7. Run full validation gates (tests, cross-validation, lint/format/docs checks).
-8. Update version correspondence and sync documentation.
-9. Produce a final sync report with:
-   - upstream diff summary
-   - per-change Rust impact (using the table format below)
-   - what was ported
-   - any intentional divergences (with rationale)
-   - validation results (each command + exit status)
-   - unresolved blockers (if any)
+8. Port changes in Rust with tests-first discipline and parity validation. For each
+   new upstream FEATURE: port the behavior, port ALL of its tests, and add the new
+   Python tests to the test-mapping manifest so completeness checks stay green.
+9. Run full validation gates (tests, cross-validation, lint/format/docs checks).
+10. Update version correspondence and sync documentation.
+11. Produce a final sync report with:
+    - upstream diff summary
+    - per-change Rust impact (using the table format below)
+    - what was ported
+    - any intentional divergences (with rationale)
+    - validation results (each command + exit status)
+    - unresolved blockers (if any)
 
 Hard requirements:
 - Do not skip changed upstream tests.
 - Do not weaken assertions to pass tests.
 - No unexplained output differences.
+- Run the differential parity sweep regardless of how small the triage looks.
 - If blocked by ambiguity, stop and ask for a decision with clear options.
 
 When the upstream change targets a library or framework that the Rust port
 replaced with a different one (e.g. Python `marko` vs Rust `comrak`), DO NOT
-auto-port the implementation change. First verify the new tests against the
-existing Rust binary; the replacement library may already have correct behavior.
-Port the tests regardless — they are the parity contract going forward.
+auto-port the implementation change. The divergence is bidirectional:
+- The replacement may ALREADY implement the upstream fix → port the tests only.
+- The replacement may have its OWN divergence the original never had → that is a
+  genuine parity bug in the port that the upstream diff will never reveal; only the
+  differential sweep (step 5) catches it.
+Verify the new tests against the existing Rust binary AND run the differential
+sweep. Port the upstream tests regardless — they are the parity contract going
+forward.
 ```
 
 ### Per-change Rust impact table format
@@ -152,6 +187,13 @@ If the diff is empty, the user’s churn is version-mismatch, not a parity gap.
 If the diff is non-empty *and* parity is supposed to hold, the case is a genuine
 regression and must be tested + fixed before the sync ships.
 
+Do not stop at one sample. Promote this to the full corpus sweep (step 5 of the
+prompt): run both binaries over a directory of diverse real documents and diff every
+file, capturing the complete output. A single-file check passing does not mean parity
+holds — the two clean parity bugs found during the flowmark v0.6.5 sync (thematic-break
+spacing and reference-link normalization) were both invisible to the upstream diff and
+only surfaced under a full corpus + class-level truth-table sweep.
+
 ## Expected Deliverables
 
 - Filled copy of update checklist (`port-checklist-update-YYYY-MM-DD.md`)
@@ -174,8 +216,16 @@ Inputs:
 Required:
 1. Diff baseline -> target first and summarize changed modules/tests/interfaces/dependencies.
 2. Follow playbooks/port-checklist-update-template.md end-to-end.
-3. Port changed behavior tests-first; do not skip changed upstream tests.
-4. Run full validation gates (tests, parity, lint/format/docs/CI checks).
-5. Update version correspondence metadata and sync log.
-6. Return a concise sync report with what changed, validation evidence, and any blockers.
+3. Port changed behavior tests-first; do not skip changed upstream tests. For each new
+   FEATURE, port the behavior, port ALL its tests, and add the new Python tests to the
+   test-mapping manifest so completeness checks stay green.
+4. Run a mandatory differential parity sweep regardless of triage: both binaries over a
+   diverse corpus, full (untruncated) diff, plus a class-level truth table for any
+   discrepancy. The replacement library can diverge in either direction independently of
+   the upstream diff.
+5. For each real divergence, consult upstream main/unreleased to decide which side is
+   canonical; write a discriminating test (red->green) before fixing.
+6. Run full validation gates (tests, parity, lint/format/docs/CI checks).
+7. Update version correspondence metadata and sync log.
+8. Return a concise sync report with what changed, validation evidence, and any blockers.
 ```

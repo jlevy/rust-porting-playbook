@@ -2,6 +2,39 @@
 
 Chronological log of improvements to the Rust Porting Playbook and its meta-process.
 
+## 2026-05-19
+
+### Bidirectional library-divergence + mandatory differential sweep (from flowmark-rs v0.6.5 stabilization)
+
+A senior review of the flowmark-rs v0.6.5 sync ([PR #55](https://github.com/jlevy/flowmark-rs/pull/55))
+concluded "no formatter behavior blocker", but a full-corpus differential sweep plus a
+reference-link truth-table sweep then found **two genuine parity bugs** that the upstream
+diff never touched: thematic-break spacing (comrak forced blank lines Python preserves)
+and reference-link normalization (released v0.6.5's shortcut form; fixed upstream as
+issue #45). Lessons folded back into the workflow:
+
+- **`playbooks/auto-sync-agent-prompt-template.md`** —
+  - Made empirical pre-port verification **bidirectional**: the replacement library can
+    diverge in either direction. "comrak already does the upstream fix" is necessary but
+    not sufficient; the port can also carry its own divergence the original never had.
+  - Added a **mandatory differential parity sweep** step (corpus diff + class-level truth
+    tables) that runs *even for "tests-only" / "metadata-only" syncs*, because a clean
+    test suite and a small upstream diff do not prove parity.
+  - Added guidance to consult upstream `main`/unreleased as the **oracle** for which side
+    is canonical when Python and Rust differ (with Principle 1 approval to adopt
+    not-yet-released fixes).
+  - Strengthened the cross-binary churn routine from a single sample to a full corpus
+    sweep, and the minimal copy/paste prompt to include the sweep + per-feature test
+    mapping.
+
+- **`playbooks/python-to-rust-sync-release-workflow.md`** — made Mode B step 4
+  bidirectional, added the mandatory differential-sweep step and a per-feature
+  port+test+mapping step to both Mode A and Mode B, and added the sweep to both modes'
+  acceptance gates.
+
+Source artifacts:
+[stabilization artifact](https://github.com/jlevy/flowmark-rs/blob/claude/review-python-porting-0i29L/docs/sync-artifacts/2026-05-19-stabilization-d17-d18.md).
+
 ## 2026-05-07
 
 ### Sync-workflow improvements from flowmark-rs v0.6.4 → v0.6.5 sync
