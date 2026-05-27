@@ -507,6 +507,12 @@ libc = "0.2"
 Without this fix, `your-tool generate | head -5` will print an error on every run.
 This is already included in the recommended `main()` pattern above.
 
+> **Alternative:** the [`sigpipe`](https://docs.rs/sigpipe) crate wraps this exact call
+> as `sigpipe::reset()`, avoiding the explicit `unsafe` block at the cost of a small
+> dependency (see
+> [rust-cli-best-practices.md](rust-cli-best-practices.md)). The two approaches are
+> equivalent.
+
 ## Shell Completions
 
 Use `clap_complete` to generate shell completion scripts at build time or via a hidden

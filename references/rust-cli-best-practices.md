@@ -277,6 +277,12 @@ sigpipe = "0.1"    # Stable workaround for Rust's SIGPIPE default
 
 - The `sigpipe` crate calls `libc::signal(SIGPIPE, SIG_DFL)` at program start
 
+- **Two equivalent approaches:** the `sigpipe` crate (shown here, avoids writing an
+  explicit `unsafe` block) or calling `libc::signal(libc::SIGPIPE, libc::SIG_DFL)`
+  directly (shown in
+  [rust-cli-app-patterns.md](rust-cli-app-patterns.md#sigpipe-handling), avoids the extra
+  dependency). They do the same thing — pick one per project.
+
 - An unstable `#[unix_sigpipe = "sig_dfl"]` attribute exists on nightly but is not yet
   stabilized
 
