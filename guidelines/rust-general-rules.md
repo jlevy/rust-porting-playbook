@@ -8,7 +8,7 @@ General coding rules for Rust projects.
 Use these as a baseline for any new Rust codebase or when reviewing Rust code quality.
 Focuses on Edition 2024+ (Rust 1.85+) patterns and modern idioms.
 
-See also: [Rust CLI App Patterns](rust-cli-app-patterns.md),
+See also: [Rust CLI App Patterns](../references/rust-cli-app-patterns.md),
 [Rust Project Setup](rust-project-setup.md).
 For general coding rules (language-agnostic), see `tbd guidelines general-coding-rules`.
 
@@ -101,9 +101,9 @@ For general coding rules (language-agnostic), see `tbd guidelines general-coding
   let content = std::fs::read_to_string(path)
       .with_context(|| format!("failed to read {}", path.display()))?;
   ```
-  `color-eyre` 0.6 is an alternative with colored backtraces but is in maintenance-only
-  mode (no active feature development).
-  Use `anyhow` for new projects.
+  `color-eyre` 0.6 is an actively maintained alternative (0.6.5, 2026) that adds colored
+  backtraces. `anyhow` is the simpler default; pick `color-eyre` when you want its
+  richer error reports.
 
 - **Decision guide:** `thiserror` for libraries (callers match on variants), `anyhow`
   for binaries (callers just display or log).
@@ -321,7 +321,7 @@ For comprehensive testing guidelines, see `tbd guidelines general-testing-rules`
 
 ## Related Guidelines
 
-- [Rust CLI App Patterns](rust-cli-app-patterns.md)
+- [Rust CLI App Patterns](../references/rust-cli-app-patterns.md)
 - [Rust Project Setup](rust-project-setup.md)
 - [Python-to-Rust Porting Rules](python-to-rust-porting-rules.md)
 - For general coding rules, see `tbd guidelines general-coding-rules`

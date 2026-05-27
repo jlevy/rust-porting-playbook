@@ -9,7 +9,7 @@ match against.
 [Test Coverage for Porting](../guidelines/test-coverage-for-porting.md) |
 `tbd guidelines golden-testing-guidelines`
 
-**Last update:** 2026-02-12
+**Last update:** 2026-05-27
 
 ## Overview
 
@@ -521,7 +521,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v7
       - run: |
           cd python-repo
           uv run pytest --cov=myproject --cov-branch \

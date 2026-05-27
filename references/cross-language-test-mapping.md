@@ -17,15 +17,17 @@ See also: [Test Coverage for Porting](../guidelines/test-coverage-for-porting.md
 
 ## Why Test Mapping Matters
 
-During a port, test count alone is misleading. A Rust codebase can have 400+ tests while
-still missing coverage for critical Python behaviors — if the tests cover different code
-paths or encode wrong expected values (see Principle 9). Test mapping provides:
+During a port, test count alone is misleading.
+A Rust codebase can have 400+ tests while still missing coverage for critical Python
+behaviors — if the tests cover different code paths or encode wrong expected values (see
+Principle 9). Test mapping provides:
 
 1. **Traceability:** Every Python test maps to one or more Rust equivalents
 2. **Gap detection:** Unmapped Python tests are immediately visible
 3. **Split tracking:** When a single Python test becomes multiple Rust tests, the
    relationship is explicit
-4. **Exclusion justification:** Tests intentionally not ported are documented with reasons
+4. **Exclusion justification:** Tests intentionally not ported are documented with
+   reasons
 5. **CI enforcement:** The mapping is validated on every push — no silent drift
 
 ## Architecture
@@ -97,7 +99,8 @@ Rust tests are simpler: no class hierarchy, no type classification needed.
 
 ### test-mapping.yaml
 
-The core mapping file. Auto-generated skeleton, manually curated:
+The core mapping file.
+Auto-generated skeleton, manually curated:
 
 ```yaml
 - python_file: tests/test_alerts.py
@@ -148,7 +151,8 @@ When a single Python test with many assertions is split into focused Rust tests:
 ## CLI Tool
 
 The discovery and validation commands are implemented as a Python CLI tool
-(`flowmark-dev` in the flowmark port). Adapt the tool name and paths to your project.
+(`flowmark-dev` in the flowmark port).
+Adapt the tool name and paths to your project.
 
 ### Commands
 
@@ -182,16 +186,18 @@ flowmark-dev check-mapping \
 extract function names starting with `test_`, classify by test type based on function
 calls and filename patterns, and capture the first line of any docstring.
 
-**Rust discovery** prefers `cargo test -- --list --format terse` for compiler-authoritative
-results. This finds both integration tests (`tests/`) and unit tests (`src/**/mod tests`).
-A regex fallback parses `#[test]` attributes directly when cargo is unavailable.
+**Rust discovery** prefers `cargo test -- --list --format terse` for
+compiler-authoritative results.
+This finds both integration tests (`tests/`) and unit tests (`src/**/mod tests`). A
+regex fallback parses `#[test]` attributes directly when cargo is unavailable.
 
 ### Regeneration Safety
 
-All three YAML files have an `# Auto-generated. Manual edits are preserved on
-re-generation.` header. The init-mapping command merges new Python tests into the
-existing mapping file without overwriting manually curated fields (`status`, `rust_file`,
-`rust_function`, `rust_functions`, `notes`).
+All three YAML files have an `# Auto-generated.
+Manual edits are preserved on re-generation.` header.
+The init-mapping command merges new Python tests into the existing mapping file without
+overwriting manually curated fields (`status`, `rust_file`, `rust_function`,
+`rust_functions`, `notes`).
 
 ## CI Enforcement
 
@@ -218,7 +224,8 @@ check-mapping:
 The `check-mapping` command validates:
 
 1. **Every Python test has a mapping entry.** Unmapped tests fail CI.
-2. **Every mapped Rust reference exists.** Broken `rust_file`/`rust_function` refs fail CI.
+2. **Every mapped Rust reference exists.** Broken `rust_file`/`rust_function` refs fail
+   CI.
 3. **No stale entries.** Mapping entries referencing removed Python tests are flagged.
 4. **Extra Rust tests are reported** (informational, not a failure — Rust can have
    additional tests beyond what Python covers).
@@ -254,6 +261,24 @@ PASS: All Python tests are covered by the mapping.
 2. New tests appear as `missing` — port them and update to `mapped`
 3. Run `discover-rust` to refresh the Rust manifest after adding tests
 4. CI prevents merging with unmapped tests
+5. **Update smoke-test count constants.** If the project pins manifest sizes (e.g.
+   `EXPECTED_PYTHON_TEST_COUNT`, `EXPECTED_RUST_TEST_COUNT`, `EXPECTED_MAPPING_COUNT` in
+   a `test_smoke.py`-style guard), bump them to match the new YAML sizes.
+   These constants drift on every sync; the failing assertion is telling you to update
+   the count, not flagging a parity issue.
+
+### Mapping new test files (not just new tests inside existing files)
+
+When upstream adds an entirely new test file (e.g. `tests/test_cli_help.py`) the mapping
+needs a corresponding Rust file decision:
+
+- **Port to a parallel Rust file** of the same name (`tests/test_cli_help.rs`) if the
+  test concept maps cleanly.
+  Set `status: mapped` for each new entry with `rust_file` pointing at the new file.
+- **Mark `excluded` with rationale** if the new test file is Python-specific (e.g.
+  packaging-entrypoint tests asserting `[project.scripts]` shape; the Rust analog might
+  exist as a `[[bin]]` shape test that isn’t 1:1).
+- **Split via `partial`** if the Python test maps to multiple Rust tests.
 
 ### When Refactoring Rust Tests
 
@@ -274,14 +299,14 @@ To implement this system for a new port:
 5. **Version-control all three YAML files** — they are the source of truth for coverage
 
 The key design decision: **mapping is a hard CI gate, not an advisory report.** This
-ensures test coverage never silently regresses. Every new Python test must be mapped
-before the next PR merges.
+ensures test coverage never silently regresses.
+Every new Python test must be mapped before the next PR merges.
 
 ## Related
 
 - [Test Coverage for Porting](../guidelines/test-coverage-for-porting.md) — fixture
   organization, golden tests, coverage tools
-- [Porting Principles](../guidelines/porting-principles-and-antipatterns.md) — Principle 9
-  covers dynamic corpus validation as a complement to static test mapping
-- [Python-to-Rust Playbook](python-to-rust-playbook.md) — Phase 5 references
-  test coverage strategy
+- [Porting Principles](../guidelines/porting-principles-and-antipatterns.md) — Principle
+  9 covers dynamic corpus validation as a complement to static test mapping
+- [Python-to-Rust Playbook](../playbooks/python-to-rust-playbook.md) — Phase 5
+  references test coverage strategy

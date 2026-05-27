@@ -11,7 +11,7 @@ development tooling.
 Cross-referenced against real-world projects: flowmark-rs, ripgrep, bat, fd, jj.
 
 See also: [Rust General Rules](rust-general-rules.md),
-[Rust CLI App Patterns](rust-cli-app-patterns.md).
+[Rust CLI App Patterns](../references/rust-cli-app-patterns.md).
 For commit conventions, see `tbd guidelines commit-conventions`.
 
 ## Cargo.toml Configuration
@@ -58,11 +58,11 @@ cli = ["clap", "color-eyre", "tracing", "tempfile", "indicatif", "ctrlc"]
 
 [dependencies]
 # Core deps (always included)
-regex = "1.10"
+regex = "1.12"
 thiserror = "2.0"
 
 # CLI deps (optional, behind feature gate)
-clap = { version = "4.5", features = ["derive", "cargo", "color"], optional = true }
+clap = { version = "4.6", features = ["derive", "cargo", "color"], optional = true }
 color-eyre = { version = "0.6", optional = true }
 ```
 
@@ -443,11 +443,12 @@ be published (internal crates, test utilities, etc.).
 
 All major Rust CLI projects (ripgrep, bat, fd, jj) hand-roll their release workflows.
 
-**Alternative: `cargo-dist`** (by axodotdev) can generate complete release CI workflows
-with `cargo dist init`. It handles cross-compilation, installer generation (shell
-scripts, Homebrew, MSI), and GitHub Release uploads with minimal configuration.
-It has matured significantly (v0.30+) and is a good choice when you don’t need full
-control over the release pipeline.
+**Alternative: `cargo-dist`** (by axodotdev, now branded `dist`) can generate complete
+release CI workflows with `dist init`. It handles cross-compilation, installer
+generation (shell scripts, Homebrew, MSI), and GitHub Release uploads with minimal
+configuration.
+It has matured significantly (v0.31+ as of early 2026) and is a good choice when you
+don’t need full control over the release pipeline.
 See https://opensource.axo.dev/cargo-dist/ for details.
 
 For full control, the standard hand-rolled pattern:
@@ -473,7 +474,7 @@ scripts (`scripts/*.py`) with unit tests. Scripts handle semver parsing, archive
 creation, idempotency checks, and wheel validation. Run tests in CI with
 `python3 -m unittest discover -s scripts/tests -p 'test_*.py'`.
 
-See [Rust CLI Best Practices](../playbooks/rust-cli-best-practices.md#64-release-ci-workflow)
+See [Rust CLI Best Practices](../references/rust-cli-best-practices.md#64-release-ci-workflow)
 for the complete release workflow template with plan job, concurrency control,
 checksum generation, and reusable channel workflows.
 
@@ -481,7 +482,7 @@ checksum generation, and reusable channel workflows.
 
 Beyond crates.io and GitHub Releases, distribute Rust CLI binaries through additional
 channels for broader reach. See
-[Rust CLI Best Practices](../playbooks/rust-cli-best-practices.md#65-multi-channel-distribution)
+[Rust CLI Best Practices](../references/rust-cli-best-practices.md#65-multi-channel-distribution)
 for full workflow templates.
 
 **PyPI via maturin is the recommended primary distribution channel** for Rust CLI
@@ -696,7 +697,7 @@ This lets agents read the Python source directly and provides an exact commit re
 ## Related Guidelines
 
 - [Rust General Rules](rust-general-rules.md)
-- [Rust CLI App Patterns](rust-cli-app-patterns.md)
+- [Rust CLI App Patterns](../references/rust-cli-app-patterns.md)
 - [Python-to-Rust Porting Rules](python-to-rust-porting-rules.md)
 - For commit conventions, see `tbd guidelines commit-conventions`
 - For release notes, see `tbd guidelines release-notes-guidelines`

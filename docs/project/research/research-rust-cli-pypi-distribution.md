@@ -276,8 +276,9 @@ automatically selects appropriate Docker images:
 - aarch64 musllinux: `ghcr.io/rust-cross/manylinux2014-cross:aarch64`
 
 **Best practices from ruff/uv:**
-- Pin the maturin-action version (e.g., `@v1.50.0` or a commit hash)
-- Pin the maturin-version (e.g., `v1.11.5`)
+- Pin the maturin-action version (to the latest `PyO3/maturin-action` release or a commit hash)
+- Pin the maturin-version to the latest `maturin` release (1.13.3 as of May 2026; the
+  `v1.11.5` pins surveyed below are a Feb 2026 snapshot of ruff/uv)
 - Use `--locked` for reproducible builds
 - Use `--compatibility pypi` for PyPI-compatible platform tags
 - Test the installed wheel on each platform (at minimum `flowmark --help`)

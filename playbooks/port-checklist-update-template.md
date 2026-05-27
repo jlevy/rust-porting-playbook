@@ -17,7 +17,9 @@ Then fill in the copy, so that this template can be reused for each subsequent s
 cycle.
 
 **Related:** [Initial Port Checklist](port-checklist-initial-template.md) |
-[Rust CLI Best Practices](rust-cli-best-practices.md)
+[Rust CLI Best Practices](../references/rust-cli-best-practices.md) |
+[Auto-Sync Prompt](auto-sync-agent-prompt-template.md) |
+[Cross-Language Test Mapping](../references/cross-language-test-mapping.md)
 
 **Applicability profile:** This checklist is CLI-forward because flowmark is a CLI case
 study. For non-CLI ports, mark CLI-only items as **N/A** and substitute equivalent
@@ -55,12 +57,55 @@ polling:
 
 These are optional but strongly recommended for projects with active Python upstreams.
 
-## Preflight: Confirm Release Mode
+## Preflight: Environment + Release Mode
+
+> **First thing every sync session:** initialize submodules.
+> Sync work fails early without them and the failure modes are confusing (missing
+> `repos/<python>` paths, empty fixtures, “playbook not found”).
+
+```bash
+git submodule update --init --recursive
+```
 
 - [ ] Confirm this run changes the Python baseline version/tag/commit.
 - [ ] If baseline is unchanged, stop and use
   [python-to-rust-sync-release-workflow.md](python-to-rust-sync-release-workflow.md)
   Mode A instead of this checklist.
+- [ ] Install / refresh the upstream Python binary at the **target** version so
+  cross-binary parity tests run against the right baseline:
+  ```bash
+  uv tool install <package>==<TARGET_VERSION>   # or equivalent
+  ```
+- [ ] Run a clean `cargo clippy --locked --all-targets --all-features -- -D warnings` on
+  the **current** Rust HEAD before making any sync edits.
+  CI uses a floating stable toolchain (`dtolnay/rust-toolchain@stable`) and a recent
+  Rust release may add new pedantic lints that flag pre-existing code.
+  Land those fixes as trivial commits *before* sync work so they don’t get conflated
+  with the sync diff.
+
+## Phase 0: Empirical Pre-Port Verification
+
+> **Hard gate (do not start Phase 1 implementation work):** for every behavior change in
+> the upstream diff, run the new upstream tests / representative inputs against the
+> *existing* Rust binary and record the result.
+> The Rust port may use a different parser/library that already implements the upstream
+> fix; in that case the upstream code change is not required, only the tests.
+
+- [ ] For each upstream behavior commit:
+  - [ ] Identify the new test cases the commit adds or modifies.
+  - [ ] Run those test inputs through the existing release Rust binary
+    (`./target/release/<bin> ...`).
+  - [ ] Record the result in the per-change Rust impact table: “None — Rust already
+    passes” / “Code change required” / “Investigation needed”.
+- [ ] Cross-check `--help` text changes: if Python aligned its CLI to Rust’s existing
+  format (a common pattern), the Rust change set is empty for that commit — only the
+  Python tests need porting.
+
+This gate exists because the most common shape of an upstream sync, once a port is
+mature, is “Python catches up to Rust” rather than “Rust catches up to Python”.
+Treating every upstream commit as a Rust code change inflates the diff and risks
+introducing duplicate workarounds for fixes the Rust replacement library already
+implements.
 
 ## Phase 1: Sync Python Changes
 
@@ -174,6 +219,27 @@ These are optional but strongly recommended for projects with active Python upst
 
   - [ ] Create tracking issues for deferred features if they may be ported later
 
+- [ ] **Refresh Test Mapping** (if the project uses
+  [cross-language test mapping](../references/cross-language-test-mapping.md))
+
+  - [ ] Re-run `discover-python` against the new Python tag to refresh
+    `python-tests.yaml`.
+
+  - [ ] Re-run `discover-rust` after porting tests, to refresh `rust-tests.yaml`.
+
+  - [ ] Run `init-mapping` to add new entries (they appear with `status: missing`).
+
+  - [ ] For each `missing` entry: set `status: mapped` with `rust_file` /
+    `rust_function` if a Rust counterpart was added, or `status: excluded` with a
+    `notes:` rationale (Python-specific infrastructure, etc.).
+
+  - [ ] Run `check-mapping` and confirm exit 0 with `Missing: 0`.
+
+  - [ ] **Update count constants** in any smoke-test that pins the manifest sizes (e.g.
+    `EXPECTED_PYTHON_TEST_COUNT`, `EXPECTED_RUST_TEST_COUNT`, `EXPECTED_MAPPING_COUNT`).
+    These need to be bumped on every sync; CI failure here is expected and not a parity
+    issue.
+
 ## Phase 3: CLI Updates
 
 - [ ] **Update CLI Interface** (if changed in Python)
@@ -261,7 +327,7 @@ These are optional but strongly recommended for projects with active Python upst
     issues if needed)
 
   - [ ] Processing speed maintained or improved vs previous Rust version (benchmark
-    critical paths; target remains 50-100x faster than Python)
+    critical paths; target remains ~20-40x faster than Python)
 
   - [ ] Startup time < 50ms
 
@@ -386,7 +452,7 @@ These are optional but strongly recommended for projects with active Python upst
 - [ ] **Runtime Performance**
 
   - [ ] Processing speed maintained or improved vs previous Rust version (target:
-    50-100x faster than Python)
+    ~20-40x faster than Python)
 
   - [ ] No performance regressions in hot paths
 

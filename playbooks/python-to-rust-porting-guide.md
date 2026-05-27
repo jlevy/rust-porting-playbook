@@ -7,9 +7,9 @@ fixtures.
 **Checklists:** [Initial Port](port-checklist-initial-template.md) |
 [Subsequent Updates](port-checklist-update-template.md)
 
-**Related:** [Rust CLI Best Practices](rust-cli-best-practices.md)
+**Related:** [Rust CLI Best Practices](../references/rust-cli-best-practices.md)
 
-**Last update:** 2025-11-02
+**Last update:** 2026-05-27
 
 **Update instructions:** After any port, review this document and make any additions to
 reflect the best, tested porting process, in particular adding to the pitfalls or useful
@@ -19,8 +19,9 @@ patterns for any general and non-obvious porting situations.
 
 - **Python**: 3.11+ (modern type hints for better Rust compatibility)
 
-- **Rust**: 1.85+ (Edition 2024). Use the latest stable Rust edition for new code (2024
-  as of now). If your MSRV requires it, 2021 is acceptable.
+- **Rust**: 1.85+ (Edition 2024; latest stable is 1.95 as of May 2026). Use the latest
+  stable Rust edition for new code (2024 as of now). If your MSRV requires it, 2021 is
+  acceptable.
 
 - **Testing**: pytest 8.0+, cargo-tarpaulin or cargo-llvm-cov
 
@@ -255,7 +256,7 @@ integration test setup.
 | Python | Rust | Notes |
 | --- | --- | --- |
 | argparse/click | [clap](https://docs.rs/clap) | CLI parsing |
-| PyYAML | [serde_yaml_ng](https://docs.rs/serde_yaml_ng) | Successor to archived serde_yaml |
+| PyYAML | [serde_yaml_ng](https://docs.rs/serde_yaml_ng) | Successor to archived serde_yaml. Also consider [serde_norway](https://docs.rs/serde_norway), which tracks a maintained libyaml fork (`unsafe-libyaml-norway`) vs serde_yaml_ng's unmaintained `unsafe-libyaml` |
 | pytest | Built-in #[test] + cargo test |  |
 | Markdown libs | [comrak](https://github.com/kivikakk/comrak) / [pulldown-cmark](https://docs.rs/pulldown-cmark) | Choose based on features |
 
@@ -557,8 +558,8 @@ The acceptance criteria cover:
 - **Cross-Validation (Mandatory):** Zero diffs across all fixtures, byte-for-byte
   matching of all file outputs
 
-- **Performance Targets:** Binary size < 10MB, processing speed 50-100x faster than
-  Python, startup time < 50ms
+- **Performance Targets:** Binary size < 10MB, processing speed ~20-40x faster than
+  Python (measured in the flowmark port; 10-50x typical), startup time < 50ms
 
 - **Quality Metrics (Mandatory):** Zero clippy warnings, ≥90% test coverage in core
   library, 100% coverage of public API, all public APIs documented, security audits pass
@@ -773,9 +774,10 @@ pub fn split_frontmatter(text: &str) -> (String, String) {
   boundaries; use `.char_indices()` to find safe boundaries, or `.chars()` to iterate by
   character
 
-- **Library types**: `comrak` inner types change between major versions (e.g.,
-  `NodeValue::Text` was `Vec<u8>` in 0.x, `String` in 0.30+). Check docs for your pinned
-  version and convert explicitly.
+- **Library types**: `comrak` inner types change between versions (e.g.,
+  `NodeValue::Text` was `Vec<u8>` pre-0.4, `String` in 0.4-0.44, and
+  `Cow<'static, str>` in 0.45+). Check docs for your pinned version and convert
+  explicitly.
 
 - **Module system**: Rust requires explicit `mod` declarations
 

@@ -60,16 +60,24 @@ Use when upstream Python has a new version and you are updating Rust to match it
 Required sequence:
 
 1. Identify baseline and target Python versions/tags/commits.
+   See
+   [auto-sync-agent-prompt-template.md → Auto-detecting the target](auto-sync-agent-prompt-template.md#auto-detecting-the-target)
+   for a snippet that diffs the current parity baseline against upstream’s latest tag.
 2. Produce baseline->target diff summary artifact.
 3. Categorize changes:
    - bug fixes
    - features
    - test changes
    - refactors/no-op behavior changes
-4. Execute [port-checklist-update-template.md](port-checklist-update-template.md)
+4. **For each upstream behavior change, verify against the existing Rust binary *before*
+   concluding code must change.** The Rust port may use a different parser/library that
+   already implements the upstream fix.
+   Port the tests regardless — they’re the parity contract going forward — but do not
+   auto-port the implementation change.
+5. Execute [port-checklist-update-template.md](port-checklist-update-template.md)
    end-to-end.
-5. Update version correspondence metadata to target baseline.
-6. Cut release and publish sync report.
+6. Update version correspondence metadata to target baseline.
+7. Cut release and publish sync report.
 
 Mode B acceptance gates:
 - no skipped changed upstream tests without documented rationale

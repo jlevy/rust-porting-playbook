@@ -9,8 +9,8 @@ file renames, backups, undo, atomic writes, directory walking with filtering.
 These patterns go beyond the simple read-transform-write cycle covered in the general
 CLI patterns guide.
 
-See also: [Rust CLI App Patterns](rust-cli-app-patterns.md),
-[Python-to-Rust Mapping Reference](../playbooks/python-to-rust-mapping-reference.md)
+See also: [Rust CLI App Patterns](../references/rust-cli-app-patterns.md),
+[Python-to-Rust Mapping Reference](../references/python-to-rust-mapping-reference.md)
 (I/O section).
 
 ## Atomic File Writes

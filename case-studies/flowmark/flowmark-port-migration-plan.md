@@ -169,7 +169,7 @@ semi-automatically track the Python repository, with:
 **Selected Library**: `comrak` (latest: 0.29+)
 
 > **Version note (2026-02-09):** This evaluation was performed against comrak 0.29
-> (November 2025). Comrak has evolved significantly since then (0.30+ through 0.50+),
+> (November 2025). Comrak has evolved significantly since then (0.30+ through 0.52+ as of May 2026),
 > with changes to APIs, rendering behavior, and bug fixes.
 > If starting a new project or upgrading, re-evaluate against the current version and
 > re-run cross-validation, as workaround behavior may have changed.
@@ -657,7 +657,7 @@ Following recommendations from the [Rust CLI Book](https://rust-cli.github.io/bo
 Rust CLI tooling (2025):
 
 <!-- Version note (2026-02-09): Dependencies below reflect versions at time of planning
-(November 2025). comrak 0.29 has since evolved to 0.30+ through 0.50+. Re-evaluate
+(November 2025). comrak 0.29 has since evolved to 0.30+ through 0.52+ (as of May 2026). Re-evaluate
 versions when starting implementation.
 -->
 
@@ -2113,6 +2113,12 @@ opt-level = "z"  # Optimize for size
 
 ### 8.2 GitHub Actions CI
 
+> **Note (2026-05-27):** The illustrative workflows below use `submodules: recursive`,
+> but the project ultimately adopted the hybrid copy + CI-clone strategy (see
+> [Section 2.2](#22-python-rust-sync-strategy)), which does **not** use git submodules.
+> The cross-validation workflow in Section 2.2 shows the actual `git clone` approach;
+> treat the `submodules: recursive` lines here as superseded.
+
 ```yaml
 # .github/workflows/ci.yml
 name: CI
@@ -2722,7 +2728,7 @@ clap_complete = "4.5"  # Shell completions
 ### B. Dependency Comparison
 
 > **Version note (2026-02-09):** Versions below were current at time of planning
-> (November 2025). comrak 0.29 has since evolved to 0.50+. Re-evaluate when
+> (November 2025). comrak 0.29 has since evolved to 0.52+ (as of May 2026). Re-evaluate when
 > implementing.
 
 | Feature | Python | Rust |

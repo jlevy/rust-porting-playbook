@@ -16,7 +16,7 @@ Use a copy so this original template is not altered.
 (But only one copy should be needed per project.)
 
 **Related:** [Subsequent Update Checklist](port-checklist-update-template.md) |
-[Rust CLI Best Practices](rust-cli-best-practices.md)
+[Rust CLI Best Practices](../references/rust-cli-best-practices.md)
 
 * * *
 
@@ -254,9 +254,9 @@ continued)*
 
 - [ ] **Map and Add Core Dependencies**
 
-  - [ ] CLI parsing: `clap = { version = "4.5", features = ["derive", "cargo"] }`
+  - [ ] CLI parsing: `clap = { version = "4.6", features = ["derive", "cargo"] }`
 
-  - [ ] Error handling: `thiserror = "2"` (library errors), `color-eyre = "0.6"` or
+  - [ ] Error handling: `thiserror = "2.0"` (library errors), `color-eyre = "0.6"` or
     `anyhow = "1.0"` (application errors)
 
   - [ ] Logging: `tracing = "0.1"`,
@@ -510,8 +510,8 @@ continued)*
   - [ ] Binary size < 10MB (release build, stripped; use `cargo-bloat` to identify size
     issues)
 
-  - [ ] Processing speed 10-100x faster than Python (benchmark critical paths, profile
-    with `cargo flamegraph` or `perf` if needed)
+  - [ ] Processing speed ~10-50x faster than Python (≈20-40x measured in the flowmark
+    port; benchmark critical paths, profile with `cargo flamegraph` or `perf` if needed)
 
   - [ ] Startup time < 50ms
 
@@ -708,8 +708,8 @@ continued)*
 
 - [ ] **Runtime Performance**
 
-  - [ ] Processing speed >= 10x faster than Python (benchmark critical paths; 50-100x is
-    typical for well-optimized ports)
+  - [ ] Processing speed >= 10x faster than Python (benchmark critical paths; ~20-40x is
+    typical, as measured in the flowmark port)
 
   - [ ] No performance regressions in hot paths
 

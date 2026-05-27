@@ -8,8 +8,8 @@ Patterns and conventions for building professional Rust CLI applications.
 Covers project structure, argument parsing, I/O handling, error reporting, and
 distribution.
 
-See also: [Rust General Rules](rust-general-rules.md),
-[Rust Project Setup](rust-project-setup.md).
+See also: [Rust General Rules](../guidelines/rust-general-rules.md),
+[Rust Project Setup](../guidelines/rust-project-setup.md).
 For Python CLI patterns (useful when porting), see `tbd guidelines python-cli-patterns`.
 
 ## Project Structure
@@ -228,10 +228,9 @@ fn main() -> color_eyre::Result<()> {
 }
 ```
 
-> **Maintenance note:** `color-eyre` is in maintenance mode (last published 2023). It
-> still works, but `anyhow` is actively maintained and is the safer long-term choice for
-> most CLIs. Use `color-eyre` only when you specifically need its colorized backtraces
-> and `SpanTrace` integration.
+> **Choosing between them:** Both are actively maintained (`color-eyre` 0.6.5 shipped
+> 2026). `anyhow` is the simplest default for most CLIs; reach for `color-eyre` when you
+> specifically want its colorized backtraces and `SpanTrace` integration.
 
 ### Exit Codes
 
@@ -508,6 +507,12 @@ libc = "0.2"
 Without this fix, `your-tool generate | head -5` will print an error on every run.
 This is already included in the recommended `main()` pattern above.
 
+> **Alternative:** the [`sigpipe`](https://docs.rs/sigpipe) crate wraps this exact call
+> as `sigpipe::reset()`, avoiding the explicit `unsafe` block at the cost of a small
+> dependency (see
+> [rust-cli-best-practices.md](rust-cli-best-practices.md)). The two approaches are
+> equivalent.
+
 ## Shell Completions
 
 Use `clap_complete` to generate shell completion scripts at build time or via a hidden
@@ -533,8 +538,8 @@ See the [clap_complete documentation](https://docs.rs/clap_complete) for details
 
 ## Related Guidelines
 
-- [Rust General Rules](rust-general-rules.md)
-- [Rust Project Setup](rust-project-setup.md)
+- [Rust General Rules](../guidelines/rust-general-rules.md)
+- [Rust Project Setup](../guidelines/rust-project-setup.md)
 - For Python CLI patterns (porting source), see `tbd guidelines python-cli-patterns`
 - For TypeScript CLI patterns (parallel reference), see
   `tbd guidelines typescript-cli-tool-rules`
