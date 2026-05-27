@@ -228,10 +228,9 @@ fn main() -> color_eyre::Result<()> {
 }
 ```
 
-> **Maintenance note:** `color-eyre` is in maintenance mode (last published 2023). It
-> still works, but `anyhow` is actively maintained and is the safer long-term choice for
-> most CLIs. Use `color-eyre` only when you specifically need its colorized backtraces
-> and `SpanTrace` integration.
+> **Choosing between them:** Both are actively maintained (`color-eyre` 0.6.5 shipped
+> 2026). `anyhow` is the simplest default for most CLIs; reach for `color-eyre` when you
+> specifically want its colorized backtraces and `SpanTrace` integration.
 
 ### Exit Codes
 

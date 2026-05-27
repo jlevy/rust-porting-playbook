@@ -1051,7 +1051,7 @@ Rust distributes config across separate files (`rustfmt.toml`, `deny.toml`,
 | (dataclasses) | serde Serialize/Deserialize | Excellent |  |
 | (type hints) | Rust type system | Built-in |  |
 | (none) | thiserror 2.0 | Excellent | Library error types |
-| (none) | color-eyre 0.6 | Excellent | CLI error display |
+| (none) | color-eyre 0.6 | Excellent | Optional rich CLI error display; `anyhow` is the simpler default |
 | (none) | tracing 0.1 | Excellent | Structured logging |
 | (none) | indicatif 0.18 | Good | Progress bars |
 | (none) | tempfile 3.27 | Excellent | Atomic file writes |

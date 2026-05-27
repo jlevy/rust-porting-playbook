@@ -182,16 +182,16 @@ struct Cli {
 
 **Error Handling**: `anyhow` (recommended) or `color-eyre`
 ```toml
-anyhow = "1.0"      # Recommended for new projects -- simple, well-maintained
+anyhow = "1.0"      # Recommended default for new projects -- simple, well-maintained
 # OR
-color-eyre = "0.6"  # Rich error display with colored backtraces (maintenance-only)
+color-eyre = "0.6"  # Rich error display with colored backtraces (actively maintained)
 ```
 
-- `anyhow` for most projects — actively maintained, simple, ergonomic
+- `anyhow` for most projects — simple, ergonomic, the default choice
 
-- `color-eyre` for projects that need colored backtraces and rich diagnostics.
-  Note: `color-eyre` 0.6 is in **maintenance-only mode** (no active feature
-  development). It works well but is not receiving new features.
+- `color-eyre` for projects that want colored backtraces and rich diagnostics.
+  Still actively maintained (0.6.5, 2026); the trade-off vs `anyhow` is richer output
+  for a slightly heavier dependency, not maintenance risk.
 
 **Logging/Tracing**: `tracing` ecosystem
 ```toml
