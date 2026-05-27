@@ -1,0 +1,14 @@
+{
+  "node-llama-cpp": 129,
+  "vitest": 106,
+  "@modelcontextprotocol/sdk": 91,
+  "better-sqlite3": 38,
+  "tsx": 31,
+  "fast-glob": 18,
+  "sqlite-vec": 6,
+  "tree-sitter-typescript": 4,
+  "@types/better-sqlite3": 3,
+  "tree-sitter-go": 3,
+  "tree-sitter-python": 3,
+  "tree-sitter-rust": 3
+}

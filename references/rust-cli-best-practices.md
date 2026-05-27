@@ -541,6 +541,26 @@ cargo geiger --update
 
 **Use Case**: Projects requiring minimal `unsafe` code or security audits
 
+### 4.6 Supply-Chain Review (Process, Not Just Tooling)
+
+A port adds a whole new dependency tree at once, so it is a supply-chain decision point.
+The tools above (`cargo audit`, `cargo deny`, `cargo-auditable`) are necessary but not
+sufficient. Also apply these review-layer habits — see the cross-ecosystem policy in
+`tbd guidelines supply-chain-hardening` and the full
+[Supply Chain Hardening guidebook](https://github.com/jlevy/supply-chain-hardening)
+(per-ecosystem ten-minute setups, IOC watch list, CI/publish hardening):
+
+- **`--locked` everywhere** and commit `Cargo.lock` (binaries/apps) — pins the exact tree
+  the author tested.
+- **14-day cool-off** before adopting a brand-new crate version, unless a documented
+  exception applies; the safest update is the one you skip.
+- **Scrutinize `build.rs` and proc-macro crates.** Both run arbitrary code at build time
+  with full filesystem/network access (the `mysten-metrics@9.0.3` attack used `build.rs`).
+  Read the build script of any new dependency, and keep your own `build.rs` minimal.
+- **`cargo-vet`** (teams) to record human review of crate versions; **`osv-scanner -L
+  Cargo.lock`** for cross-ecosystem advisory coverage beyond RustSec.
+- Prefer fewer, well-maintained crates; treat each new dependency as attack surface.
+
 ## 5. Documentation
 
 ### 5.1 Code Documentation
@@ -591,6 +611,11 @@ This gives users tab-completion for all commands, flags, and arguments with no m
 maintenance.
 
 **Build-time generation** (in `build.rs`):
+
+> Note: `build.rs` runs at compile time with full filesystem/network access. Keep it
+> minimal and deterministic (no network, no secrets), and review the build scripts of any
+> dependency that ships one — see §4.6 Supply-Chain Review.
+
 ```rust
 use clap::CommandFactory;
 use clap_complete::{generate_to, shells::Shell};

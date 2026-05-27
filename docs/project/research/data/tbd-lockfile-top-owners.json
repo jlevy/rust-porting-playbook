@@ -1,0 +1,20 @@
+{
+  "@vitest/coverage-v8": 116,
+  "typescript-eslint": 108,
+  "tryscript": 103,
+  "vitest": 97,
+  "eslint-config-prettier": 87,
+  "eslint": 86,
+  "c8": 75,
+  "tsdown": 67,
+  "tsx": 62,
+  "marked-terminal": 44,
+  "monocart-coverage-reports": 25,
+  "lefthook": 11,
+  "gray-matter": 10,
+  "@types/marked-terminal": 6,
+  "publint": 6,
+  "atomically": 4,
+  "@types/node": 2,
+  "pretty-ms": 2
+}
