@@ -10,7 +10,7 @@ For porting **methodology** (principles, workflow, pitfalls, acceptance criteria
 
 **Related:** [Python-to-Rust Porting Guide](../playbooks/python-to-rust-porting-guide.md)
 
-**Last update:** 2026-02-12
+**Last update:** 2026-05-27
 
 ## Types
 

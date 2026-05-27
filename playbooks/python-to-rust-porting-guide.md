@@ -9,7 +9,7 @@ fixtures.
 
 **Related:** [Rust CLI Best Practices](../references/rust-cli-best-practices.md)
 
-**Last update:** 2025-11-02
+**Last update:** 2026-05-27
 
 **Update instructions:** After any port, review this document and make any additions to
 reflect the best, tested porting process, in particular adding to the pitfalls or useful
