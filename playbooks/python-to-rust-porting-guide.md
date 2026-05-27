@@ -19,8 +19,9 @@ patterns for any general and non-obvious porting situations.
 
 - **Python**: 3.11+ (modern type hints for better Rust compatibility)
 
-- **Rust**: 1.85+ (Edition 2024). Use the latest stable Rust edition for new code (2024
-  as of now). If your MSRV requires it, 2021 is acceptable.
+- **Rust**: 1.85+ (Edition 2024; latest stable is 1.95 as of May 2026). Use the latest
+  stable Rust edition for new code (2024 as of now). If your MSRV requires it, 2021 is
+  acceptable.
 
 - **Testing**: pytest 8.0+, cargo-tarpaulin or cargo-llvm-cov
 
