@@ -3,9 +3,9 @@ type: is
 id: is-01ksn2h8cx0bv38z2vkdnv4he0
 title: "May 2026 currency review: refresh libraries, tooling, and best practices"
 kind: epic
-status: open
+status: closed
 priority: 1
-version: 13
+version: 14
 labels:
   - review
   - currency
@@ -24,7 +24,9 @@ child_order_hints:
   - is-01ksn2k588xne1yzymfza7n7t6
   - is-01ksn2kjmf5p2pq7xcf4f9dp36
 created_at: 2026-05-27T15:58:28.252Z
-updated_at: 2026-05-27T15:59:44.271Z
+updated_at: 2026-05-27T16:22:56.474Z
+closed_at: 2026-05-27T16:22:56.474Z
+close_reason: "All 12 child beads implemented and closed. Currency refresh complete: crate pins (regex/clap/tempfile/fs-err/thiserror), cargo-dist->dist 0.31, maturin guidance, GitHub Actions pins, color-eyre/anyhow reconciliation, serde_norway note, comrak 0.52 claims + Text history, performance ranges anchored to measured 20-40x, date markers, Rust 1.95 note, migration-plan submodule note, SIGPIPE cross-link. 14 commits on claude/focused-goodall-PdlKw."
 ---
 Senior engineering currency review of the Rust Porting Playbook (May 2026). A prior comprehensive review landed Feb 2026 (see _meta/plans/done/plan-2026-02-08-playbook-review-fixes.md); this pass finds what has drifted since plus net-new consistency gaps.
 

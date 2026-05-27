@@ -3,15 +3,17 @@ type: is
 id: is-01ksn2j92bywfz6aarqp7nqtqb
 title: Refresh maturin and PyPI distribution tooling versions in research docs
 kind: task
-status: open
+status: closed
 priority: 2
-version: 1
+version: 2
 labels:
   - currency
 dependencies: []
 parent_id: is-01ksn2h8cx0bv38z2vkdnv4he0
 created_at: 2026-05-27T15:59:01.707Z
-updated_at: 2026-05-27T15:59:01.707Z
+updated_at: 2026-05-27T16:14:56.380Z
+closed_at: 2026-05-27T16:14:56.380Z
+close_reason: Refreshed generic maturin-version pin guidance to current 1.13.3 and labeled surveyed v1.11.5/action@v1.50.0 as Feb 2026 snapshots (left as accurate historical observations of ruff/uv). maturin>=1.9,<2.0 bound still valid. macos-13 runner still available and macosx_10_12 still maturin's default x86_64-mac target as of May 2026 — left unchanged.
 ---
 Research docs cite maturin v1.11.5 and PyO3/maturin-action@v1.50.0 as surveyed/recommended pins; current maturin is 1.13.3 (May 2026). The maturin>=1.9,<2.0 build-system bound is still fine.
 

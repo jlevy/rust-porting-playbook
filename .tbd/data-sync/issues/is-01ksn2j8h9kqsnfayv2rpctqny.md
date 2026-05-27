@@ -3,16 +3,18 @@ type: is
 id: is-01ksn2j8h9kqsnfayv2rpctqny
 title: Refresh and reconcile Rust crate version pins in prescriptive docs
 kind: task
-status: open
+status: closed
 priority: 1
-version: 1
+version: 2
 labels:
   - currency
   - consistency
 dependencies: []
 parent_id: is-01ksn2h8cx0bv38z2vkdnv4he0
 created_at: 2026-05-27T15:59:01.161Z
-updated_at: 2026-05-27T15:59:01.161Z
+updated_at: 2026-05-27T16:12:57.536Z
+closed_at: 2026-05-27T16:12:57.536Z
+close_reason: Bumped regex->1.12, clap/clap_complete->4.6, tempfile->3.27, fs-err->3.3, thiserror notation->2.0 across references/, guidelines/, playbooks/. Verified no stale pins remain via grep. Historical migration-plan pins untouched.
 ---
 Prescriptive docs pin crate minimum versions that have drifted and disagree across files. Current (2026-05-27): regex 1.12.3, clap 4.6.1, indicatif 0.18.4, thiserror 2.x.
 

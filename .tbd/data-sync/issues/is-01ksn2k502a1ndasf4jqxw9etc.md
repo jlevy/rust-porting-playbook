@@ -3,15 +3,17 @@ type: is
 id: is-01ksn2k502a1ndasf4jqxw9etc
 title: Refresh Rust toolchain currency notes (latest stable 1.95; verify since-version claims)
 kind: task
-status: open
+status: closed
 priority: 3
-version: 1
+version: 2
 labels:
   - currency
 dependencies: []
 parent_id: is-01ksn2h8cx0bv38z2vkdnv4he0
 created_at: 2026-05-27T15:59:30.306Z
-updated_at: 2026-05-27T15:59:30.306Z
+updated_at: 2026-05-27T16:20:51.474Z
+closed_at: 2026-05-27T16:20:51.474Z
+close_reason: Added 'latest stable 1.95 as of May 2026' context to porting-guide prerequisites; MSRV 1.85/Edition 2024 floor kept (correct). Verified the 'stable since Rust X' notes (1.81/1.79/1.77/1.89/1.75) and aarch64-pc-windows-msvc 'Tier 1 since 1.91' are all accurate — no corrections needed.
 ---
 MSRV 1.85 / Edition 2024 floor is correct and should stay. But 'latest stable' context and several 'stable since Rust X' notes should be verified against current stable 1.95.0.
 
