@@ -1,9 +1,9 @@
 ---
 title: "Research: tbd Dependency-by-Dependency Rust Port Plan"
 status: draft
-date: 2026-03-04
+date: 2026-05-27
 source_repo: https://github.com/jlevy/tbd
-source_commit: 70d71fe738763029f4b6a3cd6a14d3c7aa8a3061
+source_commit: 395052437464a9e62ce209220dcc01096fa06f7e
 ---
 # Research: tbd Dependency-by-Dependency Rust Port Plan
 
@@ -19,10 +19,10 @@ Input package files:
 Inventory snapshot (direct dependency entries):
 - `packages/tbd` `dependencies`: 12
 - `packages/tbd` `devDependencies`: 10
-- workspace root `devDependencies`: 10
-- total: 32 entries (31 unique names; `tsx` appears in both package scopes)
+- workspace root `devDependencies`: 9
+- total: 31 entries (30 unique names; `tsx` appears in both package scopes)
 
-Validation notes (as of 2026-03-04):
+Validation notes (as of 2026-05-27):
 - Dependency inventory extracted directly from the input package manifests.
 - Candidate Rust crate targets verified for existence with `cargo search`.
 
@@ -80,7 +80,6 @@ review lifecycle scripts), and vet each proposed **target** crate (`cargo deny` 
 | `eslint-config-prettier` | lint/format conflict mediation | `rustfmt` (single formatter) | remove JS formatter coordination and rely on rustfmt canonical style |
 | `prettier` | source/doc formatting | `rustfmt` + markdown formatter policy | move code formatting to rustfmt; keep markdown formatting via existing doc tooling if still needed |
 | `lefthook` | git hook orchestration | keep `lefthook` or switch to lightweight shell hooks | keep initially for continuity, then evaluate simplification |
-| `@changesets/cli` | versioning/changelog release workflow | `release-plz` or `cargo-release` | choose one and codify release automation |
 | `npm-check-updates` | dependency update checks | `cargo update` + `cargo-audit` + Dependabot | establish update cadence and security checks |
 | `tsx` | script execution | `cargo run --bin <tool>` | remove as Rust utilities replace TS scripts |
 
@@ -118,8 +117,12 @@ Transitive lockfile coverage is maintained in:
 - `docs/project/research/data/tbd-lockfile-summary.json`
 - `docs/project/research/data/tbd-lockfile-top-owners.json`
 
-Snapshot from `attic/tbd/pnpm-lock.yaml` (2026-03-04):
-- lock entries: 454
-- transitive entries: 420
-- transitive unique package names: 388
+Snapshot from `attic/tbd/pnpm-lock.yaml` (2026-05-27):
+- lock entries: 397
+- transitive entries: 366
+- transitive unique package names: 337
 - unmapped/unreachable lock entries: 0
+
+Upstream dropped `@changesets/cli` (PR #134, "drop changesets release") in favor of a
+simpler release flow, removing a large block of tooling-only transitive mass since the
+original 2026-03-04 snapshot (454 lock entries).

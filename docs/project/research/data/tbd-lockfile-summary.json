@@ -1,24 +1,24 @@
 {
-  "lock_entries": 454,
-  "lock_unique_names": 419,
-  "direct_manifest_entries": 32,
-  "direct_manifest_unique_names": 31,
-  "transitive_entries": 420,
-  "transitive_unique_names": 388,
+  "lock_entries": 397,
+  "lock_unique_names": 367,
+  "direct_manifest_entries": 31,
+  "direct_manifest_unique_names": 30,
+  "transitive_entries": 366,
+  "transitive_unique_names": 337,
   "action_counts": {
-    "removed-with-js-toolchain": 365,
-    "covered-in-direct-plan": 34,
-    "replace-through-runtime-owner": 30,
-    "split-runtime-and-tooling": 25
+    "removed-with-js-toolchain": 311,
+    "replace-through-runtime-owner": 34,
+    "covered-in-direct-plan": 31,
+    "split-runtime-and-tooling": 21
   },
   "owner_group_mix_counts": {
-    "package-dev": 190,
-    "workspace-dev": 152,
-    "runtime": 37,
-    "package-dev+workspace-dev": 45,
-    "package-dev+runtime+workspace-dev": 8,
-    "package-dev+runtime": 17,
-    "runtime+workspace-dev": 5
+    "package-dev": 183,
+    "runtime": 41,
+    "package-dev+workspace-dev": 52,
+    "workspace-dev": 95,
+    "package-dev+runtime": 20,
+    "package-dev+runtime+workspace-dev": 5,
+    "runtime+workspace-dev": 1
   },
   "missing_edges": 0,
   "unreachable_entries": 0
