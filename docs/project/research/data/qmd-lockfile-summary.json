@@ -1,29 +1,22 @@
 {
-  "lock_entries": 447,
-  "lock_unique_names": 403,
-  "direct_manifest_entries": 16,
-  "direct_manifest_unique_names": 16,
-  "transitive_entries": 431,
-  "transitive_unique_names": 388,
+  "lock_entries": 376,
+  "lock_unique_names": 357,
+  "direct_manifest_entries": 22,
+  "direct_manifest_unique_names": 22,
+  "transitive_entries": 353,
+  "transitive_unique_names": 335,
   "action_counts": {
     "removed-with-js-toolchain": 100,
-    "replace-through-runtime-owner": 328,
-    "covered-in-direct-plan": 16,
-    "split-runtime-and-tooling": 3
+    "replace-through-runtime-owner": 251,
+    "covered-in-direct-plan": 23,
+    "split-runtime-and-tooling": 2
   },
   "owner_group_mix_counts": {
     "dev": 103,
-    "runtime": 334,
-    "dev+runtime": 5,
-    "optional+runtime": 4,
-    "peer+runtime": 1
+    "runtime": 264,
+    "dev+runtime": 4,
+    "optional+runtime": 5
   },
-  "unresolved_direct_names": [],
-  "direct_name_aliases": [
-    {
-      "manifest": "sqlite-vec-win32-x64",
-      "lock_key": "sqlite-vec-windows-x64"
-    }
-  ],
+  "missing_edges": 0,
   "unreachable_entries": 0
 }
