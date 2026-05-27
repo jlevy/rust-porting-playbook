@@ -215,6 +215,13 @@ For each dependency rated Medium or High risk:
 - Feature coverage (all features your project uses)
 - API capability (can produce the same outputs)
 - Active maintenance (commits in last 6 months, issues responded to)
+- Supply-chain trust: reputable/maintained crate, sane dependency footprint, and no
+  surprising `build.rs`/proc-macro behavior. A port adds a whole new dependency tree, so
+  treat library choice as a supply-chain decision — run `cargo deny`/`cargo audit`, apply
+  the 14-day cool-off for brand-new versions, and prefer fewer, well-vetted crates.
+  See `tbd guidelines supply-chain-hardening`, §4.6 of
+  [Rust CLI Best Practices](../references/rust-cli-best-practices.md), and the
+  [Supply Chain Hardening guidebook](https://github.com/jlevy/supply-chain-hardening).
 
 **Tier 2 (Differentiators):**
 - Output fidelity (byte-for-byte match with Python)

@@ -26,6 +26,17 @@ Validation notes (as of 2026-03-04):
 - Dependency inventory extracted directly from the input package manifests.
 - Candidate Rust crate targets verified for existence with `cargo search`.
 
+## Supply-Chain Note
+
+The **Risk** column below rates *porting difficulty*, not supply-chain risk. Treat
+dependency selection as a supply-chain decision in both directions: audit the **source**
+npm tree before trusting it as the parity oracle (`npm audit` / `pnpm audit signatures`,
+review lifecycle scripts), and vet each proposed **target** crate (`cargo deny` /
+`cargo audit`, 14-day cool-off for brand-new versions, read any `build.rs`/proc-macro,
+`cargo-vet` for teams). See `tbd guidelines supply-chain-hardening`, §4.6 of
+`references/rust-cli-best-practices.md`, and the Supply Chain Hardening guidebook
+(<https://github.com/jlevy/supply-chain-hardening>).
+
 ## Runtime Dependency Plan (`packages/tbd`)
 
 | JS Dependency | Current Role in `tbd` | Rust Target | Port Plan | Validation Gate | Risk |
