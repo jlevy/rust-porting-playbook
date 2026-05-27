@@ -41,7 +41,7 @@ manifest dependencies, using `attic/qmd/bun.lock`.
 
 | Action | Meaning | Count |
 | --- | --- | --- |
-| `covered-in-direct-plan` | Direct dependency; handled in D13 direct table | 16 |
+| `covered-in-direct-plan` | Direct dependency; handled in the qmd dependency port plan (direct table) | 16 |
 | `replace-through-runtime-owner` | Transitive package owned only by runtime/optional roots; replaced as part of runtime port | 328 |
 | `removed-with-js-toolchain` | Transitive package owned only by dev/peer roots; removed with tooling cutover | 100 |
 | `split-runtime-and-tooling` | Shared by runtime and dev roots; preserve runtime path while deleting tooling path | 3 |
@@ -75,7 +75,8 @@ porting documentation to avoid false missing-dependency checks.
 ## Rust Porting Use Rules
 
 1. For every row marked `replace-through-runtime-owner`, ensure the owner direct
-   dependency has a concrete Rust mapping and integration test in D13.
+   dependency has a concrete Rust mapping and integration test in the qmd dependency
+   port plan.
 2. For every row marked `removed-with-js-toolchain`, remove the owning TS/Node
    workflow and verify no runtime command path still references it.
 3. For every row marked `split-runtime-and-tooling`, add targeted tests to guard

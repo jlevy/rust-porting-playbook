@@ -147,7 +147,7 @@ Based on the existing research, qmd’s dependencies sort into three risk tiers:
 | --- | --- |
 | `fast-glob` | `globset`/`wax` + `walkdir`/`ignore` |
 | `picomatch` | `globset` or `regex` |
-| `yaml` | `serde_yml` |
+| `yaml` | `serde_yaml_ng` |
 
 ## Deliverables
 

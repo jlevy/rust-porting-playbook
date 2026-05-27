@@ -61,20 +61,21 @@ These decisions remove ambiguity and unblock writing:
 
 ## Current Repo Scope (Baseline)
 
-As of 2026-03-04 on this branch:
+As of 2026-05-27 (after the `references/` reorg and this PR's research additions):
 
 | Layer | Directory | Current Count | Notes |
 | --- | --- | --- | --- |
-| Playbooks | `playbooks/` | 11 files | Includes Python-specific and generic docs |
-| Guidelines | `guidelines/` | 8 files | Includes Python-specific and Rust-target docs |
-| Research | `docs/project/research/` | 2 files | Binary distribution + PyPI distribution research |
+| Playbooks | `playbooks/` | 7 files | Python-specific process guides and checklists |
+| Guidelines | `guidelines/` | 7 files | Includes Python-specific and Rust-target docs |
+| References | `references/` | 5 files | Mapping reference, CLI patterns/best-practices, review checklist, test mapping (moved here from `playbooks/`/`guidelines/`) |
+| Research | `docs/project/research/` | 6 files | Binary + PyPI distribution research, plus the tbd/qmd dependency port plans and lockfile appendices from this PR |
 | Case Studies | `case-studies/` | 2 directories | flowmark + repren |
 | Meta | `_meta/` | multiple files | Plans, templates, improvement process |
 
 ### Python-Specific Documents Requiring TypeScript Parallels
 
 1. `playbooks/python-to-rust-playbook.md`
-2. `playbooks/python-to-rust-mapping-reference.md`
+2. `references/python-to-rust-mapping-reference.md`
 3. `playbooks/python-to-rust-porting-guide.md`
 4. `playbooks/python-to-rust-test-coverage-playbook.md`
 5. `guidelines/python-to-rust-porting-rules.md`
@@ -230,7 +231,7 @@ DoD:
 - No claim implies Rust trait specialization is required/stable.
 - References included for runtime-sensitive claims.
 
-### D2. `playbooks/typescript-to-rust-mapping-reference.md`
+### D2. `references/typescript-to-rust-mapping-reference.md`
 
 Purpose: exhaustive construct-by-construct reference (deep companion to D1).
 
@@ -355,7 +356,7 @@ Required updates (with specific changes):
 - Add TypeScript coverage examples alongside Python ones (Vitest, c8).
 - Generalize fixture generation commands to show both Python and TS examples.
 
-**`guidelines/rust-cli-app-patterns.md`:**
+**`references/rust-cli-app-patterns.md`:**
 - Change “If you do not have a Python source to track” to “source language” (line ~458).
 - Update CLI patterns reference to list both Python and TypeScript guideline links.
 
@@ -394,9 +395,9 @@ Required updates (with specific changes):
   Python examples.
 - `guidelines/filesystem-heavy-cli-porting.md` — already language-neutral.
 - `guidelines/rust-general-rules.md` — Rust-target only.
-- `playbooks/cross-language-test-mapping.md` — already language-neutral.
-- `playbooks/rust-cli-best-practices.md` — Rust-target only.
-- `playbooks/rust-code-review-checklist.md` — Rust-target only.
+- `references/cross-language-test-mapping.md` — already language-neutral.
+- `references/rust-cli-best-practices.md` — Rust-target only.
+- `references/rust-code-review-checklist.md` — Rust-target only.
 
 DoD:
 - No general-purpose doc implies Python is the only supported source language.
@@ -484,7 +485,7 @@ DoD:
 ### Phase 1: Core TypeScript Path (D1-D5)
 
 - [ ] Create `guidelines/typescript-to-rust-porting-rules.md` (D1).
-- [ ] Create `playbooks/typescript-to-rust-mapping-reference.md` (D2).
+- [ ] Create `references/typescript-to-rust-mapping-reference.md` (D2).
 - [ ] Create `playbooks/typescript-to-rust-playbook.md` (D3).
 - [ ] Create `guidelines/typescript-to-rust-cli-porting.md` (D4).
 - [ ] Create `playbooks/typescript-to-rust-test-coverage-playbook.md` (D5).
@@ -529,7 +530,7 @@ complete. See `plan-2026-03-04-qmd-ai-application-porting-path.md`.
   instructions, add TS playbook entry points to reference table.
 - [ ] Update `guidelines/test-coverage-for-porting.md`: language-neutral phrasing, add
   TS coverage examples.
-- [ ] Update `guidelines/rust-cli-app-patterns.md`: generalize source-language
+- [ ] Update `references/rust-cli-app-patterns.md`: generalize source-language
   references.
 - [ ] Update `guidelines/rust-project-setup.md`: add TS submodule example alongside
   Python.
@@ -638,7 +639,7 @@ Version drift policy:
 ### Existing Playbook Documents
 
 - `playbooks/python-to-rust-playbook.md`
-- `playbooks/python-to-rust-mapping-reference.md`
+- `references/python-to-rust-mapping-reference.md`
 - `playbooks/python-to-rust-porting-guide.md`
 - `playbooks/python-to-rust-test-coverage-playbook.md`
 - `guidelines/python-to-rust-porting-rules.md`

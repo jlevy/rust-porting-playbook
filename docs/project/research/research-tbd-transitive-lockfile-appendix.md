@@ -45,6 +45,10 @@ manifest dependencies, using `attic/tbd/pnpm-lock.yaml`.
 | `removed-with-js-toolchain` | Transitive package owned only by TS/JS tooling roots; removed with tooling cutover | 365 |
 | `split-runtime-and-tooling` | Shared by runtime and tooling roots; preserve runtime path while deleting tooling path | 25 |
 
+> Note: `covered-in-direct-plan` (34) exceeds the 32 direct manifest entries / 31 unique
+> names because a few direct dependencies appear at more than one version in the lockfile
+> snapshots; each lock entry is counted separately here.
+
 ## Highest-Pressure Owner Roots (Transitive)
 
 | Owner Root | Transitive Entries Owned |

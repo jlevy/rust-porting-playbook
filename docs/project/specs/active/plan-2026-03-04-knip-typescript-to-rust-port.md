@@ -229,7 +229,7 @@ for existing users.
 | Module resolution | `oxc_resolver` | Ready | **Already validated by knip itself** via NAPI |
 | JSON parsing | `serde_json` | Ready | Standard |
 | JSONC parsing | `jsonc-parser` or custom strip | Ready | Small effort |
-| YAML parsing | `serde_yaml` | Ready | Standard |
+| YAML parsing | `serde_yaml_ng` | Ready | `serde_yaml` is archived and `serde_yml` has RUSTSEC-2025-0068; `serde_norway` is an alternative |
 | TOML parsing | `toml` | Ready | Standard |
 | Glob matching | `globset` | Ready | Production-ready |
 | Directory walking | `walkdir` + `ignore` | Ready | `.gitignore` support via `ignore` crate |
@@ -518,7 +518,7 @@ projects and compare output.
 
 - clap: https://crates.io/crates/clap
 - serde_json: https://crates.io/crates/serde_json
-- serde_yaml: https://crates.io/crates/serde_yaml
+- serde_yaml_ng: https://crates.io/crates/serde_yaml_ng
 - toml: https://crates.io/crates/toml
 - globset: https://crates.io/crates/globset
 - walkdir: https://crates.io/crates/walkdir

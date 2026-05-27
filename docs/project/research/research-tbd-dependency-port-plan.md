@@ -40,7 +40,7 @@ Validation notes (as of 2026-03-04):
 | `pretty-bytes` | human-readable byte counts | `bytesize` or `indicatif::HumanBytes` | central formatter wrapper for byte display consistency | output formatting tests for KB/MB/GB boundaries | low |
 | `pretty-ms` | human-readable durations | `humantime` or custom formatter | central formatter wrapper for elapsed durations | output formatting tests for sec/min/hour boundaries | low |
 | `ulid` | stable issue IDs | `ulid` crate | preserve generation and parsing format; ensure lexical ordering requirements | roundtrip and ordering tests | low |
-| `yaml` | parse/stringify config and docs metadata | `serde_yml` (preferred) or `yaml_serde` | create YAML utility module with deterministic key ordering and merge-conflict marker detection; avoid deprecated `serde_yaml` | config parser fixtures + deterministic write snapshots | high |
+| `yaml` | parse/stringify config and docs metadata | `serde_yaml_ng` (preferred) or `serde_norway` | create YAML utility module with deterministic key ordering and merge-conflict marker detection; avoid archived `serde_yaml` and advisory-flagged `serde_yml` (RUSTSEC-2025-0068) | config parser fixtures + deterministic write snapshots | high |
 | `zod` | runtime schema validation + strong typing | `serde` + typed structs + custom validation (`validator` as needed) | convert schemas to Rust domain types; add explicit validation errors with context | schema-equivalence tests for valid/invalid samples | high |
 
 ## Test and Build Dependency Plan (`packages/tbd` devDependencies)
