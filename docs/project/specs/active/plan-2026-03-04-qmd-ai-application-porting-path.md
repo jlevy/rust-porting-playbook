@@ -52,14 +52,16 @@ This plan extends those into application-tier complexity.
 
 The `tbd` exemplar (covered in the prior plan) has a favorable dependency profile for
 porting:
-- 87% of its 420 transitive dependencies are tooling-only and disappear in Rust
+- ~85% of its 366 transitive dependencies are tooling-only and disappear in Rust
 - 12 runtime dependencies all have clear Rust crate targets
 - Moderate complexity: Commander CLI + YAML + frontmatter + git subprocess
 
-`qmd` has a fundamentally different profile:
-- **76% of its 431 transitive dependencies are runtime-owned** (inverse of tbd)
-- `node-llama-cpp` alone owns **226 transitive entries** (52% of all transitive deps)
-- `@modelcontextprotocol/sdk` owns **90 transitive entries**
+`qmd` (v2.5.2) has a fundamentally different profile:
+- **~72% of its 353 transitive dependencies are runtime-owned** (inverse of tbd)
+- `node-llama-cpp` alone owns **129 transitive entries** (~37% of all transitive deps)
+- `@modelcontextprotocol/sdk` owns **91 transitive entries**
+- A Tree-sitter parsing stack (`tree-sitter-{go,python,rust,typescript}`,
+  `web-tree-sitter`) maps cleanly to native Rust crates and adds little transitive mass
 - The LLM and MCP components are application-tier complexity, not CLI-tier
 - Cross-platform native packaging (sqlite-vec per-platform binaries) adds distribution
   complexity
@@ -71,7 +73,7 @@ with the CLI-focused TS-to-Rust path.
 
 Source: https://github.com/tobi/qmd
 
-Audited commit: `40610c3aa65d9d399ebb188a7e4930f6628ae51c`
+Audited commit: `443760f4d5a17550d77a0e3146b5b8f08452991f` (v2.5.2, 2026-05-27)
 
 Acquisition workflow:
 1. Run `tbd shortcut checkout-third-party-repo` to load canonical instructions.
@@ -85,9 +87,9 @@ The following research artifacts were produced during the prior plan’s explora
 and are inputs to this plan:
 
 - `docs/project/research/research-qmd-dependency-port-plan.md` — Direct dependency
-  migration plan (16 entries across runtime/optional/peer/dev)
+  migration plan (22 entries across runtime/optional/peer/dev)
 - `docs/project/research/research-qmd-transitive-lockfile-appendix.md` — Lockfile-level
-  transitive coverage (447 lock entries, 431 transitive)
+  transitive coverage (376 lock entries, 353 transitive)
 - `docs/project/research/data/qmd-lockfile-package-inventory.tsv` — Full per-entry
   inventory
 - `docs/project/research/data/qmd-lockfile-summary.json` — Aggregate metrics
@@ -130,7 +132,7 @@ Based on the existing research, qmd’s dependencies sort into three risk tiers:
 
 | Dependency | Transitive Mass | Core Issue |
 | --- | --- | --- |
-| `node-llama-cpp` | 226 entries | Architectural decision: direct Rust llama.cpp binding vs external inference server. Embedding, reranking, generation, model lifecycle, timeout/cancellation all need parity. |
+| `node-llama-cpp` | 129 entries | Architectural decision: direct Rust llama.cpp binding vs external inference server. Embedding, reranking, generation, model lifecycle, timeout/cancellation all need parity. |
 | `@modelcontextprotocol/sdk` | 90 entries | `rmcp` Rust SDK maturity unknown. Stdio + streamable HTTP transport parity. Tool/resource contract surface. |
 | `sqlite-vec` | 2 entries + 4 platform binaries | Cross-platform dynamic extension loading. Graceful degradation when unavailable. Per-OS packaging. |
 
@@ -304,7 +306,7 @@ Run spikes in priority order (QD4 is highest leverage):
 - [ ] Every direct dependency from `attic/qmd/package.json` appears in QD2.
 - [ ] Every runtime dependency has a validated Rust crate target (not just candidate).
 - [ ] High-risk dependencies have spike results with pass/fail status.
-- [ ] Every lock entry from `attic/qmd/bun.lock` appears in transitive inventory with
+- [ ] Every lock entry from `attic/qmd/pnpm-lock.yaml` appears in transitive inventory with
   action classification.
 - [ ] Lockfile alias (`sqlite-vec-win32-x64` → `sqlite-vec-windows-x64`) documented and
   handled.
