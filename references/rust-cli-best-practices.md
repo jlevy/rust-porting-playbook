@@ -1613,7 +1613,7 @@ template.
 
 Rust CLI vs interpreted languages:
 
-- **10-100x faster** execution for CPU-bound tasks
+- **10-50x faster** execution for CPU-bound tasks (≈20-40x measured in the flowmark port)
 
 - Single static binary (no runtime dependencies)
 

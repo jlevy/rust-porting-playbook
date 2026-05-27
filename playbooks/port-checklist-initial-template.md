@@ -510,8 +510,8 @@ continued)*
   - [ ] Binary size < 10MB (release build, stripped; use `cargo-bloat` to identify size
     issues)
 
-  - [ ] Processing speed 10-100x faster than Python (benchmark critical paths, profile
-    with `cargo flamegraph` or `perf` if needed)
+  - [ ] Processing speed ~10-50x faster than Python (≈20-40x measured in the flowmark
+    port; benchmark critical paths, profile with `cargo flamegraph` or `perf` if needed)
 
   - [ ] Startup time < 50ms
 
@@ -708,8 +708,8 @@ continued)*
 
 - [ ] **Runtime Performance**
 
-  - [ ] Processing speed >= 10x faster than Python (benchmark critical paths; 50-100x is
-    typical for well-optimized ports)
+  - [ ] Processing speed >= 10x faster than Python (benchmark critical paths; ~20-40x is
+    typical, as measured in the flowmark port)
 
   - [ ] No performance regressions in hot paths
 

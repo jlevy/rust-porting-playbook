@@ -484,7 +484,7 @@ Behavioral parity:
 - [ ] Color output is suppressed when piped or when `NO_COLOR` is set
 
 Non-functional (adjust thresholds per project):
-- [ ] Performance meets or exceeds Python (typically 5--50x for Rust CLI tools)
+- [ ] Performance meets or exceeds Python (typically 10--50x for CPU-bound work; the flowmark port measured ~20--40x)
 - [ ] Binary size is reasonable for distribution (check with `cargo bloat` if large)
 - [ ] Startup time is acceptable (measure with `hyperfine`)
 

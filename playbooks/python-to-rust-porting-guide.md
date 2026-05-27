@@ -557,8 +557,8 @@ The acceptance criteria cover:
 - **Cross-Validation (Mandatory):** Zero diffs across all fixtures, byte-for-byte
   matching of all file outputs
 
-- **Performance Targets:** Binary size < 10MB, processing speed 50-100x faster than
-  Python, startup time < 50ms
+- **Performance Targets:** Binary size < 10MB, processing speed ~20-40x faster than
+  Python (measured in the flowmark port; 10-50x typical), startup time < 50ms
 
 - **Quality Metrics (Mandatory):** Zero clippy warnings, ≥90% test coverage in core
   library, 100% coverage of public API, all public APIs documented, security audits pass
