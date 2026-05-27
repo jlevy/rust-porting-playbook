@@ -840,12 +840,13 @@ Different tools use different runner strategies:
 cargo-dist (renamed to just “dist” at v0.24.0, October 2024) is an opinionated release
 automation tool for Rust projects.
 
-**Latest stable version:** **v0.30.4** (February 16, 2026).
+**Latest stable version:** **v0.31.0** (February 23, 2026).
 
 Recent release history:
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| v0.31.0 | 2026-02-23 | Mirror/fallback hosting; `simple` static-file hosting method |
 | v0.30.4 | 2026-02-16 | Bugfixes, dependency updates (CVE fix in brace-expansion) |
 | v0.30.3 | 2025-12-15 | macOS codesign fix, sudo permission fix for shell installer |
 | v0.30.2 | 2025-10-31 | Attestation customization (used by Astral) |
@@ -918,7 +919,7 @@ reduced the urgency of cross-compilation support.
 
 ```toml
 [dist]
-cargo-dist-version = "0.30.4"      # Pins the cargo-dist version
+cargo-dist-version = "0.31.0"      # Pins the cargo-dist (dist) version
 ci = "github"                       # CI provider (GitHub Actions ONLY)
 installers = ["shell", "homebrew"]  # Installer types to generate
 targets = [...]                     # Build targets
@@ -971,8 +972,8 @@ msvc-crt-static = true              # Static MSVC CRT (default)
    lines of YAML with complex conditional logic
 8. **No `.deb`/`.rpm`/`.pkg`** — only 5 installer types.
    No Linux distro packages or macOS `.pkg`.
-9. **No ARM64 Windows** — `aarch64-pc-windows-msvc` not yet in supported targets list
-   despite Rust Tier 1 since 1.91
+9. **No ARM64 Windows** — `aarch64-pc-windows-msvc` not in the supported targets list
+   as of v0.31.0, despite Rust Tier 1 since 1.91 (re-check newer releases)
 10. **Shell installer + Snap curl** — refuses to work with Snap-installed curl (Ubuntu
     default). Falls back to wget but may abort.
 11. **Runner image dependencies** — Ubuntu 20.04 deprecation (April 2025) required
@@ -1240,7 +1241,7 @@ increases.
 
 - [cargo-dist documentation](https://axodotdev.github.io/cargo-dist/)
 - [cargo-dist GitHub releases](https://github.com/axodotdev/cargo-dist/releases) —
-  latest stable: v0.30.4 (Feb 2026)
+  latest stable: v0.31.0 (Feb 2026)
 - [cargo-dist configuration reference](https://axodotdev.github.io/cargo-dist/book/reference/config.html)
 - [cargo-dist CHANGELOG](https://github.com/axodotdev/cargo-dist/blob/main/CHANGELOG.md)
 - [cargo-dist cross-compilation issue #74](https://github.com/axodotdev/cargo-dist/issues/74)

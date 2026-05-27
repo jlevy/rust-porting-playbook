@@ -101,9 +101,9 @@ For general coding rules (language-agnostic), see `tbd guidelines general-coding
   let content = std::fs::read_to_string(path)
       .with_context(|| format!("failed to read {}", path.display()))?;
   ```
-  `color-eyre` 0.6 is an alternative with colored backtraces but is in maintenance-only
-  mode (no active feature development).
-  Use `anyhow` for new projects.
+  `color-eyre` 0.6 is an actively maintained alternative (0.6.5, 2026) that adds colored
+  backtraces. `anyhow` is the simpler default; pick `color-eyre` when you want its
+  richer error reports.
 
 - **Decision guide:** `thiserror` for libraries (callers match on variants), `anyhow`
   for binaries (callers just display or log).

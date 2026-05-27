@@ -327,7 +327,7 @@ implements.
     issues if needed)
 
   - [ ] Processing speed maintained or improved vs previous Rust version (benchmark
-    critical paths; target remains 50-100x faster than Python)
+    critical paths; target remains ~20-40x faster than Python)
 
   - [ ] Startup time < 50ms
 
@@ -452,7 +452,7 @@ implements.
 - [ ] **Runtime Performance**
 
   - [ ] Processing speed maintained or improved vs previous Rust version (target:
-    50-100x faster than Python)
+    ~20-40x faster than Python)
 
   - [ ] No performance regressions in hot paths
 

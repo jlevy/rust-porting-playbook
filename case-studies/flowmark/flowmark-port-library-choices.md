@@ -93,7 +93,7 @@ limitations with workarounds, and fallback plan.
 **Date:** 2025-11-02 | **Impact:** Critical
 
 > **Version note (2026-02-09):** This evaluation was performed against comrak 0.29
-> (November 2025). Comrak has since evolved significantly (0.30+ through 0.50+), with
+> (November 2025). Comrak has since evolved significantly (0.30+ through 0.52+ as of May 2026), with
 > changes to APIs, rendering behavior, and bug fixes.
 > If starting a new project or upgrading, re-evaluate against the current version and
 > re-run cross-validation, as workaround behavior may have changed.

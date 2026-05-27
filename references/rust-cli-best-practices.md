@@ -65,7 +65,7 @@ license = "MIT OR Apache-2.0"
 pedantic = { level = "warn", priority = -1 }
 
 [workspace.dependencies]
-clap = { version = "4.5", features = ["derive"] }
+clap = { version = "4.6", features = ["derive"] }
 ```
 Virtual workspaces (no root `[package]`) must set `resolver` explicitly since there is
 no `package.edition` to infer it from.
@@ -121,11 +121,11 @@ cli = ["clap", "color-eyre", "tracing", "tempfile", "indicatif", "ctrlc"]
 
 [dependencies]
 # Core deps (always included)
-regex = "1.10"
+regex = "1.12"
 thiserror = "2.0"
 
 # CLI deps (optional, behind feature gate)
-clap = { version = "4.5", features = ["derive", "cargo", "color"], optional = true }
+clap = { version = "4.6", features = ["derive", "cargo", "color"], optional = true }
 color-eyre = { version = "0.6", optional = true }
 ```
 
@@ -159,7 +159,7 @@ Test without default features in CI: `cargo test --no-default-features`
 
 **Argument Parsing**: `clap` (v4+)
 ```toml
-clap = { version = "4.5", features = ["derive", "cargo"] }
+clap = { version = "4.6", features = ["derive", "cargo"] }
 ```
 
 - Use **derive API** (recommended for modern projects) [^clap-derive]
@@ -182,16 +182,16 @@ struct Cli {
 
 **Error Handling**: `anyhow` (recommended) or `color-eyre`
 ```toml
-anyhow = "1.0"      # Recommended for new projects -- simple, well-maintained
+anyhow = "1.0"      # Recommended default for new projects -- simple, well-maintained
 # OR
-color-eyre = "0.6"  # Rich error display with colored backtraces (maintenance-only)
+color-eyre = "0.6"  # Rich error display with colored backtraces (actively maintained)
 ```
 
-- `anyhow` for most projects — actively maintained, simple, ergonomic
+- `anyhow` for most projects — simple, ergonomic, the default choice
 
-- `color-eyre` for projects that need colored backtraces and rich diagnostics.
-  Note: `color-eyre` 0.6 is in **maintenance-only mode** (no active feature
-  development). It works well but is not receiving new features.
+- `color-eyre` for projects that want colored backtraces and rich diagnostics.
+  Still actively maintained (0.6.5, 2026); the trade-off vs `anyhow` is richer output
+  for a slightly heavier dependency, not maintenance risk.
 
 **Logging/Tracing**: `tracing` ecosystem
 ```toml
@@ -276,6 +276,12 @@ sigpipe = "0.1"    # Stable workaround for Rust's SIGPIPE default
 ```
 
 - The `sigpipe` crate calls `libc::signal(SIGPIPE, SIG_DFL)` at program start
+
+- **Two equivalent approaches:** the `sigpipe` crate (shown here, avoids writing an
+  explicit `unsafe` block) or calling `libc::signal(libc::SIGPIPE, libc::SIG_DFL)`
+  directly (shown in
+  [rust-cli-app-patterns.md](rust-cli-app-patterns.md#sigpipe-handling), avoids the extra
+  dependency). They do the same thing — pick one per project.
 
 - An unstable `#[unix_sigpipe = "sig_dfl"]` attribute exists on nightly but is not yet
   stabilized
@@ -576,7 +582,7 @@ cargo doc --no-deps --open    # Generate and open
 
 **`clap_complete`** - Generate shell completion scripts from clap definitions:
 ```toml
-clap_complete = "4.5"
+clap_complete = "4.6"
 ```
 
 Generate completions for bash, zsh, fish, elvish, and PowerShell at build time or via a
@@ -686,7 +692,7 @@ pre-release-hook = ["just", "check"]            # Run all checks before release
 workflows automatically.
 Run `dist init` to scaffold a `release.yml` that handles planning, cross-compilation,
 artifact upload, and installer generation (shell scripts, Homebrew, MSI). Actively
-maintained by axo.dev (v0.30+). Good for projects that want turnkey releases without
+maintained by axo.dev (v0.31+ as of early 2026). Good for projects that want turnkey releases without
 hand-rolling CI. Major projects like ripgrep, bat, and fd hand-roll their release
 workflows, but cargo-dist is a solid choice for smaller projects or teams that prefer
 convention over configuration.
@@ -1613,7 +1619,7 @@ template.
 
 Rust CLI vs interpreted languages:
 
-- **10-100x faster** execution for CPU-bound tasks
+- **10-50x faster** execution for CPU-bound tasks (≈20-40x measured in the flowmark port)
 
 - Single static binary (no runtime dependencies)
 

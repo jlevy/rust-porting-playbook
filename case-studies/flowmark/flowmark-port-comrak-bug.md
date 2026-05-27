@@ -24,7 +24,7 @@ out.
 - **Extensions enabled:** GFM (GitHub Flavored Markdown)
 
 > **Version note (2026-02-09):** This bug was identified and tested against comrak
-> 0.29.0 (November 2025). Comrak has since evolved to 0.30+ through 0.50+. This bug may
+> 0.29.0 (November 2025). Comrak has since evolved to 0.30+ through 0.52+ (as of May 2026). This bug may
 > have been fixed in a later release -- re-test against the current version before
 > filing upstream. If fixed, the pre-processing workaround in flowmark-rs
 > (`escape_fence_list_markers()`) can be removed.
