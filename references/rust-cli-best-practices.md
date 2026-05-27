@@ -686,7 +686,7 @@ pre-release-hook = ["just", "check"]            # Run all checks before release
 workflows automatically.
 Run `dist init` to scaffold a `release.yml` that handles planning, cross-compilation,
 artifact upload, and installer generation (shell scripts, Homebrew, MSI). Actively
-maintained by axo.dev (v0.30+). Good for projects that want turnkey releases without
+maintained by axo.dev (v0.31+ as of early 2026). Good for projects that want turnkey releases without
 hand-rolling CI. Major projects like ripgrep, bat, and fd hand-roll their release
 workflows, but cargo-dist is a solid choice for smaller projects or teams that prefer
 convention over configuration.

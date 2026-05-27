@@ -443,11 +443,12 @@ be published (internal crates, test utilities, etc.).
 
 All major Rust CLI projects (ripgrep, bat, fd, jj) hand-roll their release workflows.
 
-**Alternative: `cargo-dist`** (by axodotdev) can generate complete release CI workflows
-with `cargo dist init`. It handles cross-compilation, installer generation (shell
-scripts, Homebrew, MSI), and GitHub Release uploads with minimal configuration.
-It has matured significantly (v0.30+) and is a good choice when you don’t need full
-control over the release pipeline.
+**Alternative: `cargo-dist`** (by axodotdev, now branded `dist`) can generate complete
+release CI workflows with `dist init`. It handles cross-compilation, installer
+generation (shell scripts, Homebrew, MSI), and GitHub Release uploads with minimal
+configuration.
+It has matured significantly (v0.31+ as of early 2026) and is a good choice when you
+don’t need full control over the release pipeline.
 See https://opensource.axo.dev/cargo-dist/ for details.
 
 For full control, the standard hand-rolled pattern:
