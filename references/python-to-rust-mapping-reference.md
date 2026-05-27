@@ -1043,7 +1043,7 @@ Rust distributes config across separate files (`rustfmt.toml`, `deny.toml`,
 | --- | --- | --- | --- |
 | marko (Markdown) | comrak 0.50+ | Good with workarounds | 12/15 differences worked around; check for API changes in 0.50+ |
 | argparse | clap 4.6 (derive) | Excellent | Perfect mapping |
-| PyYAML | serde_yaml_ng 0.10+ | Good | serde_yaml is archived |
+| PyYAML | serde_yaml_ng 0.10+ | Good | serde_yaml is archived. `serde_norway` is an alternative that tracks a maintained libyaml fork; prefer it if C-lib supply-chain maintenance matters |
 | re (regex) | regex 1.12+ | Excellent | Different anchoring and replacement syntax! See Regex section above |
 | re (look-arounds, backrefs) | fancy-regex 0.17+ | Good | Backtracking engine; only use when needed |
 | textwrap | textwrap (crate) | Good | Also rolled custom for special cases |

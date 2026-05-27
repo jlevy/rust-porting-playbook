@@ -255,7 +255,7 @@ integration test setup.
 | Python | Rust | Notes |
 | --- | --- | --- |
 | argparse/click | [clap](https://docs.rs/clap) | CLI parsing |
-| PyYAML | [serde_yaml_ng](https://docs.rs/serde_yaml_ng) | Successor to archived serde_yaml |
+| PyYAML | [serde_yaml_ng](https://docs.rs/serde_yaml_ng) | Successor to archived serde_yaml. Also consider [serde_norway](https://docs.rs/serde_norway), which tracks a maintained libyaml fork (`unsafe-libyaml-norway`) vs serde_yaml_ng's unmaintained `unsafe-libyaml` |
 | pytest | Built-in #[test] + cargo test |  |
 | Markdown libs | [comrak](https://github.com/kivikakk/comrak) / [pulldown-cmark](https://docs.rs/pulldown-cmark) | Choose based on features |
 
