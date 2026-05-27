@@ -2113,6 +2113,12 @@ opt-level = "z"  # Optimize for size
 
 ### 8.2 GitHub Actions CI
 
+> **Note (2026-05-27):** The illustrative workflows below use `submodules: recursive`,
+> but the project ultimately adopted the hybrid copy + CI-clone strategy (see
+> [Section 2.2](#22-python-rust-sync-strategy)), which does **not** use git submodules.
+> The cross-validation workflow in Section 2.2 shows the actual `git clone` approach;
+> treat the `submodules: recursive` lines here as superseded.
+
 ```yaml
 # .github/workflows/ci.yml
 name: CI
