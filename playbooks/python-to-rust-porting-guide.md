@@ -773,9 +773,10 @@ pub fn split_frontmatter(text: &str) -> (String, String) {
   boundaries; use `.char_indices()` to find safe boundaries, or `.chars()` to iterate by
   character
 
-- **Library types**: `comrak` inner types change between major versions (e.g.,
-  `NodeValue::Text` was `Vec<u8>` in 0.x, `String` in 0.30+). Check docs for your pinned
-  version and convert explicitly.
+- **Library types**: `comrak` inner types change between versions (e.g.,
+  `NodeValue::Text` was `Vec<u8>` pre-0.4, `String` in 0.4-0.44, and
+  `Cow<'static, str>` in 0.45+). Check docs for your pinned version and convert
+  explicitly.
 
 - **Module system**: Rust requires explicit `mod` declarations
 

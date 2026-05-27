@@ -205,7 +205,7 @@ let ch = text.chars().nth(5);
 Library types are version-dependent.
 Check current docs:
 ```rust
-// comrak NodeValue::Text: String (pre-0.45), Cow<'static, str> (0.45+).
+// comrak NodeValue::Text: Vec<u8> (pre-0.4), String (0.4-0.44), Cow<'static, str> (0.45+).
 // pulldown-cmark uses CowStr (different API). Always verify against your Cargo.lock version.
 ```
 
