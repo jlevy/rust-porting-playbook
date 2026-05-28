@@ -20,6 +20,69 @@ testing rules, see `tbd guidelines general-testing-rules`. For TDD methodology, 
 porting becomes an exact requirement for the Rust implementation.
 Higher Python test coverage = more precise Rust specification = fewer bugs in the port.
 
+**Corollary: mirroring upstream tests faithfully inherits upstream gaps.** When the
+source project has a blind spot, the port will silently inherit it. Pre-emptive
+enumeration of the port's API surface (see "Syntactic Surface Enumeration" below) is
+the structural fix; differential corpus sweeps are necessary but not sufficient
+(they only sample what real-world inputs happen to exercise).
+
+## Syntactic Surface Enumeration (pre-emptive class sweep)
+
+The differential parity sweep in
+[`python-to-rust-sync-release-workflow`](../playbooks/python-to-rust-sync-release-workflow.md)
+is reactive: it triggers when a discrepancy is observed. Real-world corpora
+overwhelmingly sample common forms, so rare-but-valid syntactic variants slip
+through. The fix is to enumerate the API surface pre-emptively at port time.
+
+### When to apply
+
+Any port whose surface is a finite grammar — parsers, formatters, lexers, expression
+evaluators, configuration loaders, query builders. For these, the set of input forms
+is small and enumerable.
+
+### How
+
+1. **Identify the "node types" of the surface.** For a Markdown formatter, that is
+   each AST node variant the renderer handles (`Heading`, `Link`, `Image`, ...).
+   For a config loader, each top-level key shape. For a query builder, each
+   expression node.
+2. **For each node type, enumerate every syntactic form it can take in source.**
+   Example for Markdown `Image`: inline (`![alt](url)`), inline-with-title,
+   inline-empty-alt, reference-full (`![alt][label]`), reference-collapsed
+   (`![alt][]`), reference-shortcut (`![alt]`), reference-label-case-insensitive,
+   reference-label-with-spaces, reference-missing-definition. Plus combinations
+   with other nodes (image inside link → badge pattern).
+3. **For each (node, form) row, capture the canonical Python output** by running
+   the input through the pinned Python binary. Don't hand-write the expected
+   output — derive it.
+4. **Add one test per row** to a dedicated `tests/test_syntactic_surface.rs` (or
+   equivalent). Tests should be byte-equality assertions against the captured
+   Python output.
+5. **Maintain a coverage matrix doc** (e.g. `docs/parity-coverage-matrix.md`)
+   that lists each (node, form) pair and links to its test, so a gap is a missing
+   row in the table rather than a missing test someone has to think of. Update
+   the matrix in the same commit as any change to a render branch.
+
+### Worked example
+
+See [flowmark-rs](https://github.com/jlevy/flowmark-rs):
+- [`tests/test_syntactic_surface.rs`](https://github.com/jlevy/flowmark-rs/blob/main/tests/test_syntactic_surface.rs)
+- [`docs/parity-coverage-matrix.md`](https://github.com/jlevy/flowmark-rs/blob/main/docs/parity-coverage-matrix.md)
+
+That port adopted this approach after PR #59 because three latent parity bugs
+(reference-image inlining, badge pattern, ref-def label lowercasing) were
+inherited from upstream's near-zero coverage of reference-image forms. The
+matrix made the gap a single missing row in a table rather than a bug to be
+discovered through user reports.
+
+### Companion: file upstream test additions
+
+When the port's surface enumeration reveals a gap in the source project's own
+tests, file the matching test additions upstream. This closes the gap at the
+root so future ports (any language) inherit complete coverage rather than the
+blind spot. See
+[flowmark#50](https://github.com/jlevy/flowmark/issues/50) for an example.
+
 ## Pre-Port Coverage Strategy
 
 ### Step 1: Measure Baseline Coverage

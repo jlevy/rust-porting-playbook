@@ -84,6 +84,14 @@ Required process:
    - Corpus sweep: run BOTH binaries over a directory of diverse real documents and
      diff every file. Capture the FULL diff (never truncate with `head`/`basename`/
      `grep -c` — see Principle 2). Investigate every non-empty diff.
+   - **Syntactic surface re-validation:** if the port maintains a syntactic-surface
+     test file + coverage matrix (see
+     [`test-coverage-for-porting.md`](../guidelines/test-coverage-for-porting.md#syntactic-surface-enumeration-pre-emptive-class-sweep)),
+     re-run it against the new Python baseline. Real-world corpora under-sample
+     rare-but-valid forms; the surface matrix is what catches them. If the port
+     does not yet have one, building it during this sync is highly recommended —
+     the corpus sweep alone has a documented history of missing reference-form
+     bugs (see [flowmark-rs#59](https://github.com/jlevy/flowmark-rs/pull/59)).
    - Class sweep (truth table): for any discrepancy found, enumerate the whole class
      it belongs to (e.g. every reference-link form: shortcut, collapsed, full,
      label==text, uppercase, no-definition) and build a truth table of
