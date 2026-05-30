@@ -17,6 +17,7 @@ Primary case study for this playbook: a full Python-to-Rust port plus ongoing sy
 - [flowmark-port-wrapping-solution.md](flowmark-port-wrapping-solution.md)
 - [flowmark-port-migration-plan.md](flowmark-port-migration-plan.md)
 - [flowmark-port-metrics.md](flowmark-port-metrics.md)
+- [flowmark-sync-observations-v0.7.2.md](flowmark-sync-observations-v0.7.2.md)
 
 ## Notes
 
