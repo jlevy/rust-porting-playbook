@@ -316,6 +316,21 @@ It runs both implementations against the same inputs and diffs the outputs.
    [ "$FAILED" -eq 0 ]
    ```
 
+**Test harnesses that pipe stdin must tolerate a broken pipe.** A binary that rejects its
+arguments (for example `--inplace -`, or any invalid combination) exits *before* reading
+stdin, closing the read end of the pipe. A helper that does
+`child.stdin.take().unwrap().write_all(input).unwrap()` then races the child's exit and
+panics on `BrokenPipe` — intermittently, and more often on Windows where process teardown
+timing differs. Since the test asserts on the child's stderr and exit code, the write is
+incidental; ignore its error instead of unwrapping it:
+
+```rust
+if let Some(mut stdin) = child.stdin.take() {
+    // Child may reject its args and exit before reading; a broken-pipe write is expected.
+    let _ = stdin.write_all(input.as_bytes());
+}
+```
+
 ### Running Cross-Validation
 
 1. Ensure Python environment is set up: `cd python-repo && uv sync`

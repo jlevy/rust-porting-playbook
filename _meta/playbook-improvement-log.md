@@ -2,6 +2,43 @@
 
 Chronological log of improvements to the Rust Porting Playbook and its meta-process.
 
+## 2026-05-30
+
+### Auto-sync observations + integrations from flowmark-rs v0.7.0 → v0.7.2
+
+First sync run to follow the formal observation → triage → log loop end-to-end (the prior
+v0.6.5→v0.7.0 sync produced a sync artifact but skipped categorized observations).
+Observations recorded in
+[`case-studies/flowmark/flowmark-sync-observations-v0.7.2.md`](../case-studies/flowmark/flowmark-sync-observations-v0.7.2.md)
+(OBS-1…OBS-8). Source: flowmark-rs
+[PR #65](https://github.com/jlevy/flowmark-rs/pull/65).
+
+Changes integrated in this pass:
+
+- **`guidelines/rust-project-setup.md` (OBS-3, All/High)** — added a line-endings rule:
+  commit a `.gitattributes` enforcing `eol=lf` from project setup. Embedded text
+  (`include_str!`) and golden files read from disk otherwise carry CRLF on a Windows
+  checkout and fail newline-anchored assertions — silent and Linux/macOS-green (cost two
+  CI cycles on flowmark-rs).
+- **`guidelines/python-to-rust-cli-porting.md` (OBS-5)** — added a note that CLI test
+  harnesses piping stdin must tolerate a broken-pipe write (a binary that rejects its args
+  exits before reading stdin), to avoid flaky races.
+- **`playbooks/python-to-rust-sync-release-workflow.md` (OBS-4)** — added a published-crate
+  + semver-gate check: when a sync changes the public Rust API, check the crates.io
+  baseline and `cargo-semver-checks` early and decide version-bump vs. a targeted lint
+  allowance with the maintainer.
+- **`playbooks/auto-sync-agent-prompt-template.md` (process, OBS-8)** — added a final step
+  prompting the record-observations + improvement-log closure loop. The operational
+  template previously ended at validation/deliverables and never pointed back to the meta
+  process, so two consecutive syncs skipped the loop. Also noted re-running
+  upstream-embedding doc generators (OBS-2) and porting new golden suites for new CLI
+  surfaces (OBS-8).
+
+Recorded for maintainer triage (not yet integrated): OBS-2 (generator drift detail),
+OBS-6 (own-vs-sibling version-pin divergence as a tolerated variation), OBS-7 (smoke-count
+bumps each sync; external corpus). OBS-1 is a `VALIDATE` (the differential-sweep guidance
+worked as intended).
+
 ## 2026-05-19
 
 ### Bidirectional library-divergence + mandatory differential sweep (from flowmark-rs v0.6.5 stabilization)

@@ -122,6 +122,16 @@ Required process:
     - any intentional divergences (with rationale)
     - validation results (each command + exit status)
     - unresolved blockers (if any)
+12. **Close the loop (required).** Record categorized observations
+    (`VALIDATE`/`FIX`/`ADD`/`CLARIFY`/`GENERALIZE`) in the project's case study and add an
+    entry to `_meta/playbook-improvement-log.md`, per
+    [`../_meta/meta-improving-this-playbook.md`](../_meta/meta-improving-this-playbook.md)
+    (Codified Auto-Sync Process step 9; closure loop §C.2a). This is how the playbook
+    improves — do not end the sync without it (two consecutive flowmark syncs skipped it
+    because earlier versions of this template stopped at the sync report). Also confirm you
+    re-ran any generator that embeds upstream shared content (READMEs, skills) after the
+    submodule bump, and ported any new or changed golden suites (e.g. tryscript) for new
+    CLI surfaces.
 
 Hard requirements:
 - Do not skip changed upstream tests.
@@ -236,4 +246,6 @@ Required:
 6. Run full validation gates (tests, parity, lint/format/docs/CI checks).
 7. Update version correspondence metadata and sync log.
 8. Return a concise sync report with what changed, validation evidence, and any blockers.
+9. Close the loop: record categorized observations and an
+   `_meta/playbook-improvement-log.md` entry per `_meta/meta-improving-this-playbook.md`.
 ```

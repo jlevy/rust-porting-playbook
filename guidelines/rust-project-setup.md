@@ -685,6 +685,24 @@ definitions.
 .DS_Store
 ```
 
+### `.gitattributes`
+
+Commit a `.gitattributes` that enforces LF line endings on every platform:
+
+```gitattributes
+* text=auto eol=lf
+```
+
+This matters more than it looks for ports. A port that embeds text with `include_str!`
+(a `SKILL.md`, a help/usage doc, a template) bakes the file's bytes in at compile time,
+and golden tests often read fixtures from disk. Without `eol=lf`, a Windows checkout
+rewrites those files to CRLF, so embedded content and disk-read fixtures carry `\r\n` while
+the program emits `\n` — and newline-anchored assertions (`starts_with("---\n")`,
+`find("\n---\n")`) fail **only on Windows**, invisibly green on Linux and macOS. The
+failure is silent, platform-specific, and hard to diagnose when CI logs are not accessible.
+All sources are normally authored LF, so `git add --renormalize .` should report zero
+content changes; this only stops Windows from rewriting them on checkout.
+
 ### Git Submodules (for ports)
 
 When porting from Python, include the source as a submodule:

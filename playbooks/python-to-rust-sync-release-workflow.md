@@ -92,10 +92,19 @@ Required sequence:
 7. Execute [port-checklist-update-template.md](port-checklist-update-template.md)
    end-to-end.
 8. Update version correspondence metadata to target baseline.
-9. Cut release and publish sync report.
+9. **If the sync changed the public Rust API, check the published crates.io baseline
+   (`cargo search`) and `cargo-semver-checks` early.** A breaking change at the same
+   published version blocks CI. Decide with the maintainer: bump the version to match the
+   change class, or, for a deliberate small break in a pre-1.0 / no-downstream-users crate,
+   allow the specific lint in `Cargo.toml`
+   (`[package.metadata.cargo-semver-checks.lints]`) so the rest of the API stays gated.
+   This otherwise surfaces only as a late, confusing CI failure.
+10. Cut release and publish sync report.
 
 Mode B acceptance gates:
 - no skipped changed upstream tests without documented rationale
+- if the public Rust API changed: crates.io baseline + `cargo-semver-checks` checked, and
+  a version bump or maintainer-approved lint allowance decided
 - differential parity sweep run (corpus + class truth tables), with every diff either
   resolved or recorded as an approved tolerated variation
 - new features: behavior + tests ported, mapping manifest updated, completeness green
