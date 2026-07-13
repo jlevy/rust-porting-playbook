@@ -1,0 +1,52 @@
+name: Docs quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          version: "0.11.25"
+          enable-cache: true
+          cache-dependency-glob: docs/project/research/data/extract_lockfile_inventory.py.lock
+      - name: Run unit and integration tests
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Validate Markdown links, anchors, and fences
+        run: python scripts/check_docs.py
+      - name: Validate the locked research-script environment
+        run: uv --no-config lock --check --script docs/project/research/data/extract_lockfile_inventory.py
+      - name: Validate Python and shell syntax
+        run: |
+          python -m compileall -q scripts tests docs/project/research/data/extract_lockfile_inventory.py
+          bash -n \
+            .claude/hooks/tbd-closing-reminder.sh \
+            .claude/scripts/ensure-gh-cli.sh \
+            .claude/scripts/tbd-session.sh \
+            .codex/ensure-gh-cli.sh \
+            .codex/tbd-closing-reminder.sh \
+            .codex/tbd-session.sh
+      - name: Validate JSON files
+        run: |
+          while IFS= read -r file; do
+            python -m json.tool "$file" >/dev/null
+          done < <(git ls-files '*.json')

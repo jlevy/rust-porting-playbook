@@ -384,11 +384,11 @@ of the CI pipeline during development:
 cross-validate:
   runs-on: ubuntu-latest
   steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         submodules: recursive
     - uses: dtolnay/rust-toolchain@stable
-    - uses: astral-sh/setup-uv@v7
+    - uses: astral-sh/setup-uv@v8
     - run: cargo build --release
     - run: cd python-repo && uv sync
     - run: ./scripts/cross-validate.sh

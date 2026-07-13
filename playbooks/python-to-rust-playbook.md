@@ -393,9 +393,10 @@ done
 
 ### 4.5 Set up CI
 
-Create GitHub Actions with 7 parallel jobs: format, clippy, test, MSRV, audit, deny,
-docs. See [Rust Project Setup](../guidelines/rust-project-setup.md) for the complete
-workflow.
+Create independent GitHub Actions quality gates for formatting, clippy, cross-platform
+tests, MSRV, vulnerability auditing, dependency policy, docs, coverage, semver, and
+workflow scripts. See [Rust Project Setup](../guidelines/rust-project-setup.md) for the
+complete workflow.
 
 ### 4.6 Track version correspondence
 
@@ -743,7 +744,7 @@ SET UP
 ☐ Create project with Cargo.toml, lints, release profile
 ☐ Add Python source as git submodule
 ☐ Set up test fixtures (input/ and expected/)
-☐ Set up CI (7 jobs: fmt, clippy, test, msrv, audit, deny, docs)
+☐ Set up the complete parallel CI quality-gate suite
 ☐ Create justfile with check/fix/precommit targets
 
 PORT

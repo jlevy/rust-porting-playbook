@@ -70,7 +70,7 @@ issue #45). Lessons folded back into the workflow:
   acceptance gates.
 
 Source artifacts:
-[stabilization artifact](https://github.com/jlevy/flowmark-rs/blob/claude/review-python-porting-0i29L/docs/sync-artifacts/2026-05-19-stabilization-d17-d18.md).
+[stabilization artifact](https://github.com/jlevy/flowmark-rs/blob/main/docs/sync-artifacts/2026-05-19-stabilization-d17-d18.md).
 
 ## 2026-05-07
 
@@ -79,7 +79,7 @@ Source artifacts:
 Real-world Mode B sync surfaced several gaps in the current sync guidance.
 Source case study: [flowmark-rs PR #55](https://github.com/jlevy/flowmark-rs/pull/55)
 and the
-[sync artifact](https://github.com/jlevy/flowmark-rs/blob/claude/review-python-porting-0i29L/docs/sync-artifacts/2026-05-07-sync-v0.6.4-to-v0.6.5.md).
+[sync artifact](https://github.com/jlevy/flowmark-rs/blob/main/docs/sync-artifacts/2026-05-07-sync-v0.6.4-to-v0.6.5.md).
 
 Changes (all `ADD` / `CLARIFY`):
 

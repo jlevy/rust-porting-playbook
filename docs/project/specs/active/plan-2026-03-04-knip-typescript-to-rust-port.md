@@ -1,10 +1,12 @@
 # Feature: Knip TypeScript-to-Rust Port Planning
 
-**Date:** 2026-03-04 (last updated 2026-03-04)
+**Date:** 2026-03-04 (last updated 2026-07-13)
 
 **Author:** Joshua Levy + Claude
 
 **Status:** Draft
+
+**Tracking:** `rpp-la67` (blocked by core plan `rpp-pk9g`)
 
 ## Overview
 
@@ -22,7 +24,7 @@ the hot path and TypeScript handles the long tail of ecosystem integration.
 
 This plan depends on:
 - `plan-2026-03-04-typescript-to-rust-porting-path.md` (D1-D9 for general TS-to-Rust
-  guidance)
+  guidance; not yet complete)
 - Existing shared Rust-target guidelines and playbooks
 
 The prior plan provides core TS-to-Rust type mappings, CLI porting patterns, test

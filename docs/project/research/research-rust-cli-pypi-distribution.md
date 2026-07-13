@@ -2,6 +2,7 @@
 title: "Research: Distributing Rust CLI Binaries as Python Packages via PyPI"
 status: complete
 date: 2026-03-01
+last_reviewed: 2026-07-13
 ---
 # Research: Distributing Rust CLI Binaries as Python Packages via PyPI
 
@@ -149,7 +150,8 @@ Ruff builds **17 platform-specific wheel targets + 1 sdist = 18 distributions** 
 release.
 
 The build pipeline uses:
-- **`PyO3/maturin-action@v1.50.0`** with **`maturin-version: v1.11.5`** (pinned)
+- **`PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b`**
+  (**v1.51.0**) with **`maturin-version: v1.14.1`** (pinned)
 - **`cargo-dist`** for release orchestration (but with `build-local-artifacts = false` —
   cargo-dist doesn’t build the actual binaries)
 - **`uv publish`** for PyPI upload with OIDC trusted publishing
@@ -174,8 +176,8 @@ Build flags: `maturin build --release --locked --out dist --compatibility pypi`
 #### Ruff’s Versioning
 
 The version is manually kept in sync between `pyproject.toml` and `Cargo.toml` using
-[rooster](https://github.com/astral-sh/rooster), which bumps the version across all
-configured files simultaneously.
+Ruff’s [`tool.rooster` configuration](https://github.com/astral-sh/ruff/blob/main/pyproject.toml),
+which lists the files updated together during a version bump.
 There is no automated derivation of one from the other at build time.
 
 ### 3. How uv Does It
@@ -325,7 +327,7 @@ reusable:
   `uv publish --trusted-publishing always`
 - **Workflow structure** — trigger on GitHub Release published event, checkout with
   `fetch-depth: 0`, build, publish
-- **`astral-sh/setup-uv@v7`** — standard action for installing uv in CI
+- **`astral-sh/setup-uv@v8`** — standard action for installing uv in CI
 - **Dynamic versioning from Git tags** — using `uv-dynamic-versioning` plugin (for pure
   Python; for Rust, maturin reads from `Cargo.toml`)
 - **Test-before-publish** — runs full test suite before uploading to PyPI
@@ -621,14 +623,14 @@ jobs:
   build-linux-x86_64:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: PyO3/maturin-action@v1
         with:
           command: build
           args: --release --locked --out dist
           target: x86_64-unknown-linux-gnu
           manylinux: "2_17"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wheels-linux-x86_64
           path: dist/*.whl
@@ -638,12 +640,12 @@ jobs:
   build-sdist:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: PyO3/maturin-action@v1
         with:
           command: sdist
           args: --out dist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wheels-sdist
           path: dist/*.tar.gz
@@ -655,8 +657,8 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: astral-sh/setup-uv@v7
-      - uses: actions/download-artifact@v4
+      - uses: astral-sh/setup-uv@v8
+      - uses: actions/download-artifact@v8
         with:
           pattern: wheels-*
           merge-multiple: true

@@ -184,7 +184,8 @@ local iteration while maintaining strict quality gates in CI.
 ### Recommended: Separate Jobs (Modern Pattern)
 
 Split CI into independent parallel jobs for fast feedback.
-This is what flowmark-rs (13 jobs), jj, and delta do.
+The example below defines 11 jobs; the three-platform test matrix expands it to 13 job
+executions. This is the pattern used by flowmark-rs, jj, and delta.
 Format and clippy fail fast; test and audit run in parallel.
 
 ```yaml
@@ -207,7 +208,7 @@ jobs:
     name: Format check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
@@ -217,7 +218,7 @@ jobs:
     name: Clippy lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -231,7 +232,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --locked --all-features
@@ -242,7 +243,7 @@ jobs:
     name: Test library (no default features)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --locked --no-default-features
@@ -253,7 +254,7 @@ jobs:
     name: MSRV check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@1.85   # Match rust-version in Cargo.toml
       - uses: Swatinem/rust-cache@v2
       - run: cargo check --locked --all-features
@@ -262,14 +263,21 @@ jobs:
     name: Dependency audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: EmbarkStudios/cargo-deny-action@v2
+
+  audit:
+    name: Vulnerability audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: rustsec/audit-check@v2
 
   docs:
     name: Documentation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo doc --locked --no-deps --all-features
@@ -280,7 +288,7 @@ jobs:
     name: Code coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: llvm-tools-preview
@@ -289,7 +297,7 @@ jobs:
       - run: cargo llvm-cov --locked --all-features --lcov --output-path lcov.info
         env:
           RUSTFLAGS: "-D warnings"
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v7
         with:
           files: lcov.info
           fail_ci_if_error: false
@@ -301,7 +309,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
@@ -312,12 +320,12 @@ jobs:
     name: Workflow script tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - run: python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v
 ```
 
 **Key patterns from real-world projects:**
-- Use `actions/checkout@v6` (current), `dtolnay/rust-toolchain` (not `actions-rs`)
+- Use `actions/checkout@v7` (current), `dtolnay/rust-toolchain` (not `actions-rs`)
 - `Swatinem/rust-cache@v2` for build caching across jobs
 - `--locked` on all cargo commands enforces Cargo.lock reproducibility
 - `RUSTFLAGS: "-D warnings"` in test/build jobs treats warnings as errors
@@ -449,7 +457,7 @@ generation (shell scripts, Homebrew, MSI), and GitHub Release uploads with minim
 configuration.
 It has matured significantly (v0.31+ as of early 2026) and is a good choice when you
 don’t need full control over the release pipeline.
-See https://opensource.axo.dev/cargo-dist/ for details.
+See https://axodotdev.github.io/cargo-dist/ for details.
 
 For full control, the standard hand-rolled pattern:
 

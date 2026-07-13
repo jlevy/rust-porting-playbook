@@ -28,9 +28,17 @@ This is automated and reproducible via
 `docs/project/research/data/extract_lockfile_inventory.py`:
 
 ```sh
-python3 docs/project/research/data/extract_lockfile_inventory.py \
+git clone https://github.com/jlevy/tbd.git attic/tbd
+git -C attic/tbd checkout 395052437464a9e62ce209220dcc01096fa06f7e
+uv --no-config run --locked \
+  --script docs/project/research/data/extract_lockfile_inventory.py \
   attic/tbd/pnpm-lock.yaml tbd docs/project/research/data/tbd-lockfile
+git diff --exit-code -- docs/project/research/data/tbd-lockfile-*
 ```
+
+The adjacent `extract_lockfile_inventory.py.lock` pins the script’s PyYAML dependency.
+The source commit pins the analyzed `pnpm-lock.yaml`; `attic/` is intentionally ignored
+so third-party checkouts do not become part of this repository.
 
 ## Inventory Snapshot (as of 2026-05-27)
 

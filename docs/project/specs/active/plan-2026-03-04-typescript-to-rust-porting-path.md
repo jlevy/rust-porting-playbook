@@ -1,10 +1,12 @@
 # Feature: TypeScript-to-Rust Porting Path
 
-**Date:** 2026-03-04 (last updated 2026-03-04)
+**Date:** 2026-03-04 (last updated 2026-07-13)
 
 **Author:** Joshua Levy + Claude
 
 **Status:** Draft (revised after senior review)
+
+**Tracking:** `rpp-pk9g`
 
 ## Overview
 
@@ -690,7 +692,7 @@ Version drift policy:
 - c8 package: https://www.npmjs.com/package/c8
 - Bun test coverage: https://bun.sh/docs/test/coverage
 - cargo-dist npm installers:
-  https://opensource.axo.dev/cargo-dist/book/installers/npm.html
+  https://axodotdev.github.io/cargo-dist/book/installers/npm.html
 - tryscript package/docs entry: https://www.npmjs.com/package/tryscript
 - esbuild package: https://www.npmjs.com/package/esbuild
 - Biome package: https://www.npmjs.com/package/@biomejs/biome

@@ -117,13 +117,13 @@ Let’s first look at the results, then I’ll walk through each technique.
 The flowmark-rs port was written entirely by Claude Opus 4.6, with a final pass on PRs
 by GPT-5.3 Codex Extra High.
 
-![Release Status](article-2026-03-04-rust-porting.assets/release-status.png) *Release
+![Release Status](post-2026-03-04-rust-porting.assets/release-status.png) *Release
 published to crates.io with full CI passing.*
 
-![Porting Methodology](article-2026-03-04-rust-porting.assets/porting-methodology.png)
+![Porting Methodology](post-2026-03-04-rust-porting.assets/porting-methodology.png)
 *Overview of the porting methodology and playbook structure.*
 
-![Test Results](article-2026-03-04-rust-porting.assets/test-results.png) *292 Python
+![Test Results](post-2026-03-04-rust-porting.assets/test-results.png) *292 Python
 tests mapped to 469 Rust tests, with 100% mapping coverage.*
 
 Now let’s walk through each technique.
