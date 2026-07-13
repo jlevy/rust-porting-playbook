@@ -327,7 +327,7 @@ repository’s current GitHub feature set; this is not a repository configuratio
 | Git whitespace/conflict-marker checks | Pass |
 | tbd doctor | Pass after setup and synchronization |
 | Flowmark 0.3.1 repository baseline | Deferred: 39 of 54 tracked files need a dedicated mechanical baseline (`rpp-iasa`) |
-| Remote GitHub Actions | New workflow added; no baseline run existed at review time |
+| Remote GitHub Actions | Pass on draft PR #16 (`Validate repository`) |
 
 The two lockfile end-to-end checks downloaded the exact `pnpm-lock.yaml` blobs from the
 audited tbd and qmd commits, ran the locked extraction utility, and byte-compared all
