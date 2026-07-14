@@ -40,16 +40,16 @@ class AgentHooksTest(unittest.TestCase):
         log = temporary / "commands.log"
         quoted_log = shlex.quote(str(log))
         tbd_bin_dir = bin_dir
+        npm = bin_dir / "npm"
         if npm_global:
             npm_prefix = temporary / "npm-global"
             tbd_bin_dir = npm_prefix / "bin"
             tbd_bin_dir.mkdir(parents=True)
-            npm = bin_dir / "npm"
-            npm.write_text(
-                f"#!/bin/bash\necho {shlex.quote(str(npm_prefix))}\n",
-                encoding="utf-8",
-            )
-            npm.chmod(0o755)
+            npm_contents = f"#!/bin/bash\necho {shlex.quote(str(npm_prefix))}\n"
+        else:
+            npm_contents = "#!/bin/bash\nexit 1\n"
+        npm.write_text(npm_contents, encoding="utf-8")
+        npm.chmod(0o755)
         tbd = tbd_bin_dir / "tbd"
         tbd.write_text(
             "#!/bin/bash\n"
