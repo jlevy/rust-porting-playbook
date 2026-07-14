@@ -14,18 +14,43 @@ SESSION_SCRIPTS = (
     REPOSITORY_ROOT / ".claude" / "scripts" / "tbd-session.sh",
     REPOSITORY_ROOT / ".codex" / "tbd-session.sh",
 )
+CLOSING_SCRIPTS = (
+    REPOSITORY_ROOT / ".claude" / "hooks" / "tbd-closing-reminder.sh",
+    REPOSITORY_ROOT / ".codex" / "tbd-closing-reminder.sh",
+)
+ENSURE_GH_SCRIPTS = (
+    REPOSITORY_ROOT / ".claude" / "scripts" / "ensure-gh-cli.sh",
+    REPOSITORY_ROOT / ".codex" / "ensure-gh-cli.sh",
+)
+CLAUDE_SETTINGS = REPOSITORY_ROOT / ".claude" / "settings.json"
 CODEX_HOOKS = REPOSITORY_ROOT / ".codex" / "hooks.json"
 
 
 class AgentHooksTest(unittest.TestCase):
     def _fake_environment(
-        self, temporary: Path, *, tbd_version: str
+        self,
+        temporary: Path,
+        *,
+        tbd_version: str,
+        npm_global: bool = False,
+        npx_exit_code: int = 0,
     ) -> tuple[dict[str, str], Path]:
         bin_dir = temporary / ".local" / "bin"
         bin_dir.mkdir(parents=True)
         log = temporary / "commands.log"
         quoted_log = shlex.quote(str(log))
-        tbd = bin_dir / "tbd"
+        tbd_bin_dir = bin_dir
+        if npm_global:
+            npm_prefix = temporary / "npm-global"
+            tbd_bin_dir = npm_prefix / "bin"
+            tbd_bin_dir.mkdir(parents=True)
+            npm = bin_dir / "npm"
+            npm.write_text(
+                f"#!/bin/bash\necho {shlex.quote(str(npm_prefix))}\n",
+                encoding="utf-8",
+            )
+            npm.chmod(0o755)
+        tbd = tbd_bin_dir / "tbd"
         tbd.write_text(
             "#!/bin/bash\n"
             'if [[ "$1" == "--version" ]]; then\n'
@@ -40,7 +65,8 @@ class AgentHooksTest(unittest.TestCase):
         npx.write_text(
             "#!/bin/bash\n"
             'echo "npx ignore_scripts=${NPM_CONFIG_IGNORE_SCRIPTS:-} $*" '
-            f">> {quoted_log}\n",
+            f">> {quoted_log}\n"
+            f"exit {npx_exit_code}\n",
             encoding="utf-8",
         )
         tbd.chmod(0o755)
@@ -99,6 +125,120 @@ class AgentHooksTest(unittest.TestCase):
                     log.read_text(encoding="utf-8"),
                     "tbd ignore_scripts= prime --brief\n",
                 )
+
+    def test_session_hooks_find_matching_tbd_in_npm_global_prefix(self) -> None:
+        for script in SESSION_SCRIPTS:
+            with (
+                self.subTest(script=script),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                environment, log = self._fake_environment(
+                    Path(directory), tbd_version="0.4.0", npm_global=True
+                )
+
+                result = subprocess.run(
+                    ["/bin/bash", str(script), "--brief"],
+                    cwd=REPOSITORY_ROOT,
+                    env=environment,
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                )
+
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(
+                    log.read_text(encoding="utf-8"),
+                    "tbd ignore_scripts= prime --brief\n",
+                )
+
+    def test_claude_precompact_hook_runs_from_nested_directory(self) -> None:
+        hooks = json.loads(CLAUDE_SETTINGS.read_text(encoding="utf-8"))["hooks"]
+        for entry in hooks["SessionStart"]:
+            self.assertIn("$CLAUDE_PROJECT_DIR", entry["hooks"][0]["command"])
+        command = hooks["PreCompact"][0]["hooks"][0]["command"]
+        nested = REPOSITORY_ROOT / "docs" / "project"
+        with tempfile.TemporaryDirectory() as directory:
+            environment, log = self._fake_environment(
+                Path(directory), tbd_version="0.4.0"
+            )
+            environment["CLAUDE_PROJECT_DIR"] = str(REPOSITORY_ROOT)
+
+            result = subprocess.run(
+                command,
+                cwd=nested,
+                env=environment,
+                shell=True,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                log.read_text(encoding="utf-8"),
+                "tbd ignore_scripts= prime --brief\n",
+            )
+
+    def test_closing_reminders_warn_when_fallback_fails(self) -> None:
+        for script in CLOSING_SCRIPTS:
+            with (
+                self.subTest(script=script),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                environment, _ = self._fake_environment(
+                    Path(directory), tbd_version="0.3.0", npx_exit_code=1
+                )
+
+                result = subprocess.run(
+                    ["/bin/bash", str(script)],
+                    cwd=REPOSITORY_ROOT,
+                    env=environment,
+                    input='{"tool_input":{"command":"git push origin HEAD"}}',
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                )
+
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("Closing reminder skipped", result.stderr)
+
+    def test_gh_setup_is_best_effort_on_unsupported_platform(self) -> None:
+        for script in ENSURE_GH_SCRIPTS:
+            with (
+                self.subTest(script=script),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                temporary = Path(directory)
+                bin_dir = temporary / ".local" / "bin"
+                bin_dir.mkdir(parents=True)
+                uname = bin_dir / "uname"
+                uname.write_text(
+                    "#!/bin/bash\n"
+                    'if [[ "$1" == "-s" ]]; then\n'
+                    "  echo windows\n"
+                    "else\n"
+                    "  echo x86_64\n"
+                    "fi\n",
+                    encoding="utf-8",
+                )
+                tr = bin_dir / "tr"
+                tr.write_text('#!/bin/bash\nexec /usr/bin/tr "$@"\n', encoding="utf-8")
+                uname.chmod(0o755)
+                tr.chmod(0o755)
+                environment = os.environ.copy()
+                environment.update({"HOME": str(temporary), "PATH": str(bin_dir)})
+
+                result = subprocess.run(
+                    ["/bin/bash", str(script)],
+                    cwd=REPOSITORY_ROOT,
+                    env=environment,
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                )
+
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("Continuing without gh", result.stderr)
 
     def test_codex_provisions_gh_before_running_tbd(self) -> None:
         hooks = json.loads(CODEX_HOOKS.read_text(encoding="utf-8"))["hooks"]

@@ -11,6 +11,12 @@
 
 set -euo pipefail
 
+continue_without_gh() {
+    echo "[gh] WARNING: $1" >&2
+    echo "[gh] Continuing without gh; local tbd workflows remain available." >&2
+    exit 0
+}
+
 # Add common binary locations to PATH
 export PATH="$HOME/.local/bin:$HOME/bin:/usr/local/bin:$PATH"
 
@@ -55,43 +61,57 @@ else
 
     EXPECTED=$(checksum_for "$PLATFORM")
     if [ -z "$EXPECTED" ]; then
-        echo "[gh] ERROR: no pinned checksum for platform ${PLATFORM}; refusing to install"
-        echo "[gh] Add the checksum from gh_${GH_VERSION}_checksums.txt to this script"
-        exit 1
+        continue_without_gh "No pinned checksum for ${PLATFORM}; refusing to install an unverified binary."
     fi
 
     ASSET="gh_${GH_VERSION}_${PLATFORM}"
     DOWNLOAD_URL="https://github.com/cli/cli/releases/download/v${GH_VERSION}/${ASSET}"
 
     echo "[gh] Downloading from ${DOWNLOAD_URL}..."
-    curl -fsSL -o "/tmp/${ASSET}" "$DOWNLOAD_URL"
+    if ! curl -fsSL -o "/tmp/${ASSET}" "$DOWNLOAD_URL"; then
+        rm -f "/tmp/${ASSET}"
+        continue_without_gh "Download failed for ${ASSET}."
+    fi
 
     # Verify the download against the pinned checksum before extracting.
     if command -v sha256sum &> /dev/null; then
-        ACTUAL=$(sha256sum "/tmp/${ASSET}" | awk '{print $1}')
+        if ! ACTUAL=$(sha256sum "/tmp/${ASSET}" | awk '{print $1}'); then
+            rm -f "/tmp/${ASSET}"
+            continue_without_gh "Unable to calculate the SHA-256 digest for ${ASSET}."
+        fi
+    elif command -v shasum &> /dev/null; then
+        if ! ACTUAL=$(shasum -a 256 "/tmp/${ASSET}" | awk '{print $1}'); then
+            rm -f "/tmp/${ASSET}"
+            continue_without_gh "Unable to calculate the SHA-256 digest for ${ASSET}."
+        fi
     else
-        ACTUAL=$(shasum -a 256 "/tmp/${ASSET}" | awk '{print $1}')
+        rm -f "/tmp/${ASSET}"
+        continue_without_gh "No SHA-256 utility is available to verify ${ASSET}."
     fi
     if [ "$ACTUAL" != "$EXPECTED" ]; then
-        echo "[gh] ERROR: checksum mismatch for ${ASSET}"
-        echo "[gh]   expected ${EXPECTED}"
-        echo "[gh]   actual   ${ACTUAL}"
         rm -f "/tmp/${ASSET}"
-        exit 1
+        continue_without_gh "Checksum mismatch for ${ASSET}; expected ${EXPECTED}, received ${ACTUAL}."
     fi
     echo "[gh] Checksum verified for ${ASSET}"
 
     # Extract based on archive type
     if [ "$ARCHIVE_EXT" = "zip" ]; then
-        unzip -q "/tmp/${ASSET}" -d /tmp
+        if ! unzip -q "/tmp/${ASSET}" -d /tmp; then
+            rm -rf "${EXTRACT_DIR}" "/tmp/${ASSET}"
+            continue_without_gh "Unable to extract ${ASSET}."
+        fi
     else
-        tar -xzf "/tmp/${ASSET}" -C /tmp
+        if ! tar -xzf "/tmp/${ASSET}" -C /tmp; then
+            rm -rf "${EXTRACT_DIR}" "/tmp/${ASSET}"
+            continue_without_gh "Unable to extract ${ASSET}."
+        fi
     fi
 
     # Install to ~/.local/bin (works in cloud and local)
-    mkdir -p ~/.local/bin
-    cp "${EXTRACT_DIR}/bin/gh" ~/.local/bin/gh
-    chmod +x ~/.local/bin/gh
+    if ! { mkdir -p ~/.local/bin && cp "${EXTRACT_DIR}/bin/gh" ~/.local/bin/gh && chmod +x ~/.local/bin/gh; }; then
+        rm -rf "${EXTRACT_DIR}" "/tmp/${ASSET}"
+        continue_without_gh "Unable to install gh under ~/.local/bin."
+    fi
 
     # Clean up
     rm -rf "${EXTRACT_DIR}" "/tmp/${ASSET}"
@@ -101,9 +121,7 @@ fi
 
 # Verify gh is now in PATH
 if ! command -v gh &> /dev/null; then
-    echo "[gh] ERROR: gh CLI still not found in PATH after installation"
-    echo "[gh] Ensure ~/.local/bin is in your PATH"
-    exit 1
+    continue_without_gh "gh is still not on PATH after installation."
 fi
 
 # Check authentication status

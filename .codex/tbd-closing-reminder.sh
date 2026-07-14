@@ -14,10 +14,29 @@ if [[ "$command" == git\ push* ]] || [[ "$command" == *"&& git push"* ]] || [[ "
     # reminder still fires when tbd is not on the hook's PATH.
     readonly TBD_VERSION="0.4.0"
     export PATH="$HOME/.local/bin:$HOME/bin:/usr/local/bin:$PATH"
+    npm_global_bin=""
+    if command -v npm &> /dev/null; then
+      npm_prefix=$(npm config get prefix 2>/dev/null || true)
+      if [[ -n "$npm_prefix" && -d "$npm_prefix/bin" ]]; then
+        npm_global_bin="$npm_prefix/bin"
+      fi
+    fi
+    if [[ -n "$npm_global_bin" ]]; then
+      export PATH="$npm_global_bin:$PATH"
+    fi
+    closing_completed=false
     if command -v tbd &> /dev/null && [[ "$(tbd --version 2>/dev/null || true)" == "$TBD_VERSION" ]]; then
-      tbd closing
+      if tbd closing; then
+        closing_completed=true
+      fi
     elif command -v npx &> /dev/null; then
-      NPM_CONFIG_IGNORE_SCRIPTS=true npx --yes "get-tbd@$TBD_VERSION" closing
+      if NPM_CONFIG_IGNORE_SCRIPTS=true npx --yes "get-tbd@$TBD_VERSION" closing; then
+        closing_completed=true
+      fi
+    fi
+    if [[ "$closing_completed" != true ]]; then
+      echo "[tbd] Closing reminder skipped: tbd $TBD_VERSION and its pinned npx fallback were unavailable or failed." >&2
+      echo "[tbd] Install it with: npm install -g get-tbd@$TBD_VERSION" >&2
     fi
   fi
 fi

@@ -9,8 +9,18 @@
 
 readonly TBD_VERSION="0.4.0"
 
-# Prefer common local bin locations.
+# Restore npm's global bin directory when it is outside the common locations.
 export PATH="$HOME/.local/bin:$HOME/bin:/usr/local/bin:$PATH"
+npm_global_bin=""
+if command -v npm &> /dev/null; then
+    npm_prefix=$(npm config get prefix 2>/dev/null || true)
+    if [[ -n "$npm_prefix" && -d "$npm_prefix/bin" ]]; then
+        npm_global_bin="$npm_prefix/bin"
+    fi
+fi
+if [[ -n "$npm_global_bin" ]]; then
+    export PATH="$npm_global_bin:$PATH"
+fi
 
 # Use a local binary only when it matches the repository-required version.
 if command -v tbd &> /dev/null; then
