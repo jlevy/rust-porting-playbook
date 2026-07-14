@@ -56,16 +56,26 @@ class AgentHooksTest(unittest.TestCase):
             'if [[ "$1" == "--version" ]]; then\n'
             f"  echo {tbd_version}\n"
             "else\n"
-            '  echo "tbd ignore_scripts=${NPM_CONFIG_IGNORE_SCRIPTS:-} $*" '
+            '  if [[ "${TBD_TEST_LOG_CWD:-}" == "true" ]]; then\n'
+            '    echo "cwd=$PWD tbd ignore_scripts=${NPM_CONFIG_IGNORE_SCRIPTS:-} $*" '
             f">> {quoted_log}\n"
+            "  else\n"
+            '    echo "tbd ignore_scripts=${NPM_CONFIG_IGNORE_SCRIPTS:-} $*" '
+            f">> {quoted_log}\n"
+            "  fi\n"
             "fi\n",
             encoding="utf-8",
         )
         npx = bin_dir / "npx"
         npx.write_text(
             "#!/bin/bash\n"
-            'echo "npx ignore_scripts=${NPM_CONFIG_IGNORE_SCRIPTS:-} $*" '
+            'if [[ "${TBD_TEST_LOG_CWD:-}" == "true" ]]; then\n'
+            '  echo "cwd=$PWD npx ignore_scripts=${NPM_CONFIG_IGNORE_SCRIPTS:-} $*" '
             f">> {quoted_log}\n"
+            "else\n"
+            '  echo "npx ignore_scripts=${NPM_CONFIG_IGNORE_SCRIPTS:-} $*" '
+            f">> {quoted_log}\n"
+            "fi\n"
             f"exit {npx_exit_code}\n",
             encoding="utf-8",
         )
@@ -150,6 +160,41 @@ class AgentHooksTest(unittest.TestCase):
                     log.read_text(encoding="utf-8"),
                     "tbd ignore_scripts= prime --brief\n",
                 )
+
+    def test_session_hooks_run_prime_from_repository_root(self) -> None:
+        cases = (
+            ("0.4.0", "tbd ignore_scripts= prime --brief"),
+            (
+                "0.3.0",
+                "npx ignore_scripts=true --yes get-tbd@0.4.0 prime --brief",
+            ),
+        )
+        nested = REPOSITORY_ROOT / "docs" / "project"
+        for tbd_version, expected_command in cases:
+            for script in SESSION_SCRIPTS:
+                with (
+                    self.subTest(script=script, tbd_version=tbd_version),
+                    tempfile.TemporaryDirectory() as directory,
+                ):
+                    environment, log = self._fake_environment(
+                        Path(directory), tbd_version=tbd_version
+                    )
+                    environment["TBD_TEST_LOG_CWD"] = "true"
+
+                    result = subprocess.run(
+                        ["/bin/bash", str(script), "--brief"],
+                        cwd=nested,
+                        env=environment,
+                        check=False,
+                        capture_output=True,
+                        text=True,
+                    )
+
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(
+                        log.read_text(encoding="utf-8"),
+                        f"cwd={REPOSITORY_ROOT} {expected_command}\n",
+                    )
 
     def test_claude_precompact_hook_runs_from_nested_directory(self) -> None:
         hooks = json.loads(CLAUDE_SETTINGS.read_text(encoding="utf-8"))["hooks"]

@@ -104,7 +104,9 @@ def _anchors(path: Path) -> set[str]:
 def _destinations(line: str) -> list[str]:
     """Extract inline and reference-style Markdown link destinations from one line."""
     line = INLINE_CODE_RE.sub("", line)
-    destinations = [match.group("destination") for match in INLINE_LINK_RE.finditer(line)]
+    destinations = [
+        match.group("destination") for match in INLINE_LINK_RE.finditer(line)
+    ]
     reference_match = REFERENCE_LINK_RE.match(line)
     if reference_match is not None:
         destinations.append(reference_match.group("destination"))
@@ -187,6 +189,21 @@ def _tracked_markdown_files(root: Path) -> list[Path]:
     return [root / path.decode() for path in result.stdout.split(b"\0") if path]
 
 
+def _repository_root(start: Path) -> Path:
+    """Return the containing Git worktree root or raise a concise error."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        cwd=start,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        detail = result.stderr.strip() or "not inside a Git worktree"
+        raise RuntimeError(f"Unable to locate the repository root: {detail}")
+    return Path(result.stdout.strip()).resolve()
+
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -200,8 +217,16 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = _parse_args()
-    root = Path.cwd().resolve()
-    paths = [path if path.is_absolute() else root / path for path in args.paths]
+    invocation_directory = Path.cwd().resolve()
+    try:
+        root = _repository_root(invocation_directory)
+    except RuntimeError as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 2
+    paths = [
+        path if path.is_absolute() else invocation_directory / path
+        for path in args.paths
+    ]
     if not paths:
         paths = _tracked_markdown_files(root)
     findings = check_markdown_files(root, paths)

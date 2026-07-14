@@ -9,6 +9,17 @@
 
 readonly TBD_VERSION="0.4.0"
 
+# Anchor all repository operations to the worktree containing this hook.
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+if ! repo_root=$(git -C "$script_dir" rev-parse --show-toplevel 2>/dev/null); then
+    echo "[tbd] Unable to locate the repository containing $script_dir." >&2
+    exit 1
+fi
+if ! cd "$repo_root"; then
+    echo "[tbd] Unable to enter repository root: $repo_root" >&2
+    exit 1
+fi
+
 # Restore npm's global bin directory when it is outside the common locations.
 export PATH="$HOME/.local/bin:$HOME/bin:/usr/local/bin:$PATH"
 npm_global_bin=""

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -7,7 +8,32 @@ from pathlib import Path
 from scripts.check_docs import check_markdown_files
 
 
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+SCRIPT = REPOSITORY_ROOT / "scripts" / "check_docs.py"
+
+
 class CheckMarkdownFilesTest(unittest.TestCase):
+    def test_cli_discovers_tracked_files_from_nested_directory(self) -> None:
+        tracked = subprocess.run(
+            ["git", "ls-files", "-z", "--", "*.md"],
+            cwd=REPOSITORY_ROOT,
+            check=True,
+            capture_output=True,
+        )
+        expected_count = len([path for path in tracked.stdout.split(b"\0") if path])
+        result = subprocess.run(
+            ["python3", str(SCRIPT)],
+            cwd=REPOSITORY_ROOT / "docs" / "project",
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(
+            f"Markdown validation passed for {expected_count} file(s).", result.stdout
+        )
+
     def test_accepts_existing_relative_links_and_heading_anchors(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -68,7 +94,9 @@ class CheckMarkdownFilesTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             document = root / "README.md"
-            document.write_text("# Example\n\n```rust\nfn main() {}\n", encoding="utf-8")
+            document.write_text(
+                "# Example\n\n```rust\nfn main() {}\n", encoding="utf-8"
+            )
 
             findings = check_markdown_files(root, [document])
 
