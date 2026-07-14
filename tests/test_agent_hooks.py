@@ -247,6 +247,36 @@ class AgentHooksTest(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertIn("Closing reminder skipped", result.stderr)
 
+    def test_closing_reminders_run_from_repository_root_outside_worktree(self) -> None:
+        for script in CLOSING_SCRIPTS:
+            with (
+                self.subTest(script=script),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                temporary = Path(directory)
+                outside_worktree = temporary / "outside-worktree"
+                outside_worktree.mkdir()
+                environment, log = self._fake_environment(
+                    temporary, tbd_version="0.4.0"
+                )
+                environment["TBD_TEST_LOG_CWD"] = "true"
+
+                result = subprocess.run(
+                    ["/bin/bash", str(script)],
+                    cwd=outside_worktree,
+                    env=environment,
+                    input='{"tool_input":{"command":"git push origin HEAD"}}',
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                )
+
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(
+                    log.read_text(encoding="utf-8"),
+                    f"cwd={REPOSITORY_ROOT} tbd ignore_scripts= closing\n",
+                )
+
     def test_gh_setup_is_best_effort_on_unsupported_platform(self) -> None:
         for script in ENSURE_GH_SCRIPTS:
             with (

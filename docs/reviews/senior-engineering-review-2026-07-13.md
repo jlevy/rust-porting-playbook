@@ -313,7 +313,7 @@ repository’s current GitHub feature set; this is not a repository configuratio
 
 | Check | Result |
 | --- | --- |
-| Python unit/integration suite | Pass: 19 tests |
+| Python unit/integration suite | Pass: 20 tests |
 | Markdown relative links, anchors, and fences | Pass across all tracked Markdown |
 | External URL audit | 189 unique targets reviewed; confirmed stale targets fixed |
 | tbd inventory reproduction | Exact match at `395052437464a9e62ce209220dcc01096fa06f7e`; 397 entries, 0 missing edges, 0 unreachable |

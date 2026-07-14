@@ -7,8 +7,9 @@ command=$(echo "$input" | jq -r '.tool_input.command // empty')
 
 # Check if this is a git push command and .tbd exists
 if [[ "$command" == git\ push* ]] || [[ "$command" == *"&& git push"* ]] || [[ "$command" == *"; git push"* ]]; then
-  # The hook may start in a subdirectory; check .tbd at the repo root.
-  repo_root=$(git rev-parse --show-toplevel 2>/dev/null) && cd "$repo_root"
+  # Anchor repository discovery to this script, not the hook runner's cwd.
+  script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+  repo_root=$(git -C "$script_dir" rev-parse --show-toplevel 2>/dev/null) && cd "$repo_root"
   if [ -d ".tbd" ]; then
     # Same version-matched, pinned fallback as tbd-session.sh, so the
     # reminder still fires when tbd is not on the hook's PATH.
