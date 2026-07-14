@@ -277,6 +277,43 @@ class AgentHooksTest(unittest.TestCase):
                     f"cwd={REPOSITORY_ROOT} tbd ignore_scripts= closing\n",
                 )
 
+    def test_closing_reminders_detect_git_global_options(self) -> None:
+        cases = (
+            ("git -C /tmp push origin HEAD", True),
+            ("cd /tmp && git --no-pager -C /tmp push origin HEAD", True),
+            ("git -C '/tmp/path with spaces' push origin HEAD", True),
+            ("git add push", False),
+            ("echo git -C /tmp push origin HEAD", False),
+        )
+        for script in CLOSING_SCRIPTS:
+            for command, should_remind in cases:
+                with (
+                    self.subTest(script=script, command=command),
+                    tempfile.TemporaryDirectory() as directory,
+                ):
+                    environment, log = self._fake_environment(
+                        Path(directory), tbd_version="0.4.0"
+                    )
+
+                    result = subprocess.run(
+                        ["/bin/bash", str(script)],
+                        cwd=REPOSITORY_ROOT,
+                        env=environment,
+                        input=json.dumps({"tool_input": {"command": command}}),
+                        check=False,
+                        capture_output=True,
+                        text=True,
+                    )
+
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    if should_remind:
+                        self.assertEqual(
+                            log.read_text(encoding="utf-8"),
+                            "tbd ignore_scripts= closing\n",
+                        )
+                    else:
+                        self.assertFalse(log.exists())
+
     def test_gh_setup_is_best_effort_on_unsupported_platform(self) -> None:
         for script in ENSURE_GH_SCRIPTS:
             with (

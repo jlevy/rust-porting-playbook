@@ -5,8 +5,14 @@
 input=$(cat)
 command=$(echo "$input" | jq -r '.tool_input.command // empty')
 
-# Check if this is a git push command and .tbd exists
-if [[ "$command" == git\ push* ]] || [[ "$command" == *"&& git push"* ]] || [[ "$command" == *"; git push"* ]]; then
+# Match a git command at the start of a shell segment, allowing documented global
+# options such as `-C <path>` before the push subcommand. This inspects text only; it
+# never evaluates it.
+readonly shell_word="(\"[^\"]*\"|'[^']*'|[^;&|[:space:]]+)"
+readonly git_value_option="((-C|-c)[[:space:]]+$shell_word|--(exec-path|git-dir|work-tree|namespace|config-env)=$shell_word)"
+readonly git_flag_option='(-p|-P|--paginate|--no-pager|--no-replace-objects|--no-lazy-fetch|--no-optional-locks|--no-advice|--bare|--literal-pathspecs|--glob-pathspecs|--noglob-pathspecs|--icase-pathspecs)'
+readonly git_push_pattern="(^|[;&|][[:space:]]*)git([[:space:]]+($git_value_option|$git_flag_option))*[[:space:]]+push([[:space:];&|]|$)"
+if [[ "$command" =~ $git_push_pattern ]]; then
   # Anchor repository discovery to this script, not the hook runner's cwd.
   script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
   repo_root=$(git -C "$script_dir" rev-parse --show-toplevel 2>/dev/null) && cd "$repo_root"
