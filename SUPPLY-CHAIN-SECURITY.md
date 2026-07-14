@@ -18,6 +18,9 @@ The lockfile inventory utility is a standalone PEP 723 script.
 Its only runtime dependency, PyYAML, is pinned in the script and in the adjacent
 `*.py.lock` file. CI uses `uv --no-config ... --locked` so local resolver configuration
 cannot change that environment.
+CI downloads the tbd and qmd source lockfiles only from full-commit GitHub URLs,
+verifies their recorded SHA-256 digests, and byte-compares every regenerated inventory
+artifact with the committed research data.
 
 GitHub Actions in this repository are pinned to immutable SHAs.
 Version comments are for maintainers and dependency-update tooling; execution never

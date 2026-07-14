@@ -24,6 +24,7 @@ actions rather than telling them to run commands.
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 python3 scripts/check_docs.py
 uv --no-config lock --check --script docs/project/research/data/extract_lockfile_inventory.py
+python3 scripts/check_lockfile_inventories.py
 ```
 
 ## Architecture Overview

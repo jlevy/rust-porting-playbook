@@ -6,7 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .codex/tbd-session.sh"
+            "command": "repo_root=$(git rev-parse --show-toplevel) && bash \"$repo_root/.codex/ensure-gh-cli.sh\"",
+            "timeout": 120
           }
         ]
       },
@@ -15,8 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .codex/ensure-gh-cli.sh",
-            "timeout": 120
+            "command": "repo_root=$(git rev-parse --show-toplevel) && bash \"$repo_root/.codex/tbd-session.sh\""
           }
         ]
       }
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .codex/tbd-session.sh --brief"
+            "command": "repo_root=$(git rev-parse --show-toplevel) && bash \"$repo_root/.codex/tbd-session.sh\" --brief"
           }
         ]
       }
@@ -38,7 +38,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .codex/tbd-closing-reminder.sh"
+            "command": "repo_root=$(git rev-parse --show-toplevel) && bash \"$repo_root/.codex/tbd-closing-reminder.sh\""
           }
         ]
       }

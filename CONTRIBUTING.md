@@ -24,6 +24,7 @@ python3 -m unittest discover -s tests -p 'test_*.py' -v
 python3 scripts/check_docs.py
 uv --no-config lock --check \
   --script docs/project/research/data/extract_lockfile_inventory.py
+python3 scripts/check_lockfile_inventories.py
 bash -n \
   .claude/hooks/tbd-closing-reminder.sh \
   .claude/scripts/ensure-gh-cli.sh \
@@ -33,9 +34,12 @@ bash -n \
   .codex/tbd-session.sh
 ```
 
-The tests include an end-to-end run of the lockfile inventory script in its locked `uv`
-environment. `scripts/check_docs.py` checks every tracked Markdown file for broken
-relative links, missing anchors, and unclosed fenced code blocks.
+The unit suite runs the lockfile inventory script end to end against a deterministic
+synthetic lockfile. `scripts/check_lockfile_inventories.py` downloads the exact tbd and
+qmd source commits, verifies each lockfile’s SHA-256 digest, regenerates all six
+research artifacts, and fails on byte-level drift.
+`scripts/check_docs.py` checks every tracked Markdown file for broken relative links,
+missing anchors, and unclosed fenced code blocks.
 
 ## Submit Changes
 

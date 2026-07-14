@@ -35,6 +35,8 @@ jobs:
         run: python scripts/check_docs.py
       - name: Validate the locked research-script environment
         run: uv --no-config lock --check --script docs/project/research/data/extract_lockfile_inventory.py
+      - name: Validate lockfile inventories against pinned upstream sources
+        run: python scripts/check_lockfile_inventories.py
       - name: Validate Python and shell syntax
         run: |
           python -m compileall -q scripts tests docs/project/research/data/extract_lockfile_inventory.py

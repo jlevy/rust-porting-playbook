@@ -290,13 +290,15 @@ architecture for future contributors and agents.
 ## Security and Supply-Chain Assessment
 
 The executable attack surface is small: one GitHub Actions workflow, generated tbd shell
-hooks, and one Python utility.
+hooks, one research utility, and repository validation scripts.
 The current controls are proportionate:
 
 - GitHub Actions are full-SHA pinned with version comments and read-only contents
   permission.
 - Checkout credentials are not persisted.
 - Python resolution is exact, locked, hash-bearing, and isolated from ambient uv config.
+- Research inventories are regenerated in CI from full-commit source URLs after SHA-256
+  verification.
 - Dependabot version updates observe a 14-day cooldown; security updates may proceed
   immediately.
 - Secret scanning, push protection, private reporting, vulnerability alerts, and
@@ -311,7 +313,7 @@ repository’s current GitHub feature set; this is not a repository configuratio
 
 | Check | Result |
 | --- | --- |
-| Python unit/integration suite | Pass: 7 tests |
+| Python unit/integration suite | Pass: 13 tests |
 | Markdown relative links, anchors, and fences | Pass across all tracked Markdown |
 | External URL audit | 189 unique targets reviewed; confirmed stale targets fixed |
 | tbd inventory reproduction | Exact match at `395052437464a9e62ce209220dcc01096fa06f7e`; 397 entries, 0 missing edges, 0 unreachable |
@@ -329,9 +331,10 @@ repository’s current GitHub feature set; this is not a repository configuratio
 | Flowmark 0.3.1 repository baseline | Deferred: 39 of 54 tracked files need a dedicated mechanical baseline (`rpp-iasa`) |
 | Remote GitHub Actions | Pass on draft PR #16 (`Validate repository`) |
 
-The two lockfile end-to-end checks downloaded the exact `pnpm-lock.yaml` blobs from the
-audited tbd and qmd commits, ran the locked extraction utility, and byte-compared all
-six generated TSV/JSON outputs with the committed artifacts.
+The lockfile provenance check downloads the exact `pnpm-lock.yaml` blobs from the
+audited tbd and qmd commits, verifies their SHA-256 digests, runs the locked extraction
+utility, and byte-compares all six generated TSV/JSON outputs with the committed
+artifacts. The same check now runs on every pull request.
 
 ## Suggestions
 
