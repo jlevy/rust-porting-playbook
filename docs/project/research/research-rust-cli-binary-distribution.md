@@ -1253,7 +1253,6 @@ increases.
 
 - [Ruff build and release process (DeepWiki)](https://deepwiki.com/astral-sh/ruff/8.4-release-process)
 - [Packaging Rust for npm (Orhun’s blog)](https://blog.orhun.dev/packaging-rust-for-npm/)
-- [Release engineering blog post (axo.dev)](https://blog.axo.dev/2023/02/cargo-dist)
 - [cargo-binstall](https://github.com/cargo-bins/cargo-binstall)
 - [maturin documentation](https://www.maturin.rs/)
 - [ripgrep release process (DeepWiki)](https://deepwiki.com/BurntSushi/ripgrep/3.4-release-process)

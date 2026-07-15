@@ -419,7 +419,7 @@ flowmark file.md
 
 - Crates.io: `https://crates.io/crates/flowmark`
 
-- Docs.rs: `https://docs.rs/flowmark-core`
+- Docs.rs: `https://docs.rs/flowmark`
 
 - Command: `flowmark file.md`
 
@@ -541,13 +541,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # Clone Python repo (not as submodule, just for testing)
       - name: Clone Python flowmark
         run: git clone https://github.com/jlevy/flowmark.git python-repo
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -2096,7 +2096,7 @@ authors = ["Joshua Levy <joshua@cal.berkeley.edu>"]
 edition = "2024"
 rust-version = "1.85.0"
 license = "MIT"
-repository = "https://github.com/jlevy/flowmark-rust"
+repository = "https://github.com/jlevy/flowmark-rs"
 homepage = "https://github.com/jlevy/flowmark"
 
 [profile.release]
@@ -2132,7 +2132,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: recursive  # Fetch python-repo submodule
 
@@ -2146,11 +2146,11 @@ jobs:
   cross-validation:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -2196,12 +2196,12 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
       - run: cargo build --release --target ${{ matrix.target }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.name }}
           path: target/${{ matrix.target }}/release/flowmark*
@@ -2751,7 +2751,7 @@ clap_complete = "4.5"  # Shell completions
 
 **Rust Repo** (tracking):
 
-- `https://github.com/jlevy/flowmark-rust` (example)
+- `https://github.com/jlevy/flowmark-rs`
 
 - Tracks Python via git submodule
 

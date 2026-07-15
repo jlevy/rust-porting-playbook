@@ -27,9 +27,17 @@ lockfile (see the tbd appendix for the full method). In short: read direct roots
 classification.
 
 ```sh
-python3 docs/project/research/data/extract_lockfile_inventory.py \
+git clone https://github.com/tobi/qmd.git attic/qmd
+git -C attic/qmd checkout 443760f4d5a17550d77a0e3146b5b8f08452991f
+uv --no-config run --locked \
+  --script docs/project/research/data/extract_lockfile_inventory.py \
   attic/qmd/pnpm-lock.yaml qmd docs/project/research/data/qmd-lockfile
+git diff --exit-code -- docs/project/research/data/qmd-lockfile-*
 ```
+
+The adjacent `extract_lockfile_inventory.py.lock` pins the script’s PyYAML dependency.
+The source commit pins the analyzed `pnpm-lock.yaml`; `attic/` is intentionally ignored
+so third-party checkouts do not become part of this repository.
 
 In the pnpm lockfile the `typescript` peer is listed under importer `dependencies`, so it
 is grouped as runtime here rather than as a separate `peer` group.

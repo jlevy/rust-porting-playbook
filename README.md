@@ -91,7 +91,7 @@ flowchart TD
         P4_2[Configure Cargo.toml<br/>edition, MSRV, lints]
         P4_3[Add Python source<br/>as git submodule]
         P4_4[Set up test fixtures<br/>input/ and expected/]
-        P4_5[Set up CI<br/>7+ parallel jobs]
+        P4_5[Set up CI<br/>parallel quality gates]
         P4_6[Track version correspondence<br/>in package.metadata]
         P4_1 --> P4_2 --> P4_3 --> P4_4 --> P4_5 --> P4_6
     end
@@ -203,8 +203,7 @@ from there.
 > git submodule add https://github.com/jlevy/flowmark-rs.git repos/flowmark-rs
 > ```
 >
-> Now read and follow
-> `repos/rust-porting-playbook/playbooks/python-to-rust-playbook.md`
+> Now read and follow `repos/rust-porting-playbook/playbooks/python-to-rust-playbook.md`
 > from the beginning.
 
 Replace `<PYTHON_PROJECT>`, `<PYTHON_REPO_URL>`, and `<PROJECT>` with your actual
@@ -212,7 +211,7 @@ values.
 
 The `flowmark-rs` repo is included as a **working reference project** — a production
 Rust port built with this playbook.
-The playbook's "Before You Begin" section explains what to load and how to use it.
+The playbook’s “Before You Begin” section explains what to load and how to use it.
 
 ### Existing Port (syncing with a new upstream release)
 
@@ -386,6 +385,7 @@ the full process.
 This playbook is built from real porting examples.
 If you’ve ported a project to Rust and have lessons to share, PR them or especially try
 adding an entire new case study so the process keeps improving.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for document placement and validation commands.
 
 ## License
 

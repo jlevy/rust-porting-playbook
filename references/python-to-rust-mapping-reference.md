@@ -953,7 +953,7 @@ There is no “gradually typed” -- it’s all checked.
 | Python CI step | Rust CI step | Notes |
 | --- | --- | --- |
 | `actions/setup-python@v6` | `dtolnay/rust-toolchain@stable` | Toolchain setup |
-| `astral-sh/setup-uv@v7` | `Swatinem/rust-cache@v2` | Dependency caching |
+| `astral-sh/setup-uv@v8` | `Swatinem/rust-cache@v2` | Dependency caching |
 | Cache pip/uv cache dir | Cache `target/` via rust-cache | Different cache strategies |
 | `uv sync` / `pip install -r requirements.txt` | (automatic on first `cargo` command) | No explicit install step |
 | `ruff check .` | `cargo clippy --all-targets --all-features -- -D warnings` | Lint step |

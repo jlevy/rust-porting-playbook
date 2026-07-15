@@ -209,8 +209,8 @@ check-mapping:
   runs-on: ubuntu-latest
   needs: test  # Only run after tests pass
   steps:
-    - uses: actions/checkout@v6
-    - uses: astral-sh/setup-uv@v7
+    - uses: actions/checkout@v7
+    - uses: astral-sh/setup-uv@v8
     - name: Install dev tools
       working-directory: python
       run: uv sync --group dev

@@ -779,7 +779,7 @@ jobs:
       publish: ${{ steps.plan.outputs.publish }}
       publish_channels: ${{ steps.plan.outputs.publish_channels }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Resolve release mode
         id: plan
         run: python3 ./scripts/resolve_release_plan.py ...
@@ -805,7 +805,7 @@ jobs:
           - { target: x86_64-pc-windows-msvc, os: windows-latest, target_rustflags: "" }
           - { target: x86_64-unknown-linux-musl, os: ubuntu-latest, target_rustflags: "" }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
 
@@ -834,7 +834,7 @@ jobs:
           --runner-os "${{ matrix.os }}"
           --github-output "$GITHUB_OUTPUT"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-archives-${{ matrix.target }}
           path: ${{ steps.package.outputs.archive }}
@@ -843,13 +843,13 @@ jobs:
     needs: [plan, package]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: release-archives-*
           merge-multiple: true
           path: release
       - run: (cd release && shasum -a 256 * > ../SHA256SUMS)
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-checksums
           path: SHA256SUMS
@@ -880,7 +880,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: release-*
           merge-multiple: true
@@ -900,7 +900,7 @@ jobs:
 - Cross-compile Linux ARM64 via `gcc-aarch64-linux-gnu` + RUSTFLAGS linker override
   (no Docker containers needed). This is simpler and more transparent than `cross`.
 - Static linking with `--codegen target-feature=+crt-static` for musl targets
-- Use `actions/upload-artifact@v4` and `actions/download-artifact@v4` (current versions)
+- Use `actions/upload-artifact@v7` and `actions/download-artifact@v8` (current versions)
   with `merge-multiple: true` for collecting artifacts from matrix jobs
 - SHA256SUMS file generated from all release archives
 - `concurrency` block prevents parallel releases of the same tag
@@ -1134,14 +1134,14 @@ jobs:
           - { target: aarch64-apple-darwin, os: macos-14 }
           - { target: x86_64-pc-windows-msvc, os: windows-latest }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: PyO3/maturin-action@v1
         with:
           command: build
           args: --release --locked --out dist
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux || 'auto' }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.target }}
           path: dist/*.whl
@@ -1149,12 +1149,12 @@ jobs:
   sdist:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: PyO3/maturin-action@v1
         with:
           command: sdist
           args: --out dist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wheels-sdist
           path: dist/*.tar.gz
@@ -1167,8 +1167,8 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: astral-sh/setup-uv@v7
-      - uses: actions/download-artifact@v4
+      - uses: astral-sh/setup-uv@v8
+      - uses: actions/download-artifact@v8
         with:
           pattern: wheels-*
           merge-multiple: true
@@ -1283,14 +1283,14 @@ cargo release patch --execute
 - [jlevy/flowmark-rs](https://github.com/jlevy/flowmark-rs) — multi-channel publishing
 
 **GitHub Actions used in workflows:**
-- [actions/checkout@v6](https://github.com/actions/checkout)
+- [actions/checkout@v7](https://github.com/actions/checkout)
 - [dtolnay/rust-toolchain](https://github.com/dtolnay/rust-toolchain)
 - [Swatinem/rust-cache@v2](https://github.com/Swatinem/rust-cache)
 - [softprops/action-gh-release@v2](https://github.com/softprops/action-gh-release)
 - [EmbarkStudios/cargo-deny-action@v2](https://github.com/EmbarkStudios/cargo-deny-action)
 - [obi1kenobi/cargo-semver-checks-action@v2](https://github.com/obi1kenobi/cargo-semver-checks-action)
 - [taiki-e/install-action](https://github.com/taiki-e/install-action) (cargo-llvm-cov)
-- [codecov/codecov-action@v5](https://github.com/codecov/codecov-action)
+- [codecov/codecov-action@v7](https://github.com/codecov/codecov-action)
 - [rust-lang/crates-io-auth-action@v1](https://github.com/rust-lang/crates-io-auth-action) (OIDC)
 
 **Platform tags and wheel specifications:**
@@ -1327,7 +1327,8 @@ cargo release patch --execute
 ### 7.2 GitHub Actions (Modern Pattern)
 
 Split CI into independent parallel jobs for fast feedback.
-This is the pattern used by flowmark-rs (13 jobs), jj, and delta.
+The example below defines 11 jobs; the three-platform test matrix expands it to 13 job
+executions. This is the pattern used by flowmark-rs, jj, and delta.
 See [Rust Project Setup](../guidelines/rust-project-setup.md) for the condensed version.
 
 **CI environment variables** — set globally for all jobs:
@@ -1342,7 +1343,7 @@ These speed up CI builds significantly. `CARGO_INCREMENTAL: 0` disables incremen
 compilation (useless in CI where each build starts fresh) and
 `CARGO_PROFILE_TEST_DEBUG: 0` skips debug info for test binaries.
 
-**Complete CI workflow** (13 jobs from flowmark-rs production setup):
+**Complete CI workflow** (11 job definitions and 13 executions after matrix expansion):
 
 ```yaml
 name: CI
@@ -1361,7 +1362,7 @@ jobs:
     name: Format check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
@@ -1371,7 +1372,7 @@ jobs:
     name: Clippy lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -1385,7 +1386,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --locked --all-features
@@ -1396,7 +1397,7 @@ jobs:
     name: Test library (no default features)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --locked --no-default-features
@@ -1407,7 +1408,7 @@ jobs:
     name: MSRV check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@1.85    # Pin to declared rust-version
       - uses: Swatinem/rust-cache@v2
       - run: cargo check --locked --all-features
@@ -1416,14 +1417,21 @@ jobs:
     name: Dependency audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: EmbarkStudios/cargo-deny-action@v2
+
+  audit:
+    name: Vulnerability audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: rustsec/audit-check@v2
 
   docs:
     name: Documentation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo doc --locked --no-deps --all-features
@@ -1434,7 +1442,7 @@ jobs:
     name: Code coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: llvm-tools-preview
@@ -1443,7 +1451,7 @@ jobs:
       - run: cargo llvm-cov --locked --all-features --lcov --output-path lcov.info
         env:
           RUSTFLAGS: "-D warnings"
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v7
         with:
           files: lcov.info
           fail_ci_if_error: false
@@ -1455,7 +1463,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
@@ -1466,12 +1474,12 @@ jobs:
     name: Workflow script tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - run: python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v
 ```
 
 **Key points:**
-- Use `actions/checkout@v6` (current), `dtolnay/rust-toolchain` (not deprecated
+- Use `actions/checkout@v7` (current), `dtolnay/rust-toolchain` (not deprecated
   `actions-rs`)
 - `Swatinem/rust-cache@v2` for build caching across jobs
 - `--locked` on all cargo commands enforces Cargo.lock reproducibility
@@ -1510,7 +1518,7 @@ test-mapping:
   name: Test Mapping Check
   runs-on: ubuntu-latest
   steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         submodules: true  # If source is a submodule
     - uses: dtolnay/rust-toolchain@stable
@@ -1558,7 +1566,7 @@ cross-validation:
   name: Cross-Validation
   runs-on: ubuntu-latest
   steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         submodules: true
     - name: Set up source environment
@@ -1682,7 +1690,9 @@ Rust CLI vs interpreted languages:
 - [ ] `deny.toml` configured with v2 schema for license/dependency checks
 - [ ] Documentation complete (README, API docs, CHANGELOG)
 - [ ] Shell completions via `clap_complete` (build-time or runtime subcommand)
-- [ ] CI/CD pipeline: 7 parallel jobs (fmt, clippy, test, msrv, audit, deny, docs)
+- [ ] CI/CD pipeline includes independent gates for formatting, linting, cross-platform
+  tests, MSRV, vulnerabilities, dependency policy, docs, coverage, semver, and workflow
+  scripts
 - [ ] Cross-platform test matrix (Linux, macOS, Windows)
 - [ ] Release profile optimized (LTO, strip, panic=abort)
 - [ ] `release.toml` configured for cargo-release
@@ -1742,7 +1752,7 @@ Rust CLI vs interpreted languages:
 [^rust-edition]: [The Rust Edition Guide](https://doc.rust-lang.org/edition-guide/) -
     Rust editions explained
 
-[^cargo-dist]: [cargo-dist (dist)](https://opensource.axo.dev/cargo-dist/) - Automated
+[^cargo-dist]: [cargo-dist (dist)](https://axodotdev.github.io/cargo-dist/) - Automated
     release packaging and distribution by axo.dev
 
 [^sigpipe]: [SIGPIPE in Rust](https://github.com/rust-lang/rust/issues/62569) - Tracking

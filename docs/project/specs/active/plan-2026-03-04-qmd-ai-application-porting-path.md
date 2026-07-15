@@ -1,24 +1,28 @@
 # Feature: qmd AI-Application Porting Path
 
-**Date:** 2026-03-04 (last updated 2026-03-04)
+**Date:** 2026-03-04 (last updated 2026-07-13)
 
 **Author:** Joshua Levy + Claude
 
 **Status:** Draft
 
+**Tracking:** `rpp-ur4d` (blocked by core plan `rpp-pk9g`)
+
 ## Overview
 
 Extend the Rust Porting Playbook to support **AI-application-class TypeScript projects**
 using `qmd` as the primary exemplar.
-This plan assumes the TypeScript-to-Rust core path (D1-D9 from
-`plan-2026-03-04-typescript-to-rust-porting-path.md`) is complete and focuses on the
-harder problems that go beyond CLI/filesystem tooling: LLM inference, MCP server
-protocols, SQLite with vector extensions, and cross-platform native packaging.
+This plan follows the TypeScript-to-Rust core path (D1-D9 from
+`plan-2026-03-04-typescript-to-rust-porting-path.md`) and focuses on harder problems
+that go beyond CLI/filesystem tooling: LLM inference, MCP server protocols, SQLite with
+vector extensions, and cross-platform native packaging. The core path is not yet
+complete, so this workstream remains blocked on `rpp-pk9g`.
 
 ## Dependency on Prior Plan
 
 This plan depends on:
-- `plan-2026-03-04-typescript-to-rust-porting-path.md` (D1-D9 complete)
+- `plan-2026-03-04-typescript-to-rust-porting-path.md` (D1-D9 required; not yet
+  complete)
 - Existing shared Rust-target guidelines and playbooks
 - The `tbd` exemplar audit (D11-D12 from prior plan) as a simpler baseline
 

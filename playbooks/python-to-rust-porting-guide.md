@@ -19,9 +19,10 @@ patterns for any general and non-obvious porting situations.
 
 - **Python**: 3.11+ (modern type hints for better Rust compatibility)
 
-- **Rust**: 1.85+ (Edition 2024; latest stable is 1.95 as of May 2026). Use the latest
-  stable Rust edition for new code (2024 as of now). If your MSRV requires it, 2021 is
-  acceptable.
+- **Rust**: 1.85+ (Edition 2024; latest stable is 1.97 as of July 2026; see the
+  [official stable channel](https://static.rust-lang.org/dist/channel-rust-stable.toml)).
+  Use the latest stable Rust edition for new code (2024 as of now). If your MSRV
+  requires it, 2021 is acceptable.
 
 - **Testing**: pytest 8.0+, cargo-tarpaulin or cargo-llvm-cov
 
@@ -199,7 +200,7 @@ with open('Cargo.toml', 'w') as f:
 ## Phase 1: Project Setup
 
 **See:**
-[Initial Port Checklist - Phase 1: Project Setup](port-checklist-initial-template.md#phase-1-project-setup)
+[Initial Port Checklist - Phase 4: Project Setup](port-checklist-initial-template.md#phase-4-project-setup)
 for complete setup instructions including repository structure, workspace configuration,
 best practices configuration, and release profile optimization.
 
@@ -245,9 +246,9 @@ git commit -m "Add Python source as submodule for porting reference"
 ## Phase 2: Dependencies & Porting Process
 
 **See:**
-[Initial Port Checklist - Phase 2: Dependencies & Core Setup](port-checklist-initial-template.md#phase-2-dependencies--core-setup)
+[Initial Port Checklist - Phase 5: Dependencies & Core Setup](port-checklist-initial-template.md#phase-5-dependencies--core-setup)
 for detailed dependency setup and
-[Phase 3: Porting Process](port-checklist-initial-template.md#phase-3-porting-process) for
+[Phase 6: Porting Process](port-checklist-initial-template.md#phase-6-porting-process) for
 complete module-by-module porting instructions, critical pitfalls checklist, and
 integration test setup.
 
@@ -318,7 +319,7 @@ For large fixtures, consider reading from disk in tests to keep binaries smaller
 ### CLI Parity
 
 **See:**
-[Initial Port Checklist - Phase 4: CLI Implementation](port-checklist-initial-template.md#phase-4-cli-implementation)
+[Initial Port Checklist - Phase 8: Interface Layer](port-checklist-initial-template.md#phase-8-interface-layer-cli-if-applicable)
 for complete CLI parity requirements and validation procedures.
 
 **Key Requirements:**
@@ -348,7 +349,7 @@ output (not just processing results).
 ## Phase 3: Testing & Validation
 
 **See:**
-[Initial Port Checklist - Phase 5: Testing & Validation](port-checklist-initial-template.md#phase-5-testing--validation)
+[Initial Port Checklist - Phase 9: Testing & Validation](port-checklist-initial-template.md#phase-9-testing--validation)
 for complete testing requirements including test coverage targets, cross-validation
 procedures, and quality checks.
 

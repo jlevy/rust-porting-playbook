@@ -6,7 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/scripts/tbd-session.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/scripts/ensure-gh-cli.sh",
+            "timeout": 120
           }
         ]
       },
@@ -15,19 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/scripts/ensure-gh-cli.sh",
-            "timeout": 120
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/scripts/tbd-session.sh --brief"
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/scripts/tbd-session.sh"
           }
         ]
       }
@@ -38,7 +27,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/tbd-closing-reminder.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/tbd-closing-reminder.sh"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/scripts/tbd-session.sh --brief"
           }
         ]
       }
