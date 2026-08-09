@@ -4,6 +4,7 @@ status: complete
 date: 2026-08-08
 review_bead: rpp-djiw
 baseline_commit: 911f7cd484777a31b32953c0efbbb86b10a96e06
+pull_request: 22
 ---
 # Rust Guideline Reuse Review
 
@@ -235,10 +236,11 @@ All required checks passed:
 - `git diff --check`;
 - tbd repository, issue, dependency, worktree, and local sync consistency checks.
 
-`tbd doctor` also reported two expected delivery-state warnings: the hardened Codex hook
-file differs from tbd’s generated stock file (`rpp-gdrk` tracks compatibility), and the
-remote `tbd-sync` branch does not exist until this session’s issue changes are synced.
-Neither warning affects the documentation or test result.
+At validation time, `tbd doctor` reported two expected delivery-state warnings: the
+hardened Codex hook file differs from tbd’s generated stock file (`rpp-gdrk` tracks
+compatibility), and the remote `tbd-sync` branch did not yet exist.
+The final `tbd sync` created the remote issue state successfully.
+The remaining generated-hook warning does not affect the documentation or test result.
 
 <!-- This document follows common-doc-guidelines.md.
 See github.com/jlevy/practical-prose and review guidelines before editing.

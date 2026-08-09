@@ -4,7 +4,9 @@
 
 **Author:** Joshua Levy + Codex
 
-**Status:** Implemented; validation and PR delivery in progress
+**Status:** Implemented and delivered
+
+**Delivery:** [Draft PR #22](https://github.com/jlevy/rust-porting-playbook/pull/22)
 
 ## Overview
 
@@ -147,7 +149,7 @@ avoids maintaining a second project-local copy under `.tbd/docs/guidelines/`.
 - [x] Produce a review document with a section-level disposition map and reusable-topic
   count.
 - [x] Run the complete repository validation matrix and review the final diff.
-- [ ] Publish the work as a separate pull request and verify CI.
+- [x] Publish the work as a separate pull request and verify CI.
 
 ## Testing Strategy
 
@@ -163,10 +165,11 @@ avoids maintaining a second project-local copy under `.tbd/docs/guidelines/`.
 
 ## Rollout Plan
 
-Publish this work as a stacked pull request based on the completed repository-refresh
-branch.
-After the base pull request merges, retarget or rebase the guideline pull request
-onto `main` without mixing the two review scopes.
+Published this work as
+[stacked draft PR #22](https://github.com/jlevy/rust-porting-playbook/pull/22), based on
+the completed repository-refresh branch.
+After the base pull request merges, retarget or rebase the guideline pull request onto
+`main` without mixing the two review scopes.
 
 ## Decisions
 
