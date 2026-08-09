@@ -5,8 +5,8 @@ title: Reorganize reusable Rust guidelines
 kind: epic
 status: closed
 priority: 1
-version: 10
-spec_path: docs/project/specs/active/plan-2026-08-08-rust-guideline-reorganization.md
+version: 12
+spec_path: docs/project/specs/done/plan-2026-08-08-rust-guideline-reorganization.md
 labels:
   - documentation
   - rust
@@ -21,7 +21,7 @@ child_order_hints:
   - is-01kzjbjn79k63k74q3r9kcq0q6
   - is-01kzjbjse9psfz5cd789mjde3v
 created_at: 2026-08-09T04:12:21.836Z
-updated_at: 2026-08-09T04:42:18.159Z
+updated_at: 2026-08-09T18:21:55.619Z
 closed_at: 2026-08-09T04:42:18.158Z
 close_reason: "Completed the repository guideline reorganization and delivery in PR #22; the separately scoped upstream tbd proposal remains tracked as rpp-u657."
 ---
@@ -29,4 +29,4 @@ Implement the approved documentation reorganization: create a seven-document gen
 
 ## Notes
 
-Plan spec created at docs/project/specs/active/plan-2026-08-08-rust-guideline-reorganization.md. Target: five extracted topics plus two retained topics, for seven standalone general Rust guidelines.
+Plan spec archived at docs/project/specs/done/plan-2026-08-08-rust-guideline-reorganization.md. Delivered seven standalone general Rust guidelines; the separate upstream tbd proposal remains tracked by rpp-u657.

@@ -5,8 +5,8 @@ title: Audit Rust documentation boundaries and write the reorganization spec
 kind: task
 status: closed
 priority: 1
-version: 3
-spec_path: docs/project/specs/active/plan-2026-08-08-rust-guideline-reorganization.md
+version: 4
+spec_path: docs/project/specs/done/plan-2026-08-08-rust-guideline-reorganization.md
 labels:
   - documentation
   - planning
@@ -15,7 +15,7 @@ dependencies:
     target: is-01kzjbhy10cwntx47m34196wah
 parent_id: is-01kzjbhgydxqck4xs8wgcrryf9
 created_at: 2026-08-09T04:12:30.508Z
-updated_at: 2026-08-09T04:13:08.438Z
+updated_at: 2026-08-09T18:19:45.351Z
 closed_at: 2026-08-09T04:13:08.437Z
 close_reason: Reviewed the active plan structure and tbd Python/TypeScript exemplars, audited 76 H2 sections across seven mixed/general Rust documents, quantified duplication, and wrote the approved reorganization spec.
 ---

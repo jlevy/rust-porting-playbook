@@ -5,8 +5,8 @@ title: Document the Rust guideline taxonomy and extraction review
 kind: task
 status: closed
 priority: 1
-version: 4
-spec_path: docs/project/specs/active/plan-2026-08-08-rust-guideline-reorganization.md
+version: 5
+spec_path: docs/project/specs/done/plan-2026-08-08-rust-guideline-reorganization.md
 labels:
   - documentation
   - review
@@ -15,7 +15,7 @@ dependencies:
     target: is-01kzjbjgtveq3q4gjvqf5azbb5
 parent_id: is-01kzjbhgydxqck4xs8wgcrryf9
 created_at: 2026-08-09T04:12:49.685Z
-updated_at: 2026-08-09T04:29:51.853Z
+updated_at: 2026-08-09T18:19:45.351Z
 closed_at: 2026-08-09T04:29:51.852Z
 close_reason: Added the guideline index, repository-wide live navigation, a section-level reuse audit, compatibility map, and tbd upstream recommendation.
 ---

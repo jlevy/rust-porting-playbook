@@ -5,8 +5,8 @@ title: Create the standalone Rust guideline suite
 kind: task
 status: closed
 priority: 1
-version: 4
-spec_path: docs/project/specs/active/plan-2026-08-08-rust-guideline-reorganization.md
+version: 5
+spec_path: docs/project/specs/done/plan-2026-08-08-rust-guideline-reorganization.md
 labels:
   - documentation
   - rust
@@ -15,7 +15,7 @@ dependencies:
     target: is-01kzjbj1pv8dvc6d91tbpz3xqd
 parent_id: is-01kzjbhgydxqck4xs8wgcrryf9
 created_at: 2026-08-09T04:12:35.231Z
-updated_at: 2026-08-09T04:29:47.842Z
+updated_at: 2026-08-09T18:19:45.351Z
 closed_at: 2026-08-09T04:29:47.840Z
 close_reason: Created and refocused the seven standalone, tbd-shaped Rust guideline documents with authoritative scopes.
 ---

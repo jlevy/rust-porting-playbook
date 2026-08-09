@@ -5,8 +5,8 @@ title: Deliver the Rust guideline reorganization PR
 kind: task
 status: closed
 priority: 1
-version: 4
-spec_path: docs/project/specs/active/plan-2026-08-08-rust-guideline-reorganization.md
+version: 5
+spec_path: docs/project/specs/done/plan-2026-08-08-rust-guideline-reorganization.md
 labels:
   - delivery
 dependencies:
@@ -14,7 +14,7 @@ dependencies:
     target: is-01kzjbjse9psfz5cd789mjde3v
 parent_id: is-01kzjbhgydxqck4xs8wgcrryf9
 created_at: 2026-08-09T04:12:58.984Z
-updated_at: 2026-08-09T04:42:17.989Z
+updated_at: 2026-08-09T18:17:41.858Z
 closed_at: 2026-08-09T04:42:17.988Z
 close_reason: "Committed and pushed the reviewed Rust guideline reorganization, opened stacked draft PR #22, and verified the GitHub validation check passed."
 ---
