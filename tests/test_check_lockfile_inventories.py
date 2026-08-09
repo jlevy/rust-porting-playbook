@@ -3,7 +3,11 @@ from __future__ import annotations
 import subprocess
 import tempfile
 import unittest
+from os import environ
 from pathlib import Path
+from unittest.mock import patch
+
+from scripts.check_lockfile_inventories import _run_extractor
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -24,6 +28,21 @@ class CheckLockfileInventoriesTest(unittest.TestCase):
         workflow = WORKFLOW.read_text(encoding="utf-8")
 
         self.assertIn("python scripts/check_lockfile_inventories.py", workflow)
+        self.assertIn('UV_NO_BUILD: "1"', workflow)
+
+    def test_extractor_subprocess_enforces_uv_supply_chain_environment(self) -> None:
+        completed = subprocess.CompletedProcess([], 0, "", "")
+        with (
+            patch.dict(environ, {"UV_EXCLUDE_NEWER": "14 days"}),
+            patch("scripts.check_lockfile_inventories.subprocess.run") as run,
+        ):
+            run.return_value = completed
+
+            _run_extractor(Path("source.lock"), "test", Path("output"))
+
+        environment = run.call_args.kwargs["env"]
+        self.assertNotIn("UV_EXCLUDE_NEWER", environment)
+        self.assertEqual(environment["UV_NO_BUILD"], "1")
 
     def _run_extractor(self, source: Path, project: str, output_prefix: Path) -> None:
         result = subprocess.run(

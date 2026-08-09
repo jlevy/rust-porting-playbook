@@ -2,9 +2,13 @@
 title: "Research: Distributing Rust CLI Binaries as Python Packages via PyPI"
 status: complete
 date: 2026-03-01
-last_reviewed: 2026-07-13
+last_reviewed: 2026-08-08
 ---
 # Research: Distributing Rust CLI Binaries as Python Packages via PyPI
+
+**Review note (2026-08-08):** This was a targeted currency review of maturin and live
+workflow guidance. Surveyed project pins remain the February 2026 snapshot unless a
+line is explicitly marked as rechecked.
 
 **Case study:**
 [flowmark-rs #36 — Distribute flowmark-rs on PyPI via maturin](https://github.com/jlevy/flowmark-rs/issues/36)
@@ -279,7 +283,7 @@ automatically selects appropriate Docker images:
 
 **Best practices from ruff/uv:**
 - Pin the maturin-action version (to the latest `PyO3/maturin-action` release or a commit hash)
-- Pin the maturin-version to the latest `maturin` release (1.13.3 as of May 2026; the
+- Pin the maturin-version to the latest eligible `maturin` release (1.14.1 as of August 2026; the
   `v1.11.5` pins surveyed below are a Feb 2026 snapshot of ruff/uv)
 - Use `--locked` for reproducible builds
 - Use `--compatibility pypi` for PyPI-compatible platform tags
@@ -327,7 +331,7 @@ reusable:
   `uv publish --trusted-publishing always`
 - **Workflow structure** — trigger on GitHub Release published event, checkout with
   `fetch-depth: 0`, build, publish
-- **`astral-sh/setup-uv@v8`** — standard action for installing uv in CI
+- **`astral-sh/setup-uv@v9`** — standard action for installing uv in CI
 - **Dynamic versioning from Git tags** — using `uv-dynamic-versioning` plugin (for pure
   Python; for Rust, maturin reads from `Cargo.toml`)
 - **Test-before-publish** — runs full test suite before uploading to PyPI
@@ -657,7 +661,7 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: astral-sh/setup-uv@v8
+      - uses: astral-sh/setup-uv@v9
       - uses: actions/download-artifact@v8
         with:
           pattern: wheels-*

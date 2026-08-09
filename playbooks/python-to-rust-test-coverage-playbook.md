@@ -521,7 +521,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v8
+      - uses: astral-sh/setup-uv@v9
       - run: |
           cd python-repo
           uv run pytest --cov=myproject --cov-branch \

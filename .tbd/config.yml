@@ -1,11 +1,13 @@
 tbd_format: f06
-tbd_version: 0.4.0
+tbd_version: 0.4.2
 # tbd_upgrades: tbd versions that have run `tbd setup` in this repo (oldest first);
 # tbd_version above is the most recent. Informational; updated automatically by setup.
 tbd_upgrades:
   - version: 0.1.17
   - version: 0.4.0
     at: 2026-07-13T21:03:46.741Z
+  - version: 0.4.2
+    at: 2026-08-09T03:06:07.823Z
 display:
   id_prefix: rpp
 sync:
@@ -91,6 +93,7 @@ docs_cache:
     guidelines/tbd-sync-troubleshooting.md: internal:guidelines/tbd-sync-troubleshooting.md
     guidelines/typescript-cli-tool-rules.md: internal:guidelines/typescript-cli-tool-rules.md
     guidelines/typescript-code-coverage.md: internal:guidelines/typescript-code-coverage.md
+    guidelines/typescript-lint-format-rules.md: internal:guidelines/typescript-lint-format-rules.md
     guidelines/typescript-rules.md: internal:guidelines/typescript-rules.md
     guidelines/typescript-sorting-patterns.md: internal:guidelines/typescript-sorting-patterns.md
     guidelines/typescript-yaml-handling-rules.md: internal:guidelines/typescript-yaml-handling-rules.md
@@ -98,6 +101,9 @@ docs_cache:
     templates/plan-spec.md: internal:templates/plan-spec.md
     templates/qa-playbook.md: internal:templates/qa-playbook.md
     templates/research-brief.md: internal:templates/research-brief.md
+    references/agent-platform-integration.md: internal:references/agent-platform-integration.md
+    references/agent-skill-bundle-publication.md: internal:references/agent-skill-bundle-publication.md
+    references/agent-skill-distribution.md: internal:references/agent-skill-distribution.md
     references/docmap-format.md: internal:references/docmap-format.md
     references/docref-format.md: internal:references/docref-format.md
   lookup_path:

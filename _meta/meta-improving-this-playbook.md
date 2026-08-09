@@ -239,15 +239,15 @@ Do not close a triage item without merge evidence and log entry.
 
 #### C.2b Standard link-check workflow
 
-Use one of the following before merging meta/playbook doc changes:
+Run the repository validator before merging meta/playbook documentation changes:
 
 ```bash
-# Option A: lychee (preferred if available)
-lychee README.md _meta/**/*.md playbooks/**/*.md guidelines/**/*.md case-studies/**/*.md
-
-# Option B: repo script/check command (if configured)
-make check-links
+python3 scripts/check_docs.py
 ```
+
+It checks all tracked text for forbidden invisible Unicode and all tracked Markdown for
+local link and anchor integrity plus fenced-code structure. An optional external URL
+checker such as `lychee` can supplement this check, but does not replace it.
 
 #### C.3 Update the case study index
 

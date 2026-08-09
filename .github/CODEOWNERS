@@ -1,0 +1,18 @@
+# Open-time execution, agent instructions, CI, and executable validation surfaces.
+/.github/ @jlevy
+/.agents/ @jlevy
+/.claude/ @jlevy
+/.codex/ @jlevy
+/.tbd/ @jlevy
+/.vscode/ @jlevy
+/.devcontainer/ @jlevy
+/.mcp.json @jlevy
+/AGENTS.md @jlevy
+/CLAUDE.md @jlevy
+/.cursorrules @jlevy
+/SUPPLY-CHAIN-SECURITY.md @jlevy
+/SUPPLY-CHAIN-AUDIT-LOG.md @jlevy
+/scripts/ @jlevy
+/tests/ @jlevy
+/docs/project/research/data/*.py @jlevy
+/docs/project/research/data/*.lock @jlevy

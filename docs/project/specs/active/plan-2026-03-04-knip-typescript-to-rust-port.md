@@ -1,12 +1,16 @@
 # Feature: Knip TypeScript-to-Rust Port Planning
 
-**Date:** 2026-03-04 (last updated 2026-07-13)
+**Date:** 2026-03-04 (last status review 2026-08-08)
 
 **Author:** Joshua Levy + Claude
 
 **Status:** Draft
 
 **Tracking:** `rpp-la67` (blocked by core plan `rpp-pk9g`)
+
+**Status review:** No KD1-KD6 deliverable or implementation phase has completed. The
+feature remains blocked on the core D1-D9 work; reacquire knip and revalidate the dated
+ecosystem and popularity claims before executing the plan.
 
 ## Overview
 

@@ -2,6 +2,36 @@
 
 Chronological log of improvements to the Rust Porting Playbook and its meta-process.
 
+## 2026-08-08
+
+### Repository currency, navigation, and supply-chain refresh
+
+A repository-wide review refreshed live guidance while preserving dated observations
+at their audited versions. The full evidence and deferred work are in the
+[August 2026 repository review](../docs/reviews/repository-refresh-2026-08-08.md) and
+[supply-chain audit log](../SUPPLY-CHAIN-AUDIT-LOG.md).
+
+Changes integrated in this pass:
+
+- Updated current educational workflow examples to `actions/checkout@v7`,
+  `actions/setup-python@v7`, `astral-sh/setup-uv@v9`, and
+  `softprops/action-gh-release@v3`. The repository's own workflow remains pinned to
+  reviewed full commit SHAs.
+- Refreshed current Rust guidance for stable 1.97.1, regex 1.13, cargo-dist 0.32, and
+  maturin 1.14.1. Historical surveys and completed plans retain the versions observed
+  at their source commits.
+- Expanded top-level navigation for contributor policy, supply-chain records, active
+  plans, research appendices, and dated reviews; corrected the meta-process validation
+  commands to match the executable repository checks.
+- Reconciled all three active TypeScript/qmd/knip specs with their tbd workstreams and
+  recorded the 2026-08-08 review status without falsely marking planned work complete.
+- Added install-time, load-time, and open-time supply-chain controls, including a
+  deterministic 14-day lock-artifact check, wheel-only execution, immutable CI pins,
+  pull-request cache isolation, protected configuration ownership, and hidden-Unicode
+  validation.
+- Removed duplicate `attic/` ignore entries and recorded the full maintenance review so
+  the next pass has a stable baseline.
+
 ## 2026-05-30
 
 ### Auto-sync observations + integrations from flowmark-rs v0.7.0 → v0.7.2

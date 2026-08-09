@@ -547,7 +547,7 @@ jobs:
       - name: Clone Python flowmark
         run: git clone https://github.com/jlevy/flowmark.git python-repo
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
@@ -2150,7 +2150,7 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 

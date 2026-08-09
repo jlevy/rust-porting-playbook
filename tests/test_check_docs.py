@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.check_docs import check_markdown_files
+from scripts.check_docs import check_markdown_files, check_text_files
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -31,8 +31,21 @@ class CheckMarkdownFilesTest(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(
-            f"Markdown validation passed for {expected_count} file(s).", result.stdout
+            f"Markdown structure passed for {expected_count} file(s).", result.stdout
         )
+
+    def test_cli_reports_unreadable_path_without_traceback(self) -> None:
+        result = subprocess.run(
+            ["python3", str(SCRIPT), "missing.md"],
+            cwd=REPOSITORY_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("error:", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
 
     def test_accepts_existing_relative_links_and_heading_anchors(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -102,6 +115,34 @@ class CheckMarkdownFilesTest(unittest.TestCase):
 
             self.assertEqual(len(findings), 1)
             self.assertIn("unclosed", findings[0].message)
+
+    def test_reports_invisible_unicode_in_markdown_and_automation_text(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            document = root / "README.md"
+            automation = root / "hooks.json"
+            document.write_text(
+                "# Example\n\n```text\nhidden\u200btext\n```\n\n"
+                "visible text\n",
+                encoding="utf-8",
+            )
+            automation.write_text(
+                '{"command": "direction\u202eoverride"}\n', encoding="utf-8"
+            )
+
+            findings = check_text_files([document, automation])
+
+            self.assertEqual(len(findings), 2)
+            messages = [finding.message for finding in findings]
+            self.assertTrue(
+                any("U+200B (ZERO WIDTH SPACE)" in message for message in messages)
+            )
+            self.assertTrue(
+                any(
+                    "U+202E (RIGHT-TO-LEFT OVERRIDE)" in message
+                    for message in messages
+                )
+            )
 
 
 if __name__ == "__main__":

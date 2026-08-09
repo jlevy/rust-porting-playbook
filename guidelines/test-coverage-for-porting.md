@@ -388,7 +388,7 @@ cross-validate:
       with:
         submodules: recursive
     - uses: dtolnay/rust-toolchain@stable
-    - uses: astral-sh/setup-uv@v8
+    - uses: astral-sh/setup-uv@v9
     - run: cargo build --release
     - run: cd python-repo && uv sync
     - run: ./scripts/cross-validate.sh

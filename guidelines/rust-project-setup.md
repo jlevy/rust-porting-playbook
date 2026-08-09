@@ -58,7 +58,7 @@ cli = ["clap", "color-eyre", "tracing", "tempfile", "indicatif", "ctrlc"]
 
 [dependencies]
 # Core deps (always included)
-regex = "1.12"
+regex = "1.13"
 thiserror = "2.0"
 
 # CLI deps (optional, behind feature gate)
@@ -455,7 +455,7 @@ All major Rust CLI projects (ripgrep, bat, fd, jj) hand-roll their release workf
 release CI workflows with `dist init`. It handles cross-compilation, installer
 generation (shell scripts, Homebrew, MSI), and GitHub Release uploads with minimal
 configuration.
-It has matured significantly (v0.31+ as of early 2026) and is a good choice when you
+It has matured significantly (v0.32+ as of August 2026) and is a good choice when you
 don’t need full control over the release pipeline.
 See https://axodotdev.github.io/cargo-dist/ for details.
 

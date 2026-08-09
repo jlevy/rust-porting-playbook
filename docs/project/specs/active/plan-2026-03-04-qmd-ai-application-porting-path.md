@@ -1,12 +1,17 @@
 # Feature: qmd AI-Application Porting Path
 
-**Date:** 2026-03-04 (last updated 2026-07-13)
+**Date:** 2026-03-04 (last status review 2026-08-08)
 
 **Author:** Joshua Levy + Claude
 
 **Status:** Draft
 
 **Tracking:** `rpp-ur4d` (blocked by core plan `rpp-pk9g`)
+
+**Status review:** The dependency-plan and lockfile-inventory inputs remain available at
+their fixed 2026-05-27 source commit. No QD1-QD7 implementation item has completed, so
+the feature remains blocked on the core D1-D9 work and must refresh the qmd exemplar
+before execution.
 
 ## Overview
 
