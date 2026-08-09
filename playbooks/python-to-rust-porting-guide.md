@@ -19,7 +19,7 @@ patterns for any general and non-obvious porting situations.
 
 - **Python**: 3.11+ (modern type hints for better Rust compatibility)
 
-- **Rust**: 1.85+ (Edition 2024; latest stable is 1.97 as of July 2026; see the
+- **Rust**: 1.85+ (Edition 2024; latest stable is 1.97.1 as of August 2026; see the
   [official stable channel](https://static.rust-lang.org/dist/channel-rust-stable.toml)).
   Use the latest stable Rust edition for new code (2024 as of now). If your MSRV
   requires it, 2021 is acceptable.

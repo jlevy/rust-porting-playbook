@@ -1,12 +1,17 @@
 # Feature: TypeScript-to-Rust Porting Path
 
-**Date:** 2026-03-04 (last updated 2026-07-13)
+**Date:** 2026-03-04 (last status review 2026-08-08)
 
 **Author:** Joshua Levy + Claude
 
 **Status:** Draft (revised after senior review)
 
 **Tracking:** `rpp-pk9g`
+
+**Status review:** The feature remains open. The tbd and qmd dependency research drafts
+exist, but the core D1-D9 documents, the D11 construct matrix, and their validation
+gates remain incomplete. Reacquire each exemplar and refresh its fixed source commit
+before implementation; the 2026-03-04 ecosystem table is an explicitly dated snapshot.
 
 ## Overview
 

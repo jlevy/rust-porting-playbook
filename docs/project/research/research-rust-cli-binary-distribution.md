@@ -2,8 +2,13 @@
 title: "Research: Rust CLI Binary Distribution Practices"
 status: complete
 date: 2026-02-20
+last_reviewed: 2026-08-08
 ---
 # Research: Rust CLI Binary Distribution Practices
+
+**Review note (2026-08-08):** This was a targeted currency review of cargo-dist and the
+document’s live recommendations. Tool-by-tool versions remain evidence from the
+February 2026 survey unless a line is explicitly marked as rechecked.
 
 ## Motivation
 
@@ -840,12 +845,13 @@ Different tools use different runner strategies:
 cargo-dist (renamed to just “dist” at v0.24.0, October 2024) is an opinionated release
 automation tool for Rust projects.
 
-**Latest stable version:** **v0.31.0** (February 23, 2026).
+**Latest stable version:** **v0.32.0** (May 22, 2026; rechecked 2026-08-08).
 
 Recent release history:
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| v0.32.0 | 2026-05-22 | Smaller npm installer dependency surface, cargo-zigbuild plus cargo-auditable support, updated generated action pins |
 | v0.31.0 | 2026-02-23 | Mirror/fallback hosting; `simple` static-file hosting method |
 | v0.30.4 | 2026-02-16 | Bugfixes, dependency updates (CVE fix in brace-expansion) |
 | v0.30.3 | 2025-12-15 | macOS codesign fix, sudo permission fix for shell installer |
@@ -919,7 +925,7 @@ reduced the urgency of cross-compilation support.
 
 ```toml
 [dist]
-cargo-dist-version = "0.31.0"      # Pins the cargo-dist (dist) version
+cargo-dist-version = "0.32.0"      # Pins the cargo-dist (dist) version
 ci = "github"                       # CI provider (GitHub Actions ONLY)
 installers = ["shell", "homebrew"]  # Installer types to generate
 targets = [...]                     # Build targets
@@ -972,8 +978,8 @@ msvc-crt-static = true              # Static MSVC CRT (default)
    lines of YAML with complex conditional logic
 8. **No `.deb`/`.rpm`/`.pkg`** — only 5 installer types.
    No Linux distro packages or macOS `.pkg`.
-9. **No ARM64 Windows** — `aarch64-pc-windows-msvc` not in the supported targets list
-   as of v0.31.0, despite Rust Tier 1 since 1.91 (re-check newer releases)
+9. **No ARM64 Windows** — `aarch64-pc-windows-msvc` is still absent from the supported
+   targets list in v0.32.0, despite Rust Tier 1 since 1.91
 10. **Shell installer + Snap curl** — refuses to work with Snap-installed curl (Ubuntu
     default). Falls back to wget but may abort.
 11. **Runner image dependencies** — Ubuntu 20.04 deprecation (April 2025) required
@@ -1241,7 +1247,7 @@ increases.
 
 - [cargo-dist documentation](https://axodotdev.github.io/cargo-dist/)
 - [cargo-dist GitHub releases](https://github.com/axodotdev/cargo-dist/releases) —
-  latest stable: v0.31.0 (Feb 2026)
+  latest stable: v0.32.0 (May 2026; rechecked 2026-08-08)
 - [cargo-dist configuration reference](https://axodotdev.github.io/cargo-dist/book/reference/config.html)
 - [cargo-dist CHANGELOG](https://github.com/axodotdev/cargo-dist/blob/main/CHANGELOG.md)
 - [cargo-dist cross-compilation issue #74](https://github.com/axodotdev/cargo-dist/issues/74)

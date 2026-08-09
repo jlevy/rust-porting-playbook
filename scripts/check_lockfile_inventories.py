@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import os
 import subprocess
 import sys
 import tempfile
@@ -114,6 +115,9 @@ def _download(source: UpstreamSource, destination: Path) -> None:
 
 
 def _run_extractor(source: Path, project: str, output_prefix: Path) -> None:
+    environment = os.environ.copy()
+    environment.pop("UV_EXCLUDE_NEWER", None)
+    environment["UV_NO_BUILD"] = "1"
     result = subprocess.run(
         [
             "uv",
@@ -129,6 +133,7 @@ def _run_extractor(source: Path, project: str, output_prefix: Path) -> None:
         cwd=REPOSITORY_ROOT,
         check=False,
         capture_output=True,
+        env=environment,
         text=True,
     )
     if result.returncode != 0:

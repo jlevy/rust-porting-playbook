@@ -7,7 +7,7 @@
 # and bypasses any cool-off) and a consistency control (every teammate and agent
 # runs the same tbd version).
 
-readonly TBD_VERSION="0.4.0"
+readonly TBD_VERSION="0.4.2"
 
 # Anchor all repository operations to the worktree containing this hook.
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)

@@ -385,7 +385,7 @@ Use `persist_noclobber()` to fail instead of replace if the target exists.
 
 ## Regex
 
-Crate: `regex` 1.12+ (Thompson NFA engine, guaranteed linear time).
+Crate: `regex` 1.13+ (Thompson NFA engine, guaranteed linear time).
 
 ### Core API Mapping
 
@@ -952,8 +952,8 @@ There is no “gradually typed” -- it’s all checked.
 
 | Python CI step | Rust CI step | Notes |
 | --- | --- | --- |
-| `actions/setup-python@v6` | `dtolnay/rust-toolchain@stable` | Toolchain setup |
-| `astral-sh/setup-uv@v8` | `Swatinem/rust-cache@v2` | Dependency caching |
+| `actions/setup-python@v7` | `dtolnay/rust-toolchain@stable` | Toolchain setup |
+| `astral-sh/setup-uv@v9` | `Swatinem/rust-cache@v2` | Dependency caching |
 | Cache pip/uv cache dir | Cache `target/` via rust-cache | Different cache strategies |
 | `uv sync` / `pip install -r requirements.txt` | (automatic on first `cargo` command) | No explicit install step |
 | `ruff check .` | `cargo clippy --all-targets --all-features -- -D warnings` | Lint step |
@@ -1044,7 +1044,7 @@ Rust distributes config across separate files (`rustfmt.toml`, `deny.toml`,
 | marko (Markdown) | comrak 0.52+ | Good with workarounds | 12/15 differences worked around; check for API changes in current releases |
 | argparse | clap 4.6 (derive) | Excellent | Perfect mapping |
 | PyYAML | serde_yaml_ng 0.10+ | Good | serde_yaml is archived. `serde_norway` is an alternative that tracks a maintained libyaml fork; prefer it if C-lib supply-chain maintenance matters |
-| re (regex) | regex 1.12+ | Excellent | Different anchoring and replacement syntax! See Regex section above |
+| re (regex) | regex 1.13+ | Excellent | Different anchoring and replacement syntax! See Regex section above |
 | re (look-arounds, backrefs) | fancy-regex 0.17+ | Good | Backtracking engine; only use when needed |
 | textwrap | textwrap (crate) | Good | Also rolled custom for special cases |
 | pytest | cargo test (built-in) | Excellent |  |

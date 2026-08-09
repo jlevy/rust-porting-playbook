@@ -210,7 +210,7 @@ check-mapping:
   needs: test  # Only run after tests pass
   steps:
     - uses: actions/checkout@v7
-    - uses: astral-sh/setup-uv@v8
+    - uses: astral-sh/setup-uv@v9
     - name: Install dev tools
       working-directory: python
       run: uv sync --group dev

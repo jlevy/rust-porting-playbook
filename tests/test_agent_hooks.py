@@ -24,6 +24,7 @@ ENSURE_GH_SCRIPTS = (
 )
 CLAUDE_SETTINGS = REPOSITORY_ROOT / ".claude" / "settings.json"
 CODEX_HOOKS = REPOSITORY_ROOT / ".codex" / "hooks.json"
+TBD_VERSION = "0.4.2"
 
 
 class AgentHooksTest(unittest.TestCase):
@@ -108,7 +109,7 @@ class AgentHooksTest(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(
                     log.read_text(encoding="utf-8"),
-                    "npx ignore_scripts=true --yes get-tbd@0.4.0 prime --brief\n",
+                    f"npx ignore_scripts=true --yes get-tbd@{TBD_VERSION} prime --brief\n",
                 )
 
     def test_session_hooks_use_matching_local_tbd(self) -> None:
@@ -118,7 +119,7 @@ class AgentHooksTest(unittest.TestCase):
                 tempfile.TemporaryDirectory() as directory,
             ):
                 environment, log = self._fake_environment(
-                    Path(directory), tbd_version="0.4.0"
+                    Path(directory), tbd_version=TBD_VERSION
                 )
 
                 result = subprocess.run(
@@ -143,7 +144,7 @@ class AgentHooksTest(unittest.TestCase):
                 tempfile.TemporaryDirectory() as directory,
             ):
                 environment, log = self._fake_environment(
-                    Path(directory), tbd_version="0.4.0", npm_global=True
+                    Path(directory), tbd_version=TBD_VERSION, npm_global=True
                 )
 
                 result = subprocess.run(
@@ -163,10 +164,10 @@ class AgentHooksTest(unittest.TestCase):
 
     def test_session_hooks_run_prime_from_repository_root(self) -> None:
         cases = (
-            ("0.4.0", "tbd ignore_scripts= prime --brief"),
+            (TBD_VERSION, "tbd ignore_scripts= prime --brief"),
             (
                 "0.3.0",
-                "npx ignore_scripts=true --yes get-tbd@0.4.0 prime --brief",
+                f"npx ignore_scripts=true --yes get-tbd@{TBD_VERSION} prime --brief",
             ),
         )
         nested = REPOSITORY_ROOT / "docs" / "project"
@@ -204,7 +205,7 @@ class AgentHooksTest(unittest.TestCase):
         nested = REPOSITORY_ROOT / "docs" / "project"
         with tempfile.TemporaryDirectory() as directory:
             environment, log = self._fake_environment(
-                Path(directory), tbd_version="0.4.0"
+                Path(directory), tbd_version=TBD_VERSION
             )
             environment["CLAUDE_PROJECT_DIR"] = str(REPOSITORY_ROOT)
 
@@ -257,7 +258,7 @@ class AgentHooksTest(unittest.TestCase):
                 outside_worktree = temporary / "outside-worktree"
                 outside_worktree.mkdir()
                 environment, log = self._fake_environment(
-                    temporary, tbd_version="0.4.0"
+                    temporary, tbd_version=TBD_VERSION
                 )
                 environment["TBD_TEST_LOG_CWD"] = "true"
 
@@ -292,7 +293,7 @@ class AgentHooksTest(unittest.TestCase):
                     tempfile.TemporaryDirectory() as directory,
                 ):
                     environment, log = self._fake_environment(
-                        Path(directory), tbd_version="0.4.0"
+                        Path(directory), tbd_version=TBD_VERSION
                     )
 
                     result = subprocess.run(
@@ -350,7 +351,26 @@ class AgentHooksTest(unittest.TestCase):
                 )
 
                 self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("No pinned checksum", result.stderr)
                 self.assertIn("Continuing without gh", result.stderr)
+
+    def test_gh_setup_scripts_share_the_reviewed_pin_and_checksums(self) -> None:
+        expected_fragments = (
+            'GH_VERSION="2.96.0"',
+            'mktemp -d "${TMPDIR:-/tmp}/gh-install.XXXXXX"',
+            "83d5c2ccad5498f58bf6368acb1ab32588cf43ab3a4b1c301bf36328b1c8bd60",
+            "06f86ec7103d41993b76cd78072f43595c34aaa56506d971d9860e67140bf909",
+            "4bd449df9ad639391bc62b8032546f0fe9edcd8526e06682a4f88abd8c5d163c",
+            "f23a0c37d963aacc3bed703ccbd59b41c5ca22101fab7f00eb2b7cad23aba463",
+        )
+        script_contents = [
+            script.read_text(encoding="utf-8") for script in ENSURE_GH_SCRIPTS
+        ]
+
+        self.assertEqual(script_contents[0], script_contents[1])
+        self.assertNotIn('"/tmp/${ASSET}"', script_contents[0])
+        for fragment in expected_fragments:
+            self.assertIn(fragment, script_contents[0])
 
     def test_codex_provisions_gh_before_running_tbd(self) -> None:
         hooks = json.loads(CODEX_HOOKS.read_text(encoding="utf-8"))["hooks"]
@@ -365,7 +385,7 @@ class AgentHooksTest(unittest.TestCase):
         nested = REPOSITORY_ROOT / "docs" / "project"
         with tempfile.TemporaryDirectory() as directory:
             environment, log = self._fake_environment(
-                Path(directory), tbd_version="0.4.0"
+                Path(directory), tbd_version=TBD_VERSION
             )
 
             result = subprocess.run(

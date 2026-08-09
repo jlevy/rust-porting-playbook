@@ -21,22 +21,48 @@ continue_without_gh() {
 export PATH="$HOME/.local/bin:$HOME/bin:/usr/local/bin:$PATH"
 
 # Pinned gh release (>=14 days old per supply-chain cool-off) and its checksums.
-GH_VERSION="2.92.0"
+readonly GH_VERSION="2.96.0"
+readonly DIRECT_PROBE_TIMEOUT_SECONDS=20
+readonly DIRECT_CONNECT_TIMEOUT_SECONDS=15
 
-# SHA-256 checksums from gh_2.92.0_checksums.txt, keyed by asset suffix.
+# GitHub hosts to exempt from a session HTTPS proxy when that proxy intercepts
+# GitHub (proxied remote sessions, e.g. Claude Code cloud). Scoped and additive:
+# HTTPS_PROXY stays set for all other traffic. release-assets.githubusercontent.com
+# is the current release-binary host; objects.githubusercontent.com is its
+# predecessor and kept for compatibility.
+readonly GITHUB_DIRECT_HOSTS="api.github.com,github.com,\
+release-assets.githubusercontent.com,objects.githubusercontent.com,codeload.github.com,\
+raw.githubusercontent.com,uploads.github.com"
+
+github_no_proxy() {
+    local existing_no_proxy="${NO_PROXY:-${no_proxy:-}}"
+    printf '%s\n' "${GITHUB_DIRECT_HOSTS}${existing_no_proxy:+,$existing_no_proxy}"
+}
+
+# Direct-egress probes can hang when the network policy blocks direct
+# connections; bound them where timeout(1) exists (absent on stock macOS).
+run_bounded() {
+    if command -v timeout &> /dev/null; then
+        timeout "$DIRECT_PROBE_TIMEOUT_SECONDS" "$@"
+    else
+        "$@"
+    fi
+}
+
+# SHA-256 checksums from gh_2.96.0_checksums.txt, keyed by asset suffix.
 checksum_for() {
     case "$1" in
-        linux_amd64.tar.gz) echo "b57848131bdf0c229cd35e1f2a51aa718199858b2e728410b37e89a428943ec4" ;;
-        linux_arm64.tar.gz) echo "c2248526dd0160c08d3fccca2332c3c1a07c15a78b23978e77735f1b5a18cfee" ;;
-        macOS_amd64.zip)    echo "ae9bb327ab0d91071bdada79f8f14034a2a0f19b0e001835a782eafa519d2af0" ;;
-        macOS_arm64.zip)    echo "b11c54f6bd7d15ed6590475079e5b2fcf36f45d3991a80041b29c9d0cc1f1d07" ;;
+        linux_amd64.tar.gz) echo "83d5c2ccad5498f58bf6368acb1ab32588cf43ab3a4b1c301bf36328b1c8bd60" ;;
+        linux_arm64.tar.gz) echo "06f86ec7103d41993b76cd78072f43595c34aaa56506d971d9860e67140bf909" ;;
+        macOS_amd64.zip)    echo "4bd449df9ad639391bc62b8032546f0fe9edcd8526e06682a4f88abd8c5d163c" ;;
+        macOS_arm64.zip)    echo "f23a0c37d963aacc3bed703ccbd59b41c5ca22101fab7f00eb2b7cad23aba463" ;;
         *) echo "" ;;
     esac
 }
 
 # Check if gh is already installed
 if command -v gh &> /dev/null; then
-    echo "[gh] CLI found at $(which gh)"
+    echo "[gh] CLI found at $(command -v gh)"
 else
     echo "[gh] CLI not found, installing pinned v${GH_VERSION}..."
 
@@ -50,11 +76,11 @@ else
     if [ "$OS" = "darwin" ]; then
         PLATFORM="macOS_${ARCH}.zip"
         ARCHIVE_EXT="zip"
-        EXTRACT_DIR="/tmp/gh_${GH_VERSION}_macOS_${ARCH}"
+        EXTRACT_NAME="gh_${GH_VERSION}_macOS_${ARCH}"
     else
         PLATFORM="${OS}_${ARCH}.tar.gz"
         ARCHIVE_EXT="tar.gz"
-        EXTRACT_DIR="/tmp/gh_${GH_VERSION}_${OS}_${ARCH}"
+        EXTRACT_NAME="gh_${GH_VERSION}_${OS}_${ARCH}"
     fi
 
     echo "[gh] Detected platform: ${PLATFORM}"
@@ -64,57 +90,74 @@ else
         continue_without_gh "No pinned checksum for ${PLATFORM}; refusing to install an unverified binary."
     fi
 
+    if ! TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/gh-install.XXXXXX"); then
+        continue_without_gh "Unable to create a private temporary directory."
+    fi
+    readonly TEMP_DIR
+    cleanup_gh_temp() {
+        rm -rf -- "$TEMP_DIR"
+    }
+    trap cleanup_gh_temp EXIT
+    EXTRACT_ROOT="$TEMP_DIR/extracted"
+    if ! mkdir -p "$EXTRACT_ROOT"; then
+        continue_without_gh "Unable to prepare the private temporary directory."
+    fi
+    EXTRACT_DIR="${EXTRACT_ROOT}/${EXTRACT_NAME}"
+
     ASSET="gh_${GH_VERSION}_${PLATFORM}"
+    ARCHIVE_PATH="${TEMP_DIR}/${ASSET}"
     DOWNLOAD_URL="https://github.com/cli/cli/releases/download/v${GH_VERSION}/${ASSET}"
 
     echo "[gh] Downloading from ${DOWNLOAD_URL}..."
-    if ! curl -fsSL -o "/tmp/${ASSET}" "$DOWNLOAD_URL"; then
-        rm -f "/tmp/${ASSET}"
-        continue_without_gh "Download failed for ${ASSET}."
+    if ! curl -fsSL -o "$ARCHIVE_PATH" "$DOWNLOAD_URL"; then
+        # Proxied remote sessions can intercept GitHub downloads with a proxy 403.
+        # Retry once bypassing the proxy for GitHub hosts only; this succeeds when
+        # the environment's egress policy allows direct GitHub connections.
+        echo "[gh] Download failed (a session proxy may intercept GitHub); retrying with NO_PROXY for GitHub hosts..."
+        NP="$(github_no_proxy)"
+        if ! NO_PROXY="$NP" no_proxy="$NP" curl -fsSL \
+            --connect-timeout "$DIRECT_CONNECT_TIMEOUT_SECONDS" \
+            -o "$ARCHIVE_PATH" "$DOWNLOAD_URL"; then
+            continue_without_gh "Download failed for ${ASSET} through both proxied and direct GitHub channels."
+        fi
     fi
 
     # Verify the download against the pinned checksum before extracting.
     if command -v sha256sum &> /dev/null; then
-        if ! ACTUAL=$(sha256sum "/tmp/${ASSET}" | awk '{print $1}'); then
-            rm -f "/tmp/${ASSET}"
+        if ! ACTUAL=$(sha256sum "$ARCHIVE_PATH" | awk '{print $1}'); then
             continue_without_gh "Unable to calculate the SHA-256 digest for ${ASSET}."
         fi
     elif command -v shasum &> /dev/null; then
-        if ! ACTUAL=$(shasum -a 256 "/tmp/${ASSET}" | awk '{print $1}'); then
-            rm -f "/tmp/${ASSET}"
+        if ! ACTUAL=$(shasum -a 256 "$ARCHIVE_PATH" | awk '{print $1}'); then
             continue_without_gh "Unable to calculate the SHA-256 digest for ${ASSET}."
         fi
     else
-        rm -f "/tmp/${ASSET}"
         continue_without_gh "No SHA-256 utility is available to verify ${ASSET}."
     fi
     if [ "$ACTUAL" != "$EXPECTED" ]; then
-        rm -f "/tmp/${ASSET}"
         continue_without_gh "Checksum mismatch for ${ASSET}; expected ${EXPECTED}, received ${ACTUAL}."
     fi
     echo "[gh] Checksum verified for ${ASSET}"
 
     # Extract based on archive type
     if [ "$ARCHIVE_EXT" = "zip" ]; then
-        if ! unzip -q "/tmp/${ASSET}" -d /tmp; then
-            rm -rf "${EXTRACT_DIR}" "/tmp/${ASSET}"
+        if ! unzip -q "$ARCHIVE_PATH" -d "$EXTRACT_ROOT"; then
             continue_without_gh "Unable to extract ${ASSET}."
         fi
     else
-        if ! tar -xzf "/tmp/${ASSET}" -C /tmp; then
-            rm -rf "${EXTRACT_DIR}" "/tmp/${ASSET}"
+        if ! tar -xzf "$ARCHIVE_PATH" -C "$EXTRACT_ROOT"; then
             continue_without_gh "Unable to extract ${ASSET}."
         fi
     fi
 
     # Install to ~/.local/bin (works in cloud and local)
     if ! { mkdir -p ~/.local/bin && cp "${EXTRACT_DIR}/bin/gh" ~/.local/bin/gh && chmod +x ~/.local/bin/gh; }; then
-        rm -rf "${EXTRACT_DIR}" "/tmp/${ASSET}"
         continue_without_gh "Unable to install gh under ~/.local/bin."
     fi
 
     # Clean up
-    rm -rf "${EXTRACT_DIR}" "/tmp/${ASSET}"
+    cleanup_gh_temp
+    trap - EXIT
 
     echo "[gh] Installed to ~/.local/bin/gh"
 fi
@@ -130,12 +173,32 @@ if [ -n "${GH_TOKEN:-}" ]; then
     if gh auth status &> /dev/null; then
         echo "[gh] Authenticated successfully"
     else
-        echo "[gh] WARNING: GH_TOKEN is set but authentication check failed"
-        echo "[gh] Token may be invalid or expired"
+        # A failed check does NOT prove the token is bad. In proxied remote
+        # sessions (HTTPS_PROXY set, e.g. Claude Code cloud) the proxy can
+        # intercept api.github.com, block the GraphQL query behind
+        # `gh auth status`, and even swap Authorization headers; gh then
+        # misreports a perfectly valid token as invalid. Retest on the direct
+        # channel (proxy bypassed for GitHub hosts only) before concluding.
+        NP="$(github_no_proxy)"
+        if [ -n "${HTTPS_PROXY:-}${https_proxy:-}" ] \
+            && NO_PROXY="$NP" no_proxy="$NP" run_bounded gh auth status &> /dev/null; then
+            echo "[gh] GH_TOKEN is VALID, but this session's proxy intercepts GitHub API calls"
+            echo "[gh] ('gh auth status' fails through the proxy and misreports the token as invalid)."
+            echo "[gh] To use gh in this session, bypass the proxy for GitHub hosts only"
+            echo "[gh] (keep HTTPS_PROXY set; never disable TLS verification):"
+            echo '[gh]   export NO_PROXY="'"${GITHUB_DIRECT_HOSTS}"'${NO_PROXY:+,$NO_PROXY}"'
+            echo '[gh]   export no_proxy="$NO_PROXY"'
+            echo "[gh] Details: tbd shortcut setup-github-cli (Proxied Remote Sessions)"
+        else
+            echo "[gh] WARNING: GH_TOKEN is set but could not be verified on any channel"
+            echo "[gh] Either the token is invalid/expired, or this session's network policy"
+            echo "[gh] blocks GitHub API access (git push and GitHub MCP tools may still work)."
+            echo "[gh] Diagnosis: tbd shortcut setup-github-cli (Proxied Remote Sessions)"
+        fi
     fi
 else
     echo "[gh] NOTE: GH_TOKEN not set - some operations may require authentication"
-    echo "[gh] See: docs/general/agent-setup/github-cli-setup.md"
+    echo "[gh] See: tbd shortcut setup-github-cli"
 fi
 
 exit 0

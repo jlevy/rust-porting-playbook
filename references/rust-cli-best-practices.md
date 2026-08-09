@@ -121,7 +121,7 @@ cli = ["clap", "color-eyre", "tracing", "tempfile", "indicatif", "ctrlc"]
 
 [dependencies]
 # Core deps (always included)
-regex = "1.12"
+regex = "1.13"
 thiserror = "2.0"
 
 # CLI deps (optional, behind feature gate)
@@ -717,7 +717,7 @@ pre-release-hook = ["just", "check"]            # Run all checks before release
 workflows automatically.
 Run `dist init` to scaffold a `release.yml` that handles planning, cross-compilation,
 artifact upload, and installer generation (shell scripts, Homebrew, MSI). Actively
-maintained by axo.dev (v0.31+ as of early 2026). Good for projects that want turnkey releases without
+maintained by axo.dev (v0.32+ as of August 2026). Good for projects that want turnkey releases without
 hand-rolling CI. Major projects like ripgrep, bat, and fd hand-roll their release
 workflows, but cargo-dist is a solid choice for smaller projects or teams that prefer
 convention over configuration.
@@ -885,7 +885,7 @@ jobs:
           pattern: release-*
           merge-multiple: true
           path: release
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.plan.outputs.release_tag }}
           prerelease: ${{ needs.plan.outputs.prerelease == 'true' }}
@@ -895,7 +895,7 @@ jobs:
 ```
 
 **Key points:**
-- Use `softprops/action-gh-release@v2` for creating GitHub Releases (not the archived
+- Use `softprops/action-gh-release@v3` for creating GitHub Releases (not the archived
   `actions/create-release@v1`) with `fail_on_unmatched_files: true`
 - Cross-compile Linux ARM64 via `gcc-aarch64-linux-gnu` + RUSTFLAGS linker override
   (no Docker containers needed). This is simpler and more transparent than `cross`.
@@ -1167,7 +1167,7 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: astral-sh/setup-uv@v8
+      - uses: astral-sh/setup-uv@v9
       - uses: actions/download-artifact@v8
         with:
           pattern: wheels-*
@@ -1286,7 +1286,7 @@ cargo release patch --execute
 - [actions/checkout@v7](https://github.com/actions/checkout)
 - [dtolnay/rust-toolchain](https://github.com/dtolnay/rust-toolchain)
 - [Swatinem/rust-cache@v2](https://github.com/Swatinem/rust-cache)
-- [softprops/action-gh-release@v2](https://github.com/softprops/action-gh-release)
+- [softprops/action-gh-release@v3](https://github.com/softprops/action-gh-release)
 - [EmbarkStudios/cargo-deny-action@v2](https://github.com/EmbarkStudios/cargo-deny-action)
 - [obi1kenobi/cargo-semver-checks-action@v2](https://github.com/obi1kenobi/cargo-semver-checks-action)
 - [taiki-e/install-action](https://github.com/taiki-e/install-action) (cargo-llvm-cov)
@@ -1697,7 +1697,7 @@ Rust CLI vs interpreted languages:
 - [ ] Release profile optimized (LTO, strip, panic=abort)
 - [ ] `release.toml` configured for cargo-release
 - [ ] Release CI workflow for cross-platform binary builds
-  (softprops/action-gh-release@v2)
+  (softprops/action-gh-release@v3)
 - [ ] `justfile` with check/fix/precommit targets
 - [ ] `Cargo.lock` committed (for binary projects)
 - [ ] SIGPIPE handling: `sigpipe::reset()` at start of main (Unix CLI tools)

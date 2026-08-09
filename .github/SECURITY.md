@@ -10,7 +10,9 @@ Do not open a public issue for an undisclosed vulnerability or include credentia
 tokens, private exploit details, or personal data in public repository content.
 
 For supply-chain controls applied to this repository, see
-[`SUPPLY-CHAIN-SECURITY.md`](../SUPPLY-CHAIN-SECURITY.md).
+[`SUPPLY-CHAIN-SECURITY.md`](../SUPPLY-CHAIN-SECURITY.md). Reviewed upgrades and
+cool-off exceptions are recorded in
+[`SUPPLY-CHAIN-AUDIT-LOG.md`](../SUPPLY-CHAIN-AUDIT-LOG.md).
 
 ## Supported Content
 

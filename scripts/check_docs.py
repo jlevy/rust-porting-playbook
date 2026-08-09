@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate tracked Markdown links, anchors, and fenced code blocks."""
+"""Validate tracked text safety and Markdown structure."""
 
 from __future__ import annotations
 
@@ -30,11 +30,31 @@ MARKDOWN_LINK_TEXT_RE = re.compile(r"!?\[([^\]]*)\]\([^)]*\)")
 HTML_TAG_RE = re.compile(r"<[^>]+>")
 MARKDOWN_FORMATTING_RE = re.compile(r"[`*_~]")
 TEMPLATED_DESTINATION_CHARS = frozenset("<>{}$")
+FORBIDDEN_INVISIBLE_UNICODE = {
+    "\u00ad": "SOFT HYPHEN",
+    "\u061c": "ARABIC LETTER MARK",
+    "\u200b": "ZERO WIDTH SPACE",
+    "\u200c": "ZERO WIDTH NON-JOINER",
+    "\u200d": "ZERO WIDTH JOINER",
+    "\u200e": "LEFT-TO-RIGHT MARK",
+    "\u200f": "RIGHT-TO-LEFT MARK",
+    "\u202a": "LEFT-TO-RIGHT EMBEDDING",
+    "\u202b": "RIGHT-TO-LEFT EMBEDDING",
+    "\u202c": "POP DIRECTIONAL FORMATTING",
+    "\u202d": "LEFT-TO-RIGHT OVERRIDE",
+    "\u202e": "RIGHT-TO-LEFT OVERRIDE",
+    "\u2060": "WORD JOINER",
+    "\u2066": "LEFT-TO-RIGHT ISOLATE",
+    "\u2067": "RIGHT-TO-LEFT ISOLATE",
+    "\u2068": "FIRST STRONG ISOLATE",
+    "\u2069": "POP DIRECTIONAL ISOLATE",
+    "\ufeff": "ZERO WIDTH NO-BREAK SPACE",
+}
 
 
 @dataclass(frozen=True, order=True)
 class Finding:
-    """One actionable Markdown validation failure."""
+    """One actionable repository text validation failure."""
 
     path: Path
     line: int
@@ -128,6 +148,29 @@ def _is_local_destination(destination: str) -> bool:
     return not urlsplit(destination).scheme
 
 
+def check_text_files(paths: list[Path]) -> list[Finding]:
+    """Reject invisible characters that can conceal instructions or source text."""
+    findings: list[Finding] = []
+    for path in paths:
+        path = path.resolve()
+        for line_number, line in enumerate(
+            path.read_text(encoding="utf-8").splitlines(), start=1
+        ):
+            for character in sorted(
+                set(line).intersection(FORBIDDEN_INVISIBLE_UNICODE)
+            ):
+                findings.append(
+                    Finding(
+                        path,
+                        line_number,
+                        "forbidden invisible Unicode "
+                        f"U+{ord(character):04X} "
+                        f"({FORBIDDEN_INVISIBLE_UNICODE[character]})",
+                    )
+                )
+    return sorted(findings)
+
+
 def check_markdown_files(root: Path, paths: list[Path]) -> list[Finding]:
     """Validate relative links, anchors, and fences in the supplied Markdown files."""
     root = root.resolve()
@@ -189,6 +232,17 @@ def _tracked_markdown_files(root: Path) -> list[Path]:
     return [root / path.decode() for path in result.stdout.split(b"\0") if path]
 
 
+def _tracked_text_files(root: Path) -> list[Path]:
+    """List tracked files Git classifies as text, excluding ignored local data."""
+    result = subprocess.run(
+        ["git", "grep", "-Il", "-z", "-e", "", "--"],
+        cwd=root,
+        check=True,
+        capture_output=True,
+    )
+    return [root / path.decode() for path in result.stdout.split(b"\0") if path]
+
+
 def _repository_root(start: Path) -> Path:
     """Return the containing Git worktree root or raise a concise error."""
     result = subprocess.run(
@@ -210,7 +264,10 @@ def _parse_args() -> argparse.Namespace:
         "paths",
         nargs="*",
         type=Path,
-        help="Markdown files to validate (default: all tracked Markdown files)",
+        help=(
+            "text files to scan; Markdown files also receive structural validation "
+            "(default: all tracked text files)"
+        ),
     )
     return parser.parse_args()
 
@@ -223,13 +280,25 @@ def main() -> int:
     except RuntimeError as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
-    paths = [
+    requested_paths = [
         path if path.is_absolute() else invocation_directory / path
         for path in args.paths
     ]
-    if not paths:
-        paths = _tracked_markdown_files(root)
-    findings = check_markdown_files(root, paths)
+    try:
+        if requested_paths:
+            text_paths = requested_paths
+            markdown_paths = [
+                path for path in requested_paths if path.suffix.lower() == ".md"
+            ]
+        else:
+            text_paths = _tracked_text_files(root)
+            markdown_paths = _tracked_markdown_files(root)
+        findings = check_text_files(text_paths)
+        findings.extend(check_markdown_files(root, markdown_paths))
+    except (OSError, UnicodeError, subprocess.CalledProcessError) as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 2
+    findings.sort()
     for finding in findings:
         try:
             display_path = finding.path.relative_to(root)
@@ -237,9 +306,12 @@ def main() -> int:
             display_path = finding.path
         print(f"{display_path}:{finding.line}: {finding.message}")
     if findings:
-        print(f"Markdown validation failed with {len(findings)} finding(s).")
+        print(f"Repository text validation failed with {len(findings)} finding(s).")
         return 1
-    print(f"Markdown validation passed for {len(paths)} file(s).")
+    print(
+        f"Repository text validation passed for {len(text_paths)} file(s); "
+        f"Markdown structure passed for {len(markdown_paths)} file(s)."
+    )
     return 0
 
 

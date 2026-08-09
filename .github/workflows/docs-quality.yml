@@ -8,6 +8,9 @@ on:
 permissions:
   contents: read
 
+env:
+  UV_NO_BUILD: "1"
+
 concurrency:
   group: docs-quality-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -18,23 +21,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.13"
-      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+          python-version: "3.14"
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          version: "0.11.25"
-          enable-cache: true
-          cache-dependency-glob: docs/project/research/data/extract_lockfile_inventory.py.lock
+          version: "0.11.32"
+          enable-cache: false
       - name: Run unit and integration tests
         run: python -m unittest discover -s tests -p 'test_*.py' -v
-      - name: Validate Markdown links, anchors, and fences
+      - name: Validate repository text and Markdown structure
         run: python scripts/check_docs.py
       - name: Validate the locked research-script environment
         run: uv --no-config lock --check --script docs/project/research/data/extract_lockfile_inventory.py
+      - name: Validate dependency cool-off
+        run: python scripts/check_dependency_cooloff.py
       - name: Validate lockfile inventories against pinned upstream sources
         run: python scripts/check_lockfile_inventories.py
       - name: Validate Python and shell syntax

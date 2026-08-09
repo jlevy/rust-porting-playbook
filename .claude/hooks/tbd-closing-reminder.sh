@@ -19,7 +19,7 @@ if [[ "$command" =~ $git_push_pattern ]]; then
   if [ -d ".tbd" ]; then
     # Same version-matched, pinned fallback as tbd-session.sh, so the
     # reminder still fires when tbd is not on the hook's PATH.
-    readonly TBD_VERSION="0.4.0"
+    readonly TBD_VERSION="0.4.2"
     export PATH="$HOME/.local/bin:$HOME/bin:/usr/local/bin:$PATH"
     npm_global_bin=""
     if command -v npm &> /dev/null; then

@@ -34,10 +34,15 @@ This directory contains documentation for improving the Rust Porting Playbook it
 - **Definition of done for doc changes:** merged doc update + corresponding entry in
   [playbook-improvement-log.md](playbook-improvement-log.md)
 
-## Link Validation
+## Repository Validation
 
-Before merging meta/playbook changes, run a link check across core docs:
+Before merging meta/playbook changes, run the repository validator
+from the repository root:
 
 ```bash
-lychee README.md _meta/**/*.md playbooks/**/*.md guidelines/**/*.md case-studies/**/*.md
+python3 scripts/check_docs.py
 ```
+
+This checks forbidden invisible Unicode across all tracked text, plus local links,
+anchors, and code fences across all tracked Markdown, including files outside the core
+directories.
