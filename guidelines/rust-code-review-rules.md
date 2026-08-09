@@ -1,14 +1,16 @@
 ---
 title: Rust Code Review Rules
-description: A severity-ranked review checklist for Rust correctness, soundness, APIs, async behavior, and maintainability
+description: A risk-ordered process for reviewing Rust correctness, soundness, APIs, and maintainability
+author: Joshua Levy (github.com/jlevy) with LLM assistance
 category: rust
 ---
 # Rust Code Review Rules
 
-Use this checklist after formatting, Clippy, tests, docs, and project-specific automated
-checks pass. It focuses on properties tools do not establish reliably: ownership design,
-unsafe invariants, public contracts, failure behavior, concurrency, performance, and
-long-term maintainability.
+Use this process after formatting, Clippy, tests, docs, and project-specific automated
+checks pass. The topic guidelines own the rules for Rust code, projects, CLIs,
+filesystems, tests, and releases.
+This document defines how to load those rules, order the review, inspect unsafe
+boundaries, assign severity, and report findings without restating each topic checklist.
 
 **Related:** [`rust-rules.md`](rust-rules.md),
 [`rust-project-setup.md`](rust-project-setup.md), and `tbd shortcut review-code`.
@@ -23,8 +25,42 @@ long-term maintainability.
 | **Low** | Optional improvement with a concrete benefit |
 
 Assign severity from impact and likelihood, not personal preference.
-A review finding should name the violated contract, show evidence, and propose a bounded
+A finding should name the violated contract, show evidence, and propose a bounded
 correction.
+
+## Load the Rules That Own the Changed Surface
+
+Load `rust-rules.md` for every Rust review, then add only the documents that match the
+diff and its runtime boundaries:
+
+| Changed surface | Additional guideline |
+| --- | --- |
+| Cargo layout, toolchains, CI, dependencies, or repository automation | `rust-project-setup.md` |
+| Arguments, streams, terminal behavior, subprocesses, or exits | `rust-cli-rules.md` |
+| Paths, traversal, mutation, metadata, links, or recovery | `rust-filesystem-rules.md` |
+| Test placement, fixtures, snapshots, matrices, or coverage | `rust-testing-rules.md` |
+| Artifacts, publishing authority, channels, or incidents | `rust-release-rules.md` |
+
+Also load the project’s own contracts and any language-agnostic tbd guidelines that
+apply, such as `backward-compatibility-rules`, `error-handling-rules`, or
+`supply-chain-hardening`. Do not review from this process document alone.
+
+## Establish the Review Baseline
+
+Before looking for findings:
+
+1. Read the request, specification, linked issues, and repository instructions.
+2. Inspect the full diff and enough surrounding code to understand changed control flow,
+   ownership, failure paths, and external effects.
+3. Run or inspect the required automated checks.
+   Confirm how many tests ran and whether any selection was skipped.
+4. Identify the public, persisted, cross-process, unsafe, and destructive contracts the
+   change can affect.
+5. Reproduce a suspected defect or trace an exact failing path before reporting it as
+   fact.
+
+Automated formatting or lint ownership should not consume manual review time unless the
+automation is missing, disabled, or demonstrably failed.
 
 ## Review the Highest-Risk Boundaries First
 
@@ -40,47 +76,10 @@ Review in this order unless the change has a more specific risk profile:
 8. performance-sensitive paths;
 9. tests, docs, organization, and idiom.
 
-Do not spend the review budget on formatting that automated checks already own while a
-high-risk boundary remains unread.
+Do not spend the review budget on low-risk style while a higher-risk boundary remains
+unread.
 
-## Ownership and Resource Lifetimes
-
-- [ ] **High: Clones are deliberate.** Each meaningful `.clone()` reflects required
-  ownership or a measured cheap value, not an attempt to silence the borrow checker.
-- [ ] **Medium: APIs borrow when they only read.** Owned arguments are consumed, stored,
-  or otherwise justified.
-- [ ] **High: `'static` bounds describe real lifetime needs.** They are not used as a
-  catch-all to make spawned work compile.
-- [ ] **High: Shared ownership is necessary.** `Rc`, `Arc`, `Mutex`, and `RwLock` model
-  actual sharing, and lock guards do not escape public APIs.
-- [ ] **High: Resource cleanup runs on every path.** Files, temp state, transactions,
-  subprocesses, tasks, permits, and locks are released after success and failure.
-- [ ] **Medium: Borrow scopes are narrow.** Long borrows do not force unrelated state
-  into clones or broad locks.
-- [ ] **Medium: Builders and state transitions make ownership clear.** Callers can tell
-  which values are borrowed, retained, consumed, or returned.
-
-## Errors and Recovery
-
-- [ ] **Blocker: No required error is silently discarded.** `let _ =` and ignored task
-  results have a reviewed reason or are handled.
-- [ ] **High: Errors retain context and causes.** I/O, parsing, network, subprocess, and
-  registry errors identify the failed operation and relevant non-secret input.
-- [ ] **High: Library errors are matchable where callers recover.** Applications may use
-  report-style errors at their outer boundary.
-- [ ] **High: Success is reported only after every required operation succeeds.**
-  Partial results, cleanup failures, and publish failures cannot fall through to a
-  success message.
-- [ ] **High: Retry behavior distinguishes transient and permanent failures.** Retries
-  are bounded, idempotent, and observable.
-- [ ] **High: Destructive partial failure has a recovery story.** The user can identify
-  completed work and restore or resume safely.
-- [ ] **Medium: Panics express violated programmer invariants.** Normal invalid input
-  and external failure return errors.
-- [ ] **Medium: `expect` messages explain the invariant.** Unexplained `unwrap` and
-  `expect` calls are removed from production paths.
-
-## Unsafe Code and FFI
+## Review Unsafe Code and FFI
 
 - [ ] **Blocker: Every unsafe block has a specific `// SAFETY:` argument.** The stated
   invariant is established by code the reviewer can trace.
@@ -92,127 +91,34 @@ high-risk boundary remains unread.
   field and mutation path is considered.
 - [ ] **Blocker: Unwinding across FFI is prevented or explicitly supported.** Panic and
   foreign-exception behavior is defined.
-- [ ] **High: FFI ownership is unambiguous.** Allocation/free pairs, pointer lifetime,
-  nullability, strings, callbacks, and thread affinity match the foreign contract.
+- [ ] **High: FFI ownership is unambiguous.** Allocation and free pairs, pointer
+  lifetime, nullability, strings, callbacks, and thread affinity match the foreign
+  contract.
 - [ ] **High: A safe alternative was considered.** Performance-motivated unsafe code has
   representative benchmark evidence.
 - [ ] **High: Platform layout assumptions are tested.** Sizes, alignment, calling
   convention, and generated bindings match supported targets.
 
-## Public API and Compatibility
+For safe Rust, use the loaded topic guidelines instead of recreating their checklists
+here.
 
-- [ ] **High: The public surface is no larger than required.** Internal items use
-  private or `pub(crate)` visibility.
-- [ ] **High: Public changes have a compatibility disposition.** Removed items, new
-  trait bounds, changed defaults, feature changes, and altered re-exports are assessed
-  against project policy.
-- [ ] **High: Important return values are difficult to ignore.** `#[must_use]` is
-  applied where omission is likely a bug.
-- [ ] **Medium: Types encode valid states.** Enums and newtypes replace sentinel values,
-  related booleans, and loosely coupled primitives.
-- [ ] **Medium: APIs do not force avoidable allocation.** Borrowed input, slices, and
-  iterators are used where they fit the contract.
-- [ ] **Medium: Traits have a polymorphic consumer.** Single-use indirection is removed
-  unless it is a deliberate public extension or test seam.
-- [ ] **Medium: Feature flags stay at boundaries.** Business logic is not tangled with
-  scattered `cfg` branches.
-- [ ] **Medium: Serialization and on-disk formats remain compatible or migrate
-  explicitly.** Round-trip and older-version fixtures cover the change.
+## Write Findings That Can Be Acted On
 
-Apply `tbd guidelines backward-compatibility-rules` when compatibility is in scope.
+Each finding should contain:
 
-## Concurrency and Async
+- a severity from the table above;
+- the narrowest file and line range that demonstrates the problem;
+- the violated behavior, invariant, or policy;
+- the concrete consequence or failure path;
+- a bounded fix that does not expand the requested scope unnecessarily.
 
-- [ ] **Blocker: Async code does not perform blocking I/O or heavy CPU work on the
-  executor.** Blocking work uses a bounded dedicated path.
-- [ ] **Blocker: Lock ordering cannot deadlock.** Multiple-lock paths share one order or
-  are redesigned.
-- [ ] **High: No slow I/O or unrelated await occurs while holding a lock.** Critical
-  sections contain only protected state transitions.
-- [ ] **High: Spawned tasks are awaited or supervised.** Failures cannot disappear.
-- [ ] **High: Cancellation is safe at every relevant await.** Dropping a future does not
-  leave corrupt state or leaked ownership.
-- [ ] **High: Shutdown is defined.** The system stops intake, signals workers, and
-  drains or cancels in-flight work according to policy.
-- [ ] **Medium: Queues and spawning are bounded.** Load produces backpressure rather
-  than unbounded memory or task growth.
-- [ ] **Medium: Atomic ordering is justified.** `Relaxed` and stronger orderings match a
-  documented synchronization argument.
+Do not report a preference as a defect.
+If evidence is incomplete, say what remains uncertain and what check would resolve it.
+Group repeated instances under one root-cause finding when one correction addresses all
+of them.
 
-## Filesystem, Subprocess, and External Boundaries
-
-- [ ] **Blocker: Destructive scope is resolved exactly.** No broad path, unresolved
-  environment variable, or unvalidated glob identifies deletion targets.
-- [ ] **High: Writes are atomic or explicitly non-atomic.** Metadata, backup, collision,
-  and crash-durability policies are stated.
-- [ ] **High: Traversal errors are not silently dropped.** Symlink and root-boundary
-  behavior is explicit.
-- [ ] **High: Subprocesses use argument vectors.** Shell interpretation is used only
-  when it is the requested feature.
-- [ ] **High: Exit status, stdout, and stderr are all checked.** A spawned command
-  cannot fail while the caller reports success.
-- [ ] **Medium: Timeouts terminate and reap subprocesses.** Child processes and pipes do
-  not leak after cancellation.
-- [ ] **Medium: Environment inheritance is intentional.** Secrets and ambient flags are
-  removed when the child should run reproducibly.
-
-See [`rust-filesystem-rules.md`](rust-filesystem-rules.md) and
-[`rust-cli-rules.md`](rust-cli-rules.md).
-
-## Performance and Efficiency
-
-- [ ] **High: Performance claims have representative measurements.** Benchmarks include
-  inputs, toolchain, target, and relevant environment.
-- [ ] **High: Hot paths avoid accidental allocation.** Repeated `clone`, `to_string`,
-  `format!`, and `collect` calls are justified or removed.
-- [ ] **High: Lock contention is measured or structurally bounded.** Slow operations do
-  not serialize unrelated work.
-- [ ] **Medium: Collections match access patterns.** Simpler structures remain preferred
-  for small bounded data.
-- [ ] **Medium: Parsing and serialization do not repeat avoidable work.** Reusable state
-  is cached only with a clear invalidation and memory policy.
-- [ ] **Medium: Optimizations preserve readability or carry evidence explaining the
-  tradeoff.** Cleverness without a measured need is removed.
-
-## Dependencies and Supply Chain
-
-- [ ] **Blocker: New build-time execution is identified.** `build.rs`, proc macros,
-  native build tools, generators, and install scripts are reviewed.
-- [ ] **High: Every new dependency has a concrete need.** Maintenance signals or
-  popularity alone are not a trust argument.
-- [ ] **High: New and upgraded versions satisfy cool-off policy or have a recorded
-  exception.** Exact source and release diffs were reviewed.
-- [ ] **High: Lockfile and source policy are preserved.** Registry, git, path, and
-  vendored dependencies match project rules.
-- [ ] **High: Licenses and advisories pass policy.** RustSec and cross-ecosystem
-  evidence are both considered where applicable.
-- [ ] **Medium: Enabled features are minimal.** Heavy default features and native code
-  are not pulled in accidentally.
-- [ ] **Medium: Duplicate and unused dependencies are understood.** Tool output is
-  verified before changing manifests.
-- [ ] **Medium: The declared MSRV still resolves and builds.** Dependency upgrades do
-  not silently raise it.
-
-Apply `tbd guidelines supply-chain-hardening`.
-
-## Tests and Documentation
-
-- [ ] **High: Changed behavior has direct evidence.** Tests cover success, failure, and
-  relevant boundaries.
-- [ ] **High: Regression tests fail without the fix.** A passing test that never reaches
-  the changed branch is insufficient.
-- [ ] **High: Supported feature, toolchain, and platform combinations are exercised by
-  policy.** Empty or skipped selections cannot appear green.
-- [ ] **Medium: Tests assert behavior rather than implementation detail.** Refactors can
-  preserve the suite when the contract is unchanged.
-- [ ] **Medium: Public docs describe invariants, errors, and costs.** Examples compile
-  as doctests where practical.
-- [ ] **Medium: Ignored and flaky tests have current tracking issues or beads and
-  unblock conditions.**
-- [ ] **Medium: Comments describe the present code.** Stale migration or refactor notes
-  are removed.
-
-See [`rust-testing-rules.md`](rust-testing-rules.md).
+End the review with a short verdict, the validation evidence inspected, and any
+remaining risks that could not be tested locally.
 
 ## Quick Scan
 
@@ -235,7 +141,7 @@ See [`rust-testing-rules.md`](rust-testing-rules.md).
 | TODO, FIXME, or HACK without tracking | Medium |
 
 The quick scan identifies where to investigate.
-It does not replace reading the changed control flow and contracts.
+It does not replace reading the changed control flow, contracts, and topic guidelines.
 
 ## Related Guidelines
 

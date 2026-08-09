@@ -1,6 +1,7 @@
 ---
 title: Rust CLI Rules
 description: Rules for composable, testable, and cross-platform Rust command-line applications
+author: Joshua Levy (github.com/jlevy) with LLM assistance
 category: rust
 ---
 # Rust CLI Rules
@@ -39,15 +40,15 @@ src/
 
 ## Define Arguments as a Stable Interface
 
-`clap` derive is a common default, but the interface rules are independent of parser
-choice.
+Use `clap` derive by default.
+It keeps the parser, generated help, value enums, and completion metadata on one typed
+definition. Use another parser only when a documented binary-size, compile-time, syntax,
+or compatibility constraint outweighs that shared contract.
 
-- Use descriptive long flags and conventional short flags.
 - Make required values required in the type instead of validating an `Option` later.
 - Use enums for closed value sets.
 - Distinguish an omitted override from a defaulted value when configuration layers need
   that information.
-- Put useful descriptions on every command, argument, and option.
 - Treat `--help`, `--version`, exit codes, completion output, and invalid-input behavior
   as tested interfaces.
 - Add `--non-interactive` or `--yes` only when the program actually prompts.

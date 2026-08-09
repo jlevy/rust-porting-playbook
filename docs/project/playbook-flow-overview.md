@@ -168,8 +168,8 @@ satisfying their conditions.
 
 ## 2. Resource Dependency Map
 
-This diagram groups the 48 primary playbook, guideline, reference, research,
-case-study, and meta-process documents by function and maps them to lifecycle stages.
+This diagram groups the 44 primary playbook, guideline, reference, research, case-study,
+and meta-process documents by function and maps them to lifecycle stages.
 Plans and dated reviews govern maintenance work but are not runtime porting resources,
 so they are not included in this count.
 Solid arrows show primary usage; dotted arrows show secondary usage (only some docs in
@@ -517,12 +517,8 @@ flowchart TD
 | 20 | `test-coverage-for-porting.md` | Porting guideline | 1, 5, 6 | Source evidence, traceability, and differential validation |
 | 21 | `porting-principles-and-antipatterns.md` | Porting guideline | 5, 6 | Non-negotiable parity principles |
 | 22 | `filesystem-heavy-cli-porting.md` | Porting guideline | 2, 5, 6 | Filesystem contract inventory and cross-validation |
-| 23 | `rust-general-rules.md` | Compatibility | — | Redirect to `rust-rules.md` |
-| 24 | `rust-cli-app-patterns.md` | Compatibility | — | Redirect to `rust-cli-rules.md` |
-| 25 | `rust-cli-best-practices.md` | Compatibility map | — | Routes old sections to focused guidelines and research |
-| 26 | `rust-code-review-checklist.md` | Compatibility | — | Redirect to `rust-code-review-rules.md` |
-| 27 | `research-rust-cli-binary-distribution.md` | Research | 7 | Survey of 14 Rust CLI tools |
-| 28 | `research-rust-cli-pypi-distribution.md` | Research | 7 | maturin and PyPI distribution |
-| 29-32 | `research-{tbd,qmd}-*.md` | Research | 2, 3 | Fixed-commit dependency maps and lockfile evidence for TypeScript exemplars |
-| 33-43 | `case-studies/*` | Case Study | 2, 3, 6, 7, 8 | Real-world port, planning, and synchronization evidence |
-| 44-48 | `_meta/*.md` | Meta | — | Self-improvement framework |
+| 23 | `research-rust-cli-binary-distribution.md` | Research | 7 | Survey of 14 Rust CLI tools |
+| 24 | `research-rust-cli-pypi-distribution.md` | Research | 7 | maturin and PyPI distribution |
+| 25-28 | `research-{tbd,qmd}-*.md` | Research | 2, 3 | Fixed-commit dependency maps and lockfile evidence for TypeScript exemplars |
+| 29-39 | `case-studies/*` | Case Study | 2, 3, 6, 7, 8 | Real-world port, planning, and synchronization evidence |
+| 40-44 | `_meta/*.md` | Meta | — | Self-improvement framework |

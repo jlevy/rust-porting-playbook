@@ -1,6 +1,7 @@
 ---
 title: Rust Release Rules
 description: Rules for reproducible Rust artifacts, least-privilege publishing, and multi-channel releases
+author: Joshua Levy (github.com/jlevy) with LLM assistance
 category: rust
 ---
 # Rust Release Rules
@@ -64,14 +65,16 @@ small testable programs rather than long inline shell blocks.
 
 ## Minimize Workflow Authority
 
-- Default workflow permissions to read-only.
+Apply the project-wide CI controls in
+[`rust-project-setup.md`](rust-project-setup.md#design-ci-as-independent-evidence).
+Release workflows add these narrower authority rules:
+
 - Grant `contents: write`, `packages: write`, or `id-token: write` only to the job that
   needs it.
 - Use protected release environments when publication warrants an approval boundary.
 - Prefer registry trusted publishing through OIDC to stored long-lived tokens.
 - Keep build jobs unable to publish; pass reviewed artifacts to separate publish jobs.
 - Do not run untrusted pull-request code in a context that has release credentials.
-- Pin every third-party action to a reviewed immutable commit SHA.
 
 If a channel cannot use short-lived credentials, scope its token to one project, store
 it in the narrowest environment, rotate it, and ensure forked code cannot access it.
@@ -111,26 +114,21 @@ Use it when necessary, not merely to reduce matrix size.
 ## Package Predictably
 
 Artifact names should include project, version, and target.
-Archives should contain only the files users expect, commonly:
+Archives should contain only the files users expect:
 
-- the executable or library;
+- the executable or library
+- license files
+- a concise readme or install note
+- shell completions or man pages when supported
 
-- license files;
-
-- a concise readme or install note;
-
-- shell completions or man pages when supported.
+Apply these packaging rules:
 
 - Use deterministic file ordering and normalized timestamps where reproducible archives
   are a goal.
-
 - Generate SHA-256 checksums for downloadable artifacts.
-
 - Emit an SBOM or embedded dependency metadata when the project policy requires it.
-
 - Sign artifacts or attest provenance when consumers have a verification path; a
   signature nobody verifies is not a substitute for other controls.
-
 - Test archive extraction on every supported host format.
 
 ## Smoke-Test the Packaged Artifact

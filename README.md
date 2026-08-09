@@ -10,6 +10,27 @@ beads to better automate the porting plans.
 (I use [tbd](https://github.com/jlevy/tbd), my own beads tool, but
 [the original](https://github.com/steveyegge/beads) should work too)
 
+## Choose Your Starting Point
+
+| What are you here to do? | Start here |
+| --- | --- |
+| Start a new Rust project | [New-project route](guidelines/README.md#start-a-new-rust-project) |
+| Improve or review an existing Rust codebase | [Existing-codebase route](guidelines/README.md#improve-or-review-an-existing-rust-codebase) |
+| Port an existing project to Rust | [Python-to-Rust playbook](playbooks/python-to-rust-playbook.md) |
+| Synchronize an existing port | [Port update checklist](playbooks/port-checklist-update-template.md) |
+
+### Agent Prompts for Rust Work
+
+> **Start a Rust project** Read `guidelines/README.md` and follow its new-project route.
+> Load only the general Rust guidelines needed for this project, apply them while
+> designing the package, and record any deviation from their defaults with a concrete
+> reason.
+
+> **Improve or review a Rust codebase** Read `guidelines/README.md` and follow its
+> existing-codebase route.
+> Load the topic guidelines that match the diff before using the Rust review process,
+> then report findings by severity with file and line evidence.
+
 ## How Does it Work?
 
 This is new! But it seems to work quite well.
@@ -51,17 +72,6 @@ Key elements of the approach:
 
 - Codifying the process for ongoing port updates into two kinds: improvements to Rust
   port (type A) and port synchronization with a new release (type B)
-
-## Rust Best Practices Without a Port
-
-The [Rust guideline index](guidelines/README.md) is independently useful for projects
-written in Rust from the start. It organizes language and API design, project setup,
-CLI behavior, filesystem safety, testing, releases, and code review as seven focused
-documents. Start with [`rust-rules.md`](guidelines/rust-rules.md) and add only the topic
-guidelines relevant to the work.
-
-Porting mappings and parity workflows are indexed separately, so loading general Rust
-guidance does not bring Python-specific assumptions into a new project.
 
 ## Flowchart
 
@@ -265,16 +275,12 @@ rust-porting-playbook/
 │   ├── port-checklist-initial-template.md
 │   ├── port-checklist-update-template.md
 │   └── auto-sync-agent-prompt-template.md
-├── references/                # Porting lookup tables and compatibility maps
+├── references/                # Porting lookup tables and research indexes
 │   ├── python-to-rust-mapping-reference.md
-│   ├── cross-language-test-mapping.md
-│   ├── rust-cli-best-practices.md       # Compatibility map
-│   ├── rust-cli-app-patterns.md         # Compatibility redirect
-│   └── rust-code-review-checklist.md    # Compatibility redirect
+│   └── cross-language-test-mapping.md
 ├── guidelines/                # Standalone Rust rules and separate porting rules
 │   ├── README.md
 │   ├── rust-rules.md
-│   ├── rust-general-rules.md             # Compatibility redirect
 │   ├── rust-project-setup.md
 │   ├── rust-cli-rules.md
 │   ├── rust-filesystem-rules.md
@@ -310,7 +316,7 @@ rust-porting-playbook/
 | Layer | Directory | Purpose | When to use |
 | --- | --- | --- | --- |
 | **Playbooks** | `playbooks/` | Step-by-step process guides and checklists | Start here. The playbook is the primary doc. |
-| **References** | `references/` | Lookup tables, mapping schemas, and compatibility maps | When you need construct or test mappings rather than prescriptive rules |
+| **References** | `references/` | Lookup tables, mapping schemas, and research indexes | When you need construct or test mappings rather than prescriptive rules |
 | **Guidelines** | `guidelines/` | Compact general Rust rules plus a separate porting layer | Load the smallest relevant set into agent context before writing or porting Rust |
 | **Research** | `docs/project/research/` | In-depth investigation of specific topics (distribution, packaging) | When you need deep research on a specific area |
 | **Case Studies** | `case-studies/` | Real-world examples with decisions, metrics, lessons | When you hit a specific problem and want to see how it was handled |
@@ -338,19 +344,9 @@ Thorough library evaluation in Phase 2 is the single highest-leverage activity.
 
 ## For AI Agents
 
-The [`guidelines/`](guidelines/) directory contains compact documents designed for an
-AI agent's context window. Its [index](guidelines/README.md) separates general Rust
-engineering from source-language mapping and parity concerns.
-
-For a new Rust project, start with:
-
-- [`rust-rules.md`](guidelines/rust-rules.md) — language and API design;
-- [`rust-project-setup.md`](guidelines/rust-project-setup.md) — Cargo, tooling, CI, and
-  dependency policy;
-- the focused CLI, filesystem, testing, release, or code-review guideline needed for
-  the task.
-
-For a port, add:
+Use the route selected from `guidelines/README.md` to load the smallest relevant general
+Rust set. For a port, add only the source-language and parity documents required by the
+work:
 
 - [`python-to-rust-porting-rules.md`](guidelines/python-to-rust-porting-rules.md) —
   translation, traceability, and acceptance;
@@ -371,13 +367,6 @@ automation, test organization, maturin/PyPI distribution, and more).
 | --- | --- |
 | [python-to-rust-playbook.md](playbooks/python-to-rust-playbook.md) | The complete phased porting process |
 | [Rust guideline index](guidelines/README.md) | The reusable Rust suite and the separate porting-guideline layer |
-| [rust-rules.md](guidelines/rust-rules.md) | General language, ownership, API, error, unsafe, async, and performance rules |
-| [rust-project-setup.md](guidelines/rust-project-setup.md) | Cargo layout, toolchains, linting, CI, dependency policy, and documentation |
-| [rust-cli-rules.md](guidelines/rust-cli-rules.md) | Standalone Rust CLI architecture and behavior rules |
-| [rust-filesystem-rules.md](guidelines/rust-filesystem-rules.md) | Safe and deterministic Rust filesystem operations |
-| [rust-testing-rules.md](guidelines/rust-testing-rules.md) | Rust unit, integration, property, snapshot, and platform testing |
-| [rust-release-rules.md](guidelines/rust-release-rules.md) | Reproducible artifacts and least-privilege publishing |
-| [rust-code-review-rules.md](guidelines/rust-code-review-rules.md) | Severity-ranked Rust correctness and maintainability review |
 | [python-to-rust-mapping-reference.md](references/python-to-rust-mapping-reference.md) | Type mappings, project setup equivalences, dependency tables |
 | [python-to-rust-porting-guide.md](playbooks/python-to-rust-porting-guide.md) | Detailed methodology with pitfalls and automation scripts |
 | [cross-language-test-mapping.md](references/cross-language-test-mapping.md) | YAML-based test mapping with CI enforcement |

@@ -1,6 +1,7 @@
 ---
 title: Rust Filesystem Rules
 description: Rules for safe, deterministic, and testable filesystem operations in Rust
+author: Joshua Levy (github.com/jlevy) with LLM assistance
 category: rust
 ---
 # Rust Filesystem Rules
@@ -131,6 +132,10 @@ If these semantics are not supported, fail clearly without partially copying.
 
 ## Traverse Deterministically and Propagate Errors
 
+Use the `ignore` crate by default when traversal should honor gitignore-style rules;
+otherwise use `walkdir`. Write custom recursive traversal only when either crate cannot
+express a documented boundary or performance requirement.
+
 - Use `filter_entry` to prune excluded directory subtrees before descent.
 - Sort by a documented key when output or mutation order is observable.
 - Decide whether symlinks are followed; do not inherit a library default accidentally.
@@ -139,6 +144,18 @@ If these semantics are not supported, fail clearly without partially copying.
   It silently drops errors and can turn incomplete work into apparent success.
 - Keep traversal and mutation separate when deleting or renaming entries could change
   what remains to be visited.
+
+**Bad:**
+
+```rust
+let files: Vec<_> = WalkDir::new(root)
+    .into_iter()
+    .filter_map(Result::ok)
+    .filter(|entry| entry.file_type().is_file())
+    .collect();
+```
+
+**Good:**
 
 ```rust
 use std::path::{Path, PathBuf};
@@ -183,7 +200,10 @@ failed targets.
 
 ## Test the State Machine, Not Just Final Bytes
 
-Use an isolated `tempfile::TempDir` for every mutating test.
+Build every mutating fixture in the isolated root required by
+[`rust-testing-rules.md`](rust-testing-rules.md#test-filesystem-behavior-in-isolated-roots).
+That document owns fixture construction and cleanup; this section owns the filesystem
+behaviors the fixture must exercise.
 Test:
 
 - empty, nested, Unicode, and platform-specific paths;

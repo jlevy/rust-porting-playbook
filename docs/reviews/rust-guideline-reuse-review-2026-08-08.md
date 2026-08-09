@@ -2,6 +2,7 @@
 title: "Rust Guideline Reuse Review"
 status: complete
 date: 2026-08-08
+last_updated: 2026-08-09
 review_bead: rpp-djiw
 baseline_commit: 911f7cd484777a31b32953c0efbbb86b10a96e06
 pull_request: 22
@@ -55,13 +56,15 @@ Three alternatives were rejected:
 
 - keeping the 7,000-word CLI reference as the hub would preserve duplication and make
   selective context loading difficult;
-- deleting the old paths immediately would break historical links and external
-  bookmarks;
+- keeping redirect stubs would make `rust-rules.md` and `rust-general-rules.md` appear
+  equally current and would preserve obsolete numbered sections indefinitely;
 - copying the candidates directly into tbd in the same PR would couple two repository
   lifecycles and make review provenance unclear.
 
-Compatibility files are therefore intentionally small, and tbd upstreaming is tracked
-separately.
+The obsolete paths are therefore deleted.
+Versioned checkouts and git history preserve their prior content, while current
+navigation exposes only maintained documents.
+tbd upstreaming remains tracked separately.
 
 ### Documentation Consistency
 
@@ -72,7 +75,7 @@ they describe the repository state at their recorded commits.
 
 Confirmed benign during review:
 
-- legacy filenames remain only in compatibility maps, historical artifacts, and the
+- legacy filenames remain only as historical evidence in completed artifacts and this
   reorganization audit;
 - Python appears in the general release guideline only as the audience for an optional
   PyPI binary-wheel channel;
@@ -137,7 +140,7 @@ new porting paths are added.
 | [`rust-filesystem-rules.md`](../../guidelines/rust-filesystem-rules.md) | Paths, traversal, mutation planning, replacement, durability, metadata, links, recovery, and failure tests | Extracted target-side rules from filesystem porting guidance | Specialized wave |
 | [`rust-testing-rules.md`](../../guidelines/rust-testing-rules.md) | Unit, integration, property, snapshot, CLI, async, feature, toolchain, platform, and coverage tests | Extracted Rust testing from port coverage guidance and duplicated references | First wave |
 | [`rust-release-rules.md`](../../guidelines/rust-release-rules.md) | Release identity, gates, artifacts, permissions, channels, publishing, smoke tests, and incidents | Split release policy from project setup and the CLI reference | Specialized wave |
-| [`rust-code-review-rules.md`](../../guidelines/rust-code-review-rules.md) | Severity-ranked correctness, soundness, APIs, concurrency, dependencies, tests, and reviewer flow | Promoted and normalized the general review checklist | Specialized wave |
+| [`rust-code-review-rules.md`](../../guidelines/rust-code-review-rules.md) | Review process, severity, risk ordering, unsafe and FFI analysis, and quick scanning | Promoted and refocused the general review checklist to load topic rules instead of restating them | Specialized wave |
 
 [`guidelines/README.md`](../../guidelines/README.md) is now the navigation root.
 Each general guideline has tbd-style frontmatter, a standalone scope statement,
@@ -147,17 +150,16 @@ actionable rules, related-guideline links, and the repository’s documentation 
 
 | Previous source | Disposition |
 | --- | --- |
-| `rust-general-rules.md` | Compatibility redirect to `rust-rules.md`; formatting, setup, and test material moved to focused guidelines |
+| `rust-general-rules.md` | Replaced by `rust-rules.md` and deleted; formatting, setup, and test material moved to focused guidelines |
 | `rust-project-setup.md` | Retained as an authority, shortened, and separated from release mechanics |
 | `filesystem-heavy-cli-porting.md` | Retains filesystem contract inventory, source/target parity, fixture matrices, and differential validation; implementation rules moved to `rust-filesystem-rules.md` |
 | `test-coverage-for-porting.md` | Retains source-suite evidence, syntactic-surface enumeration, test mapping, fixture provenance, and differential validation; Rust test design moved to `rust-testing-rules.md` |
-| `rust-cli-app-patterns.md` | Compatibility redirect to `rust-cli-rules.md`; version-correspondence behavior remains in `python-to-rust-cli-porting.md` |
-| `rust-cli-best-practices.md` | Reduced to a compatibility map routing project, CLI, test, release, review, porting, and research topics to their authorities |
-| `rust-code-review-checklist.md` | Compatibility redirect to `rust-code-review-rules.md` |
+| `rust-cli-app-patterns.md` | Moved reusable rules to `rust-cli-rules.md` and deleted; version-correspondence behavior remains in `python-to-rust-cli-porting.md` |
+| `rust-cli-best-practices.md` | Split maintained rules across the focused suite and research documents, then deleted |
+| `rust-code-review-checklist.md` | Refocused as the process-oriented `rust-code-review-rules.md`, then deleted |
 
-The compatibility files preserve established paths and the historical anchors still used
-by completed plans and reviews.
-Live navigation links directly to the new authorities.
+Completed plans and reviews may name the old sources as historical evidence.
+Live links and navigation point directly to the maintained authorities.
 
 ## Porting Layer Retained
 
@@ -182,8 +184,8 @@ and the execution sequence remains in the playbooks.
 
 The seven audited sources contained 19,546 words.
 Their reorganized general suite, port-specific filesystem and test documents, navigation
-index, and four compatibility files contain 12,759 words: 6,787 fewer words, or about
-35% less material in this overlapping cluster.
+index, and no compatibility files contain 12,088 words: 7,458 fewer words, or about 38%
+less material in this overlapping cluster.
 The reduction comes from removing repeated Cargo, CI, release, testing, and CLI
 explanations rather than dropping the porting contract.
 
@@ -224,15 +226,16 @@ reviewed independently from changes to tbd itself.
 
 All required checks passed:
 
-- 36 unit and integration tests, including three new guideline-structure regressions;
-- tracked-text and Markdown structure checks across all 69 Markdown files, including
+- 37 unit and integration tests, including four guideline-structure regressions;
+- tracked-text and Markdown structure checks across all 67 Markdown files, including
   links, anchors, fences, and forbidden invisible Unicode;
 - frozen PEP 723 uv lock validation with builds disabled;
 - the independent 14-day dependency cool-off gate;
 - byte-for-byte lockfile inventories regenerated from pinned tbd and qmd upstream
   commits;
 - shell syntax for all six Claude and Codex integration scripts;
-- Flowmark’s full auto-format check for every new or substantially rewritten document;
+- Flowmark’s auto-format check for all modified guideline, plan, review, case-study, and
+  overview documents; the repository-wide README baseline remains tracked by `rpp-iasa`;
 - `git diff --check`;
 - tbd repository, issue, dependency, worktree, and local sync consistency checks.
 

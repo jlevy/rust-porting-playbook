@@ -1,6 +1,7 @@
 ---
 title: Rust Testing Rules
 description: Rules for effective unit, integration, property, snapshot, and cross-platform testing in Rust
+author: Joshua Levy (github.com/jlevy) with LLM assistance
 category: rust
 ---
 # Rust Testing Rules
@@ -87,8 +88,10 @@ serialized data, and large render trees.
   might miss in a large diff.
 - Never auto-accept snapshots in CI.
 
-`insta` is a common Rust snapshot tool.
-CLI session tests can use a transcript tool or a small purpose-built harness.
+Use `insta` by default for Rust snapshots because it keeps reviewed snapshot files and
+update diffs in the test workflow.
+Use another representation only when the project documents a format, interoperability,
+or dependency-policy constraint that `insta` cannot satisfy.
 Apply `tbd guidelines golden-testing-guidelines` before choosing the representation.
 
 ## Use Property Tests for Invariants
@@ -109,32 +112,24 @@ Property tests complement, rather than replace, examples with exact expected out
 
 ## Test Filesystem Behavior in Isolated Roots
 
-- Give every mutating test its own `tempfile::TempDir`.
-- Never use a shared predictable path or broad cleanup glob.
-- Assert the complete relevant tree, including names, bytes, links, and promised
-  metadata.
-- Inject failures before and after commit points.
-- Test destination collisions and symlink policy.
-- Do not call a replacement atomic solely because final content is either old or new;
-  exercise the interrupted state.
+Give every mutating test its own `tempfile::TempDir` by default, build all fixture paths
+under that root, and let its exact lifetime own cleanup.
+Inject filesystem behavior through a narrow adapter when a deterministic failure cannot
+be produced portably.
 
-See [`rust-filesystem-rules.md`](rust-filesystem-rules.md).
+[`rust-filesystem-rules.md`](rust-filesystem-rules.md#test-the-state-machine-not-just-final-bytes)
+owns the collision, symlink, metadata, commit-point, durability, and recovery cases that
+the test suite must cover.
 
 ## Test CLI Contracts Through the Built Binary
 
-Use an integration-test harness to run the actual executable when testing:
+Use an integration-test harness to run the actual packaged or Cargo-built executable.
+Pass arguments as a vector, construct the environment explicitly, capture stdout and
+stderr separately, and assert the exit status before interpreting output.
 
-- arguments, help, and version;
-- stdout, stderr, and exit codes;
-- stdin and broken pipes;
-- environment and configuration precedence;
-- TTY-sensitive color or progress behavior;
-- interruption and destructive-operation recovery.
-
-Keep command invocation as an argument vector.
-Capture each stream separately and assert failure cases as carefully as success cases.
-
-See [`rust-cli-rules.md`](rust-cli-rules.md).
+[`rust-cli-rules.md`](rust-cli-rules.md#test-the-executable-contract) owns the command,
+stream, terminal, configuration, interruption, and destructive-operation behaviors the
+harness must exercise.
 
 ## Test Async and Concurrent Code as a State Machine
 
@@ -166,8 +161,9 @@ platform adapters need real tests on the platform.
 
 ## Use Coverage to Find Missing Questions
 
-Source-based coverage tools such as `cargo-llvm-cov` can identify unexecuted lines,
-regions, and branches.
+Use `cargo-llvm-cov` by default to identify unexecuted lines, regions, and branches.
+Use another coverage tool only when the compiler, target, or reporting environment
+cannot support it, and keep the replacement command reproducible.
 Use the report to ask which behavior lacks evidence.
 
 - Do not optimize for a universal percentage.

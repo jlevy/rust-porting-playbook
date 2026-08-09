@@ -1,6 +1,7 @@
 ---
 title: Rust Rules
 description: General Rust coding rules for modern libraries, applications, services, and command-line tools
+author: Joshua Levy (github.com/jlevy) with LLM assistance
 category: rust
 ---
 # Rust Rules
@@ -47,6 +48,22 @@ capture, shorter tail-expression temporary lifetimes, and resolver version 3.
 - **Do not expose lock guards through public APIs.** Complete the protected operation
   inside the abstraction and return plain data or a result.
 
+A clone that exists only to satisfy aliasing is a cue to split the field borrows.
+
+**Bad:**
+
+```rust
+let config = state.config.clone();
+render(&config, &mut state.output)?;
+```
+
+**Good:**
+
+```rust
+let State { config, output } = state;
+render(config, output)?;
+```
+
 ```rust
 use std::borrow::Cow;
 
@@ -63,10 +80,15 @@ fn normalize(input: &str) -> Cow<'_, str> {
 
 - **Use domain types instead of primitive aliases.** Newtypes make units and validated
   values explicit.
-- **Use enums for modes and states.** Avoid several related booleans or magic sentinel
-  values.
-- **Use `Option<T>` for absence.** Do not encode absence as `-1`, an empty string, or a
-  special path.
+- **Replace related booleans and sentinels with one enum.** Several flags such as
+  `is_pending`, `is_running`, and `is_complete` permit contradictory states that one
+  enum makes unrepresentable.
+- **Return a named struct when tuple fields have meaning.** A return type such as
+  `(bool, usize, String)` hides which value is a status, count, or message and becomes
+  fragile when fields change.
+- **Do not derive `Default` when construction requires a decision.** Configuration and
+  context types should require security, storage, network, or destructive-operation
+  choices rather than silently selecting them.
 - **Make matches exhaustive.** Avoid wildcard arms when adding a new enum variant should
   force callers to make a decision.
 - **Keep public APIs minimal.** Default to private or `pub(crate)` and make an item
@@ -91,10 +113,14 @@ enum OutputMode {
 
 ## Error Handling
 
-- **Use typed errors at library boundaries.** A small error enum, commonly derived with
-  `thiserror`, lets callers match recoverable cases without parsing messages.
-- **Use contextual reports at application boundaries.** `anyhow` or another report type
-  can be appropriate in binaries where errors are displayed rather than matched.
+- **Use `thiserror` for typed library errors by default.** A small error enum lets
+  callers match recoverable cases without parsing messages.
+  Implement the traits manually only when avoiding the proc macro has a measured or
+  policy-driven benefit.
+- **Use `anyhow` for contextual reports at binary boundaries by default.** Application
+  errors are normally displayed rather than matched.
+  Use a different report type only when the project documents another error-stack or
+  diagnostic contract.
 - **Preserve the source error.** Add context with error chaining; do not replace a
   detailed error with a generic string.
 - **Do not discard fallible results.** A `let _ = operation()` requires an explicit
@@ -105,6 +131,20 @@ enum OutputMode {
   programmer contracts or states that are genuinely unreachable.
 - **Classify retryable failures explicitly.** Network and service code should not infer
   retry behavior from error strings.
+
+Discarding a result hides whether required cleanup or persistence happened.
+
+**Bad:**
+
+```rust
+let _ = std::fs::remove_file(path);
+```
+
+**Good:**
+
+```rust
+std::fs::remove_file(path)?;
+```
 
 ```rust
 #[derive(Debug, thiserror::Error)]
@@ -151,8 +191,18 @@ static IDENTIFIER: LazyLock<Regex> =
 
 - **Organize modules around coherent responsibilities.** Split files when distinct
   concepts change for different reasons, not at an arbitrary line threshold.
-- **Prefer descriptive module files.** Use a directory module when it owns a meaningful
-  family of submodules; do not add indirection solely for symmetry.
+- **Prefer `foo.rs` with `foo/` submodules over `foo/mod.rs`.** The Edition 2018+ layout
+  keeps editor tabs and search results descriptive.
+  Use `mod.rs` only when a project-wide convention or generated layout provides a
+  concrete benefit.
+- **Reserve re-exports for a deliberate public API.** Put explicit `pub use` items at a
+  crate’s supported public boundary.
+  Avoid glob re-exports, internal convenience re-exports, and application `prelude`
+  modules that obscure ownership.
+- **Update internal callers after moving an item.** Do not leave a compatibility
+  re-export at the old path.
+  A published library may retain an explicitly deprecated re-export only when its
+  compatibility policy requires a migration window and names a removal release.
 - **Keep binaries thin.** Put reusable domain behavior in library modules and keep
   process setup at the executable boundary.
 - **Document public contracts and invariants.** Public items need concise `///` docs;
@@ -194,14 +244,28 @@ static IDENTIFIER: LazyLock<Regex> =
 - **Support graceful shutdown.** Stop accepting work, signal workers, drain or cancel
   in-flight operations according to policy, and report incomplete work.
 
+Move plain data out of a critical section before awaiting unrelated work.
+
+**Bad:**
+
+```rust
+let state = shared.lock().await;
+send(&state.payload).await?;
+```
+
+**Good:**
+
+```rust
+let payload = { shared.lock().await.payload.clone() };
+send(&payload).await?;
+```
+
 ## Performance
 
-- **Measure before optimizing.** Use representative workloads and retain benchmark
-  inputs with the code.
+- **Require representative benchmark evidence for a retained optimization.** Record
+  inputs, toolchain, target, and relevant environment so the claim can be reproduced.
 - **Inspect allocations in hot paths.** Reuse buffers and avoid repeated `to_string`,
   `format!`, `collect`, and clone operations inside tight loops.
-- **Choose collections for access patterns.** A linear scan can be best for a tiny
-  collection; use sets or maps when membership or key lookup dominates.
 - **Keep correctness tests separate from benchmarks.** A benchmark should not be the
   only evidence that an optimization preserves behavior.
 - **Record the tradeoff.** Non-obvious optimizations need a comment or benchmark link

@@ -1,6 +1,7 @@
 ---
 title: Rust Project Setup
 description: Rules for structuring, validating, and maintaining modern Rust packages and workspaces
+author: Joshua Levy (github.com/jlevy) with LLM assistance
 category: rust
 ---
 # Rust Project Setup
@@ -74,6 +75,13 @@ license = "MIT OR Apache-2.0"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
+```
+
+Each member package must opt in; defining workspace lints alone does not apply them:
+
+```toml
+[lints]
+workspace = true
 ```
 
 Virtual workspaces must declare the resolver because there is no root package edition
@@ -176,8 +184,11 @@ unsafe_code = "forbid"
 
 ## Make One Local Command Match CI
 
-Contributors and CI should run the same named validation entry point, implemented with
-`just`, a checked-in script, or another project-standard task runner.
+Contributors and CI should run the same named validation entry point.
+Use a checked-in `justfile` by default because it keeps named tasks local and
+reviewable. Use a checked-in script or another task runner only when bootstrap
+availability, portability, or an established repository convention provides a concrete
+reason.
 
 The baseline normally includes:
 
@@ -233,7 +244,9 @@ Treat additions and upgrades as code changes.
 - Review the exact source diff and release notes for an upgrade.
 - Minimize enabled features and default features.
 - Prefer registry sources; justify git dependencies and pin them to immutable commits.
-- Run RustSec, OSV, license, source, and duplicate-version policy checks as appropriate.
+- Use `cargo-deny` by default for advisory, license, source, and duplicate-version
+  policy. Add OSV or another scanner when it covers ecosystems or evidence outside the
+  Cargo graph.
 - Use `cargo tree` to understand ownership of transitive dependencies.
 - Use an unused-dependency tool as supporting evidence, then verify removals by build
   and test.

@@ -24,12 +24,27 @@ guidelines.
 | [`rust-filesystem-rules.md`](rust-filesystem-rules.md) | Safe mutation, atomic replacement, metadata, traversal, symlinks, and failure testing |
 | [`rust-testing-rules.md`](rust-testing-rules.md) | Unit, integration, property, snapshot, async, feature, platform, and coverage testing |
 | [`rust-release-rules.md`](rust-release-rules.md) | Release identity, artifacts, permissions, channels, trusted publishing, and incidents |
-| [`rust-code-review-rules.md`](rust-code-review-rules.md) | Severity-ranked review of soundness, ownership, APIs, concurrency, dependencies, and tests |
+| [`rust-code-review-rules.md`](rust-code-review-rules.md) | Risk-ordered review process, severity, guideline routing, unsafe and FFI analysis, and actionable findings |
 
-For ordinary Rust implementation, start with `rust-rules.md` and add the focused
-document for the work.
-For a new repository, also load `rust-project-setup.md`. For a review, load
-`rust-code-review-rules.md` after the relevant topic guidelines.
+## Start a New Rust Project
+
+Load `rust-rules.md` and `rust-project-setup.md`, then add only the focused guideline
+for each surface the project actually contains.
+For example, a library with no binary does not need the CLI rules, and an internal
+service with no published artifacts does not need the release rules.
+
+Apply each guideline as a default policy.
+Record a concrete reason when project constraints require a different tool or rule.
+
+## Improve or Review an Existing Rust Codebase
+
+Load `rust-rules.md` plus the topic guidelines that match the changed files and runtime
+boundaries. Load `rust-code-review-rules.md` last; it defines the review process and
+severity model without repeating the topic rules.
+
+Run the repository’s automated checks before spending review time on properties they
+already establish. Report each remaining finding with severity, file and line evidence,
+the violated contract, and a bounded correction.
 
 ## Porting Guidelines
 
@@ -58,13 +73,10 @@ links, and the common documentation footer.
 This repository remains their development home until a separate upstream change adds
 selected documents to tbd itself.
 
-The recommended upstream order is:
-
-1. `rust-rules`
-2. `rust-project-setup`
-3. `rust-cli-rules`
-4. `rust-testing-rules`
-5. the specialized filesystem, release, and code-review guidelines
+The dated
+[reuse review](../docs/reviews/rust-guideline-reuse-review-2026-08-08.md#tbd-upstream-recommendation)
+owns the upstream grouping and order so this navigation index does not duplicate that
+decision.
 
 <!-- This document follows common-doc-guidelines.md.
 See github.com/jlevy/practical-prose and review guidelines before editing.

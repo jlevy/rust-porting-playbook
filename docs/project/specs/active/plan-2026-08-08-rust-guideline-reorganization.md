@@ -1,10 +1,10 @@
 # Feature: Reusable Rust Guideline Reorganization
 
-**Date:** 2026-08-08 (last updated 2026-08-08)
+**Date:** 2026-08-08 (last updated 2026-08-09)
 
 **Author:** Joshua Levy + Codex
 
-**Status:** Implemented and delivered
+**Status:** Implemented; awaiting PR review and merge
 
 **Delivery:** [Draft PR #22](https://github.com/jlevy/rust-porting-playbook/pull/22)
 
@@ -96,7 +96,7 @@ Five become newly standalone topics; two existing topics are retained and refocu
 | `rust-filesystem-rules.md` | Extract from filesystem porting guidance | Atomic writes, backups, collision policy, traversal, paths, mutation testing |
 | `rust-testing-rules.md` | Extract from test-porting guidance and duplicated references | Rust test placement, fixtures, snapshots, property tests, coverage, CI behavior |
 | `rust-release-rules.md` | Extract from project setup and the oversized CLI reference | Release design, artifacts, channels, trusted publishing, checksums, idempotency |
-| `rust-code-review-rules.md` | Move and normalize the review checklist | Ownership, soundness, APIs, async, dependencies, performance, reviewer flow |
+| `rust-code-review-rules.md` | Move and refocus the review checklist | Review process, severity, risk ordering, unsafe and FFI analysis, and quick scanning |
 
 Add `guidelines/README.md` as the navigation root for the general Rust and porting
 groups. Each general document must have tbd-compatible frontmatter, a concise scope
@@ -124,12 +124,12 @@ to `rust-testing-rules.md` for target-side testing practices.
 
 ### Duplicate Reference Consolidation
 
-Replace `references/rust-cli-best-practices.md` with a concise best-practices map that
-routes readers to the seven guideline documents and the detailed distribution research.
-Remove duplicated CI, Cargo, release, testing, and CLI explanations from that reference.
-Move the content of `references/rust-cli-app-patterns.md` and
-`references/rust-code-review-checklist.md` into their guideline homes, then update all
-internal links.
+Move the reusable content of `references/rust-cli-app-patterns.md`,
+`references/rust-cli-best-practices.md`, and `references/rust-code-review-checklist.md`
+into authoritative guideline or research documents, then delete those obsolete paths.
+Rename `guidelines/rust-general-rules.md` to the unambiguous `rust-rules.md` without a
+compatibility stub. Versioned checkouts and git history preserve the old documents;
+current readers should see only the maintained structure.
 
 ### tbd Upstream Readiness
 
@@ -145,18 +145,20 @@ avoids maintaining a second project-local copy under `.tbd/docs/guidelines/`.
 - [x] Create the seven-document Rust guideline suite and `guidelines/README.md`.
 - [x] Separate port-only material from general CLI, filesystem, and testing guidance.
 - [x] Consolidate release and project-setup duplication from the CLI reference.
+- [x] Remove obsolete compatibility documents and assert that they stay absent.
 - [x] Update repository navigation and every internal cross-reference.
 - [x] Produce a review document with a section-level disposition map and reusable-topic
   count.
 - [x] Run the complete repository validation matrix and review the final diff.
 - [x] Publish the work as a separate pull request and verify CI.
+- [x] Address PR #22 findings R1–R10 and suggestions S1–S5 with tracked dispositions.
 
 ## Testing Strategy
 
 - Run `scripts/check_docs.py` to verify links, anchors, fences, and tracked text.
 - Run the complete unit suite because documentation tests cover repository navigation
   and validation behavior.
-- Search for obsolete filenames and stale links after moves.
+- Search for obsolete live links after moves and assert that legacy paths do not exist.
 - Verify each general Rust guideline has required frontmatter, a scope statement,
   related-guideline links, and the common documentation footer.
 - Confirm porting documents still expose every mapping, parity, traceability, and
@@ -166,17 +168,20 @@ avoids maintaining a second project-local copy under `.tbd/docs/guidelines/`.
 ## Rollout Plan
 
 Published this work as
-[stacked draft PR #22](https://github.com/jlevy/rust-porting-playbook/pull/22), based on
-the completed repository-refresh branch.
-After the base pull request merges, retarget or rebase the guideline pull request onto
-`main` without mixing the two review scopes.
+[draft PR #22](https://github.com/jlevy/rust-porting-playbook/pull/22). After PR #21
+merged, PR #22 was retargeted to `main` and merged the current base without content
+conflicts before review findings were addressed.
 
 ## Decisions
 
-- Propose `rust-rules`, `rust-project-setup`, `rust-cli-rules`, and `rust-testing-rules`
-  to tbd first, followed by the specialized filesystem, release, and review documents.
+- Use the wave order maintained in the
+  [reuse review](../../../reviews/rust-guideline-reuse-review-2026-08-08.md#tbd-upstream-recommendation)
+  rather than duplicating it in navigation or planning documents.
 - Evaluate a `review-code-rust` shortcut with the upstreaming work tracked by
   `rpp-u657`, rather than coupling it to this repository reorganization.
+- Do not maintain compatibility paths for this repository-internal documentation
+  reorganization; update current links and rely on version control for historical
+  content.
 
 ## References
 
