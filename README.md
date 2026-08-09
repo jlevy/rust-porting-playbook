@@ -46,7 +46,8 @@ Notes and caveats:
 
 - The end-to-end porting workflow is currently focused on **Python-to-Rust**.
   The standalone Rust guideline suite is source-language-independent, and an active
-  plan tracks the TypeScript-to-Rust path.
+  workstream in the [project specification index](docs/project/specs/README.md) tracks
+  the TypeScript-to-Rust path.
 
 - This requires **thoroughly testable** Python apps where all features can be mapped to
   Rust. (You don’t need perfect tests to begin with, as long as the agent can add them
@@ -265,7 +266,6 @@ rust-porting-playbook/
 │   ├── playbook-improvement-log.md
 │   └── plans/
 │       ├── README.md
-│       ├── active/
 │       └── done/
 ├── playbooks/                 # Step-by-step process guides and checklists
 │   ├── python-to-rust-playbook.md        ** START HERE **
@@ -293,8 +293,16 @@ rust-porting-playbook/
 │   ├── porting-principles-and-antipatterns.md
 │   └── filesystem-heavy-cli-porting.md
 ├── docs/
-│   ├── project/research/      # In-depth research and dependency-port plans
-│   ├── project/specs/active/  # Governing plans linked to tbd features
+│   ├── README.md              # Stable index for project records
+│   ├── project/
+│   │   ├── README.md
+│   │   ├── playbook-flow-overview.md
+│   │   ├── posts/             # Publication source and assets
+│   │   ├── research/          # In-depth research and dependency-port plans
+│   │   └── specs/
+│   │       ├── README.md      # Lifecycle index for implementation plans
+│   │       ├── active/
+│   │       └── done/
 │   └── reviews/               # Dated repository engineering reviews
 ├── case-studies/              # Real-world porting examples
 │   ├── flowmark/              # Python Markdown formatter → Rust
@@ -321,7 +329,7 @@ rust-porting-playbook/
 | **Research** | `docs/project/research/` | In-depth investigation of specific topics (distribution, packaging) | When you need deep research on a specific area |
 | **Case Studies** | `case-studies/` | Real-world examples with decisions, metrics, lessons | When you hit a specific problem and want to see how it was handled |
 | **Meta Process** | `_meta/` | How to improve the playbook itself via case studies | Use when contributing playbook improvements |
-| **Plans and Reviews** | `docs/project/specs/`, `docs/reviews/` | Active workstream plans and dated repository assessments | When tracking future work or reviewing maintenance history |
+| **Project Records** | `docs/` | Lifecycle-indexed plans, publication material, and dated repository assessments | When tracking future work or reviewing implementation history |
 
 ## The Porting Process (Summary)
 
@@ -387,27 +395,25 @@ automation, test organization, maturin/PyPI distribution, and more).
 | [research-qmd-dependency-port-plan.md](docs/project/research/research-qmd-dependency-port-plan.md) | Fixed-commit dependency-by-dependency Rust migration plan for qmd |
 | [research-qmd-transitive-lockfile-appendix.md](docs/project/research/research-qmd-transitive-lockfile-appendix.md) | Reproducible qmd lockfile ownership and migration inventory |
 
-## Planning and Review Docs
+## Project Documentation
 
 | Document | What it covers |
 | --- | --- |
+| [Documentation index](docs/README.md) | Stable entry point for project records and their maintained-document counterparts |
+| [Project specification index](docs/project/specs/README.md) | Active and completed plan records organized by lifecycle |
 | [August 2026 repository refresh](docs/reviews/repository-refresh-2026-08-08.md) | Current maintenance, dependency-currency, documentation, automation, and supply-chain review |
-| [Rust guideline reorganization plan](docs/project/specs/active/plan-2026-08-08-rust-guideline-reorganization.md) | Governing plan for separating reusable Rust rules from porting mappings |
 | [Rust guideline reuse review](docs/reviews/rust-guideline-reuse-review-2026-08-08.md) | Section-level audit, extraction results, and tbd upstream candidates |
-| [TypeScript-to-Rust porting path](docs/project/specs/active/plan-2026-03-04-typescript-to-rust-porting-path.md) | Governing draft for the planned TypeScript core path and exemplar audits |
-| [Active plans](docs/project/specs/active/) | Current TypeScript, qmd, and knip workstreams linked to tbd features |
 | [Repository reviews](docs/reviews/) | Dated engineering, maintenance, and supply-chain assessments |
 
 ## Meta Docs
 
 | Document | What it covers |
 | --- | --- |
+| [Meta documentation index](_meta/README.md) | Stable entry point for the playbook-improvement process and its plan archive |
 | [meta-improving-this-playbook.md](_meta/meta-improving-this-playbook.md) | Process for improving the playbook through case studies |
 | [case-study-observations-template.md](_meta/case-study-observations-template.md) | Template for recording observations during a port |
 | [case-study-improvement-triage-template.md](_meta/case-study-improvement-triage-template.md) | Template for triaging observations into playbook changes |
 | [playbook-improvement-log.md](_meta/playbook-improvement-log.md) | Chronological log of playbook and meta-process improvements |
-| [plans/done/plan-2026-02-25-playbook-meta-gap-map-and-structure.md](_meta/plans/done/plan-2026-02-25-playbook-meta-gap-map-and-structure.md) | Consolidated gap map and implementation plan for playbook improvements |
-| [plans/done/plan-2026-02-25-flowmark-case-study-sync-and-readme-highlight.md](_meta/plans/done/plan-2026-02-25-flowmark-case-study-sync-and-readme-highlight.md) | Completed plan to synchronize Flowmark case-study docs and improve top-level summary |
 
 ## Improving This Playbook
 

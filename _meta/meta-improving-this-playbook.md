@@ -9,8 +9,8 @@ accurate and complete.
 [Observation Template](case-study-observations-template.md) |
 [Improvement Triage Template](case-study-improvement-triage-template.md) |
 [Improvement Log](playbook-improvement-log.md) |
-[Current Gap Map Plan](plans/done/plan-2026-02-25-playbook-meta-gap-map-and-structure.md)
-| [Auto-Sync Agent Prompt](../playbooks/auto-sync-agent-prompt-template.md)
+[Meta Plan Archive](plans/README.md) |
+[Auto-Sync Agent Prompt](../playbooks/auto-sync-agent-prompt-template.md)
 
 * * *
 

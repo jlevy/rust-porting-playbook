@@ -4,9 +4,12 @@
 
 **Author:** Joshua Levy + Codex
 
-**Status:** Implemented; awaiting PR review and merge
+**Status:** Complete
 
-**Delivery:** [Draft PR #22](https://github.com/jlevy/rust-porting-playbook/pull/22)
+**Delivery:** [PR #22](https://github.com/jlevy/rust-porting-playbook/pull/22)
+
+**Durable outputs:** [Rust guideline index](../../../../guidelines/README.md) and
+[Rust guideline reuse review](../../../reviews/rust-guideline-reuse-review-2026-08-08.md)
 
 ## Overview
 
@@ -152,6 +155,8 @@ avoids maintaining a second project-local copy under `.tbd/docs/guidelines/`.
 - [x] Run the complete repository validation matrix and review the final diff.
 - [x] Publish the work as a separate pull request and verify CI.
 - [x] Address PR #22 findings R1–R10 and suggestions S1–S5 with tracked dispositions.
+- [x] Archive this completed plan and route top-level navigation through durable
+  documentation indexes instead of individual plan records.
 
 ## Testing Strategy
 
@@ -168,7 +173,7 @@ avoids maintaining a second project-local copy under `.tbd/docs/guidelines/`.
 ## Rollout Plan
 
 Published this work as
-[draft PR #22](https://github.com/jlevy/rust-porting-playbook/pull/22). After PR #21
+[PR #22](https://github.com/jlevy/rust-porting-playbook/pull/22). After PR #21
 merged, PR #22 was retargeted to `main` and merged the current base without content
 conflicts before review findings were addressed.
 
