@@ -319,7 +319,7 @@ The packaging/distribution workstream was a significant effort that produced reu
 patterns now documented in the playbook.
 
 For detailed guidance, see:
-- [Rust CLI Best Practices: Multi-Channel Distribution](../../references/rust-cli-best-practices.md#65-multi-channel-distribution)
+- [Rust release channel guidance](../../guidelines/rust-release-rules.md#choose-channels-by-audience)
 - [Research: PyPI Distribution](../../docs/project/research/research-rust-cli-pypi-distribution.md)
 - [Research: Binary Distribution](../../docs/project/research/research-rust-cli-binary-distribution.md)
 

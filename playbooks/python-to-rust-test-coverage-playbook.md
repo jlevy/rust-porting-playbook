@@ -7,6 +7,7 @@ match against.
 
 **Related:** [Python-to-Rust Porting Guide](python-to-rust-porting-guide.md) |
 [Test Coverage for Porting](../guidelines/test-coverage-for-porting.md) |
+[Rust Testing Rules](../guidelines/rust-testing-rules.md) |
 `tbd guidelines golden-testing-guidelines`
 
 **Last update:** 2026-05-27

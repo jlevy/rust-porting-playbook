@@ -7,6 +7,10 @@ of any Python construct.
 
 For porting **methodology** (principles, workflow, pitfalls, acceptance criteria), see
 [Python-to-Rust Porting Rules](../guidelines/python-to-rust-porting-rules.md).
+For target-side design and implementation rules, start with the
+[Rust guideline index](../guidelines/README.md). This reference records equivalences;
+it is not the authority for general Rust project, CLI, filesystem, testing, release,
+or review practices.
 
 **Related:** [Python-to-Rust Porting Guide](../playbooks/python-to-rust-porting-guide.md)
 

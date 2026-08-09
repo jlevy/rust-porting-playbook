@@ -17,7 +17,7 @@ Then fill in the copy, so that this template can be reused for each subsequent s
 cycle.
 
 **Related:** [Initial Port Checklist](port-checklist-initial-template.md) |
-[Rust CLI Best Practices](../references/rust-cli-best-practices.md) |
+[Rust Release Rules](../guidelines/rust-release-rules.md) |
 [Auto-Sync Prompt](auto-sync-agent-prompt-template.md) |
 [Cross-Language Test Mapping](../references/cross-language-test-mapping.md)
 

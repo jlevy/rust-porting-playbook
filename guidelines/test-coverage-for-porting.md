@@ -1,428 +1,179 @@
 ---
 title: Test Coverage for Porting
-description: Guidelines for maximizing test coverage before and during a Python-to-Rust port, including golden testing and tryscript
+description: Rules for turning a source implementation's tests and behavior into an explicit Rust parity contract
 ---
 # Test Coverage for Porting
 
-Guidelines for building comprehensive test coverage as the specification for a
-Python-to-Rust port.
-High test coverage in the Python source directly translates to a higher-quality, more
-automatable port.
-
-See also: [Python-to-Rust Porting Rules](python-to-rust-porting-rules.md).
-For golden testing patterns, see `tbd guidelines golden-testing-guidelines`. For general
-testing rules, see `tbd guidelines general-testing-rules`. For TDD methodology, see
-`tbd guidelines general-tdd-guidelines`.
-
-## Core Principle
-
-**Tests are the specification for the port.** Every test you write in Python before
-porting becomes an exact requirement for the Rust implementation.
-Higher Python test coverage = more precise Rust specification = fewer bugs in the port.
-
-**Corollary: mirroring upstream tests faithfully inherits upstream gaps.** When the
-source project has a blind spot, the port will silently inherit it. Pre-emptive
-enumeration of the port's API surface (see "Syntactic Surface Enumeration" below) is
-the structural fix; differential corpus sweeps are necessary but not sufficient
-(they only sample what real-world inputs happen to exercise).
-
-## Syntactic Surface Enumeration (pre-emptive class sweep)
-
-The differential parity sweep in
-[`python-to-rust-sync-release-workflow`](../playbooks/python-to-rust-sync-release-workflow.md)
-is reactive: it triggers when a discrepancy is observed. Real-world corpora
-overwhelmingly sample common forms, so rare-but-valid syntactic variants slip
-through. The fix is to enumerate the API surface pre-emptively at port time.
-
-### When to apply
-
-Any port whose surface is a finite grammar — parsers, formatters, lexers, expression
-evaluators, configuration loaders, query builders. For these, the set of input forms
-is small and enumerable.
-
-### How
-
-1. **Identify the "node types" of the surface.** For a Markdown formatter, that is
-   each AST node variant the renderer handles (`Heading`, `Link`, `Image`, ...).
-   For a config loader, each top-level key shape. For a query builder, each
-   expression node.
-2. **For each node type, enumerate every syntactic form it can take in source.**
-   Example for Markdown `Image`: inline (`![alt](url)`), inline-with-title,
-   inline-empty-alt, reference-full (`![alt][label]`), reference-collapsed
-   (`![alt][]`), reference-shortcut (`![alt]`), reference-label-case-insensitive,
-   reference-label-with-spaces, reference-missing-definition. Plus combinations
-   with other nodes (image inside link → badge pattern).
-3. **For each (node, form) row, capture the canonical Python output** by running
-   the input through the pinned Python binary. Don't hand-write the expected
-   output — derive it.
-4. **Add one test per row** to a dedicated `tests/test_syntactic_surface.rs` (or
-   equivalent). Tests should be byte-equality assertions against the captured
-   Python output.
-5. **Maintain a coverage matrix doc** (e.g. `docs/parity-coverage-matrix.md`)
-   that lists each (node, form) pair and links to its test, so a gap is a missing
-   row in the table rather than a missing test someone has to think of. Update
-   the matrix in the same commit as any change to a render branch.
-
-### Worked example
-
-See [flowmark-rs](https://github.com/jlevy/flowmark-rs):
-- [`tests/test_syntactic_surface.rs`](https://github.com/jlevy/flowmark-rs/blob/main/tests/test_syntactic_surface.rs)
-- [`docs/parity-coverage-matrix.md`](https://github.com/jlevy/flowmark-rs/blob/main/docs/parity-coverage-matrix.md)
-
-That port adopted this approach after PR #59 because three latent parity bugs
-(reference-image inlining, badge pattern, ref-def label lowercasing) were
-inherited from upstream's near-zero coverage of reference-image forms. The
-matrix made the gap a single missing row in a table rather than a bug to be
-discovered through user reports.
-
-### Companion: file upstream test additions
-
-When the port's surface enumeration reveals a gap in the source project's own
-tests, file the matching test additions upstream. This closes the gap at the
-root so future ports (any language) inherit complete coverage rather than the
-blind spot. See
-[flowmark#50](https://github.com/jlevy/flowmark/issues/50) for an example.
-
-## Pre-Port Coverage Strategy
-
-### Step 1: Measure Baseline Coverage
-
-```bash
-cd python-repo
-uv run pytest --cov=myproject --cov-branch --cov-report=term-missing
-```
-
-Target: identify uncovered code paths that will need tests.
-
-### Step 2: Write Unit Tests for Uncovered Code
-
-Focus on:
-- Edge cases in parsing/formatting logic
-- Error handling paths
-- Boundary conditions (empty input, huge input, special characters)
-- Unicode handling
-
-### Step 3: Write Integration Tests (CLI Golden Tests)
-
-Capture the CLI’s behavior as golden test fixtures:
-
-```bash
-# Generate golden output from known inputs
-for f in test-fixtures/input/*.md; do
-    python -m myproject "$f" > "test-fixtures/expected/$(basename $f)"
-done
-```
-
-These expected outputs become the specification for the Rust port.
-
-### Step 4: Use tryscript for CLI Golden Tests
-
-[tryscript](https://github.com/jlevy/tryscript) captures CLI sessions as reproducible
-test scripts:
-
-```bash
-# Install tryscript
-pip install tryscript
-
-# Record a CLI session
-tryscript record test-session.try
-
-# Replay and verify
-tryscript test test-session.try
-```
-
-tryscript is particularly valuable for:
-- Complex CLI workflows (multiple commands, piping)
-- Interactive sessions
-- Testing error messages and exit codes
-- Regression testing after changes
-
-### Step 5: Document Manual Test Procedures
-
-For behaviors that are hard to automate (visual output, interactive sessions), create
-documented manual test procedures:
-
-```markdown
-## Manual Test: Progress Bar Display
-
-1. Run: `myproject --verbose large-file.md`
-2. Verify: Progress bar appears on stderr
-3. Verify: Progress bar shows file count
-4. Verify: No progress bar when piped: `myproject large-file.md | cat`
-```
-
-## Test Fixture Organization
-
-### Directory Structure
-
-```
-test-fixtures/
-├── input/                    # Input files (shared between Python and Rust)
-│   ├── basic.md
-│   ├── complex-formatting.md
-│   ├── edge-cases.md
-│   ├── unicode.md
-│   └── empty.md
-├── expected/                 # Expected outputs (generated by Python)
-│   ├── basic.md
-│   ├── complex-formatting.md
-│   └── ...
-└── scripts/                  # Test scripts (tryscript files)
-    ├── basic-workflow.try
-    └── error-handling.try
-```
-
-### Fixture Management Best Practices
-
-- **Check fixtures into version control.** Fixtures are the specification -- they must
-  be versioned alongside the code so that changes are visible in diffs.
-- **Regenerate, do not hand-edit.** Always regenerate expected outputs from the Python
-  source of truth. Hand-editing fixtures drifts from actual behavior.
-- **Keep fixtures small and focused.** Each fixture should test one concern.
-  Avoid mega-fixtures that make failures hard to diagnose.
-- **Handle binary fixtures carefully.** If your tool produces binary output (images,
-  serialized data), store fixtures with Git LFS or a `.gitattributes` binary marker, and
-  compare via checksums rather than byte-for-byte diffs.
-- **Share fixtures between Python and Rust.** Place `test-fixtures/` at the repository
-  root so both the Python test suite and Rust integration tests reference the same
-  directory. This guarantees the same inputs and expected outputs are used by both
-  implementations.
-
-### Fixture Generation Script
-
-```bash
-#!/usr/bin/env bash
-# scripts/generate-fixtures.sh
-set -euo pipefail
-
-PY_CMD=(uv run -q --project python-repo python -m myproject)
-
-for input in test-fixtures/input/*.md; do
-    name="$(basename "$input")"
-    echo "Generating expected output for $name..."
-    "${PY_CMD[@]}" "$input" > "test-fixtures/expected/$name"
-done
-
-echo "Generated $(ls test-fixtures/expected/ | wc -l) fixture(s)"
-```
-
-## Porting Tests to Rust
-
-### Unit Tests
-
-Port Python unit tests directly to Rust `#[test]` functions:
-
-```python
-# Python
-def test_wrap_basic():
-    assert wrap("hello world", width=5) == "hello\nworld"
-```
-
-```rust
-// Rust
-#[test]
-fn test_wrap_basic() {
-    assert_eq!(wrap("hello world", 5), "hello\nworld");
-}
-```
-
-### Integration Tests with Fixtures
-
-Use `include_str!()` to embed golden test fixtures:
-
-```rust
-#[test]
-fn test_format_basic() {
-    let input = include_str!("../../test-fixtures/input/basic.md");
-    let expected = include_str!("../../test-fixtures/expected/basic.md");
-    let result = format_document(input, &Config::default());
-    assert_eq!(result, expected);
-}
-```
-
-### Snapshot Testing with insta
-
-The [`insta`](https://insta.rs/) crate is the standard for snapshot testing in Rust.
-It works similarly to golden tests but manages snapshots automatically, making it an
-excellent complement to the fixture-based approach above:
-
-```rust
-use insta::assert_snapshot;
-
-#[test]
-fn test_format_basic() {
-    let input = include_str!("../../test-fixtures/input/basic.md");
-    let result = format_document(input, &Config::default());
-    assert_snapshot!(result);
-}
-```
-
-Run `cargo insta review` to interactively accept or reject snapshot changes.
-This is especially useful during active porting when outputs are stabilizing.
-
-Add to `Cargo.toml`:
-```toml
-[dev-dependencies]
-insta = "1"
-proptest = "1"
-# quickcheck = "1"  # Alternative to proptest
-```
-
-### Property-Based Tests
-
-Use property-based testing to verify algorithmic invariants that are hard to cover
-exhaustively with hand-written examples.
-The two main crates are:
-
-- [`proptest`](https://crates.io/crates/proptest) -- Hypothesis-inspired, with per-value
-  strategies and constraint-aware shrinking.
-  Recommended for most porting projects because its strategy model makes it easy to
-  express input constraints.
-- [`quickcheck`](https://crates.io/crates/quickcheck) -- generates and shrinks values
-  based on type alone.
-  Simpler to set up but less flexible for constrained inputs.
-
-Example using `proptest`:
-
-```rust
-use proptest::prelude::*;
-
-proptest! {
-    #[test]
-    fn wrap_never_exceeds_width(s in "\\PC{1,200}", width in 10..200usize) {
-        let wrapped = wrap(&s, width);
-        for line in wrapped.lines() {
-            // Lines should not exceed width (unless a single word is longer)
-            prop_assert!(
-                line.len() <= width || !line.contains(' '),
-                "Line too long: {} (width: {})", line.len(), width
-            );
-        }
-    }
-}
-```
-
-### Golden Tests with Multiple Modes
-
-When porting a tool with multiple output modes or formatting options, create golden tests
-that exercise each mode against the same set of inputs. This catches mode-specific
-parity bugs that single-mode testing misses.
-
-For example, if a text formatter supports 4 modes (wrap-only, sentence-breaks, both,
-neither), generate 4 expected outputs per input fixture:
-
-```
-test-fixtures/
-├── input/basic.md
-├── expected/basic.wrap.md         # --width=80
-├── expected/basic.sentence.md     # --sentence-breaks
-├── expected/basic.both.md         # --width=80 --sentence-breaks
-└── expected/basic.neither.md      # (no flags)
-```
-
-In Rust, parameterize the test:
-```rust
-#[rstest]
-#[case("wrap", Config { width: Some(80), sentence_breaks: false })]
-#[case("sentence", Config { width: None, sentence_breaks: true })]
-#[case("both", Config { width: Some(80), sentence_breaks: true })]
-#[case("neither", Config { width: None, sentence_breaks: false })]
-fn test_format_modes(#[case] mode: &str, #[case] config: Config) {
-    let input = include_str!("../../test-fixtures/input/basic.md");
-    let expected_path = format!("../../test-fixtures/expected/basic.{mode}.md");
-    let expected = std::fs::read_to_string(expected_path).unwrap();
-    assert_eq!(format_document(input, &config), expected);
-}
-```
-
-This pattern was used in the flowmark port to test all 4 formatting modes across every
-fixture, catching several mode-specific parity bugs that single-mode tests missed.
-
-## Coverage Tools for Rust
-
-### cargo-llvm-cov (Recommended)
-
-`cargo-llvm-cov` is the preferred coverage tool for Rust.
-It uses LLVM source-based instrumentation, which provides more accurate results than
-alternatives and supports line, region, and branch coverage.
-It works across Linux, macOS, and Windows:
-
-```bash
-cargo install cargo-llvm-cov
-cargo llvm-cov --html --all-features          # Line coverage (HTML report)
-cargo llvm-cov --html --all-features --branch  # Branch coverage (HTML report)
-```
-
-### cargo-tarpaulin (Linux Alternative)
-
-`cargo-tarpaulin` is a Linux-focused alternative.
-Its default ptrace-based backend works only on x86_64 Linux, though it also supports an
-LLVM backend via `--engine llvm`. It is a reasonable choice if you are already using it
-in CI:
-
-```bash
-cargo install cargo-tarpaulin
-cargo tarpaulin --out html --all-features
-```
-
-### Coverage Targets
-
-| Component | Target | Rationale |
-| --- | --- | --- |
-| Core library | ≥90% lines | Critical business logic |
-| Public API | 100% | Every public function tested |
-| CLI wrapper | ≥80% | I/O paths are hard to fully cover |
-| Error paths | ≥70% | Important but some are hard to trigger |
-
-## Cross-Validation as Continuous Testing
-
-Cross-validation (running both Python and Rust against the same inputs) should be part
-of the CI pipeline during development:
-
-```yaml
-# .github/workflows/cross-validate.yml
-cross-validate:
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v7
-      with:
-        submodules: recursive
-    - uses: dtolnay/rust-toolchain@stable
-    - uses: astral-sh/setup-uv@v9
-    - run: cargo build --release
-    - run: cd python-repo && uv sync
-    - run: ./scripts/cross-validate.sh
-```
-
-## Test Categories Checklist
-
-Before porting, ensure the Python test suite covers:
-
-- [ ] **Happy path** -- typical inputs produce expected outputs
-- [ ] **Edge cases** -- empty input, single character, very long lines
-- [ ] **Unicode** -- non-ASCII characters, emoji, CJK text
-- [ ] **Special Markdown** -- code blocks, tables, footnotes, HTML, frontmatter
-- [ ] **CLI flags** -- all combinations of flags and options
-- [ ] **Error cases** -- missing files, permission errors, invalid input
-- [ ] **Idempotency** -- running the tool twice produces the same output
-- [ ] **Stdin/stdout** -- piping behavior matches file behavior
-- [ ] **Large files** -- performance doesn’t degrade on realistic inputs
-
-## Increasing Coverage During the Port
-
-As you port each module:
-
-1. **Port existing tests** -- these are the specification
-2. **Add Rust-specific tests** -- for Rust edge cases (ownership, lifetimes)
-3. **Add property tests** -- use proptest (or quickcheck) for algorithmic invariants
-4. **Run cross-validation** -- catch differences unit tests miss
-5. **Measure coverage** -- fill gaps discovered by cargo-llvm-cov (preferred) or
-   tarpaulin
+Use this document when a Rust implementation must preserve behavior from a source
+implementation. It covers source-suite preparation, construct enumeration, test mapping,
+and differential validation.
+Rust-native test design belongs in [`rust-testing-rules.md`](rust-testing-rules.md).
+
+## Tests Are Evidence, Not the Whole Specification
+
+The source test suite is the strongest executable evidence of expected behavior, but it
+contains only the cases someone chose to write.
+A faithful port needs three independent forms of evidence:
+
+1. mapped source tests;
+2. an explicit inventory of the source surface;
+3. differential runs over representative and adversarial inputs.
+
+Mirroring every source test can still reproduce the source suite’s blind spots.
+Treat uncovered source behavior as a requirement to investigate, not permission to
+invent Rust behavior.
+
+## Syntactic Surface Enumeration (Pre-Emptive Class Sweep)
+
+Differential corpus testing is reactive: common inputs dominate a corpus, so rare valid
+forms may never appear.
+For finite input surfaces, enumerate the classes before porting.
+
+This applies to parsers, formatters, lexers, configuration loaders, query builders,
+protocol messages, and other systems whose input forms can be listed.
+
+1. Identify the semantic node or operation families.
+2. Enumerate every source form for each family.
+3. Include combinations whose nesting changes behavior.
+4. Run each case through the pinned source implementation.
+5. Store or generate the observed source result.
+6. Add a Rust test for each row.
+7. Maintain a matrix that links every row to its source and Rust evidence.
+
+For a Markdown image node, for example, the forms include inline, titled, empty-alt,
+full reference, collapsed reference, shortcut reference, missing definition, label case
+and whitespace variants, and an image nested inside a link.
+
+Do not hand-author expected output when the source implementation can produce it.
+A hand-authored expectation can accidentally validate the port author’s assumption
+rather than the source contract.
+
+The Flowmark case study includes a worked
+[`parity coverage matrix`](https://github.com/jlevy/flowmark-rs/blob/main/docs/parity-coverage-matrix.md)
+and the corresponding
+[`syntactic-surface tests`](https://github.com/jlevy/flowmark-rs/blob/main/tests/test_syntactic_surface.rs).
+
+## Strengthen the Source Suite First
+
+Before translating code:
+
+- run the complete source suite from its locked environment;
+- measure branch and line coverage as discovery signals;
+- identify unexecuted parsing, error, and option branches;
+- add source-side tests for missing behavior where feasible;
+- record tests that are platform-specific, nondeterministic, quarantined, or ignored;
+- confirm the suite fails when a representative behavior is deliberately broken;
+- pin the source commit and all generated fixture inputs.
+
+Coverage percentage is not the acceptance criterion.
+The useful output is a list of unexercised behavior and a decision for each gap.
+
+When a port uncovers a source-suite blind spot, contribute the source-side test upstream
+where practical. This improves the contract for the source project and future ports.
+
+## Maintain a Complete Test Map
+
+Map every discovered source test to one of these explicit states:
+
+- one Rust test;
+- several Rust tests because the source test covers several behaviors;
+- one shared integration or golden test;
+- excluded with a current, reviewed reason;
+- blocked by a tracked parity gap.
+
+The map must also detect newly added source tests.
+Generate the source and Rust test inventories mechanically, preserve manual mappings
+during regeneration, and fail CI for unmapped tests or stale identifiers.
+
+Use [`cross-language-test-mapping.md`](../references/cross-language-test-mapping.md) for
+the schema and regeneration model.
+
+## Treat Fixtures as Versioned Evidence
+
+- Store source inputs, expected outputs, stderr, and exit metadata in version control
+  when their size permits.
+- Record the source commit and exact generation command.
+- Regenerate expected output from the pinned source; do not hand-edit it.
+- Keep fixtures focused enough that a diff identifies one behavior.
+- Share inputs between implementations instead of maintaining parallel copies.
+- Mark binary fixtures as binary and verify them with an appropriate structural or hash
+  comparison.
+- Normalize paths, timestamps, random values, colors, and other nondeterminism only when
+  the contract says those values are not meaningful.
+
+Fixture updates are behavior changes.
+Review their diffs with the same care as source code.
+
+## Translate Assertions by Meaning
+
+Port the behavior each source assertion establishes, not its test-framework mechanics.
+
+- Preserve boundary values, error types, messages, output bytes, and ordering when they
+  are observable.
+- Split a source test when separate Rust tests make independent behavior clearer, and
+  record all resulting IDs in the test map.
+- Do not add Rust-specific implementation assertions as substitutes for source behavior.
+- Add Rust-native tests for ownership, feature combinations, platform adapters, and
+  unsafe boundaries in addition to the mapped parity suite.
+- Keep every ignored Rust test linked to a current tracking issue or bead and a concrete
+  unblock condition.
+
+Apply [`rust-testing-rules.md`](rust-testing-rules.md) for placement, fixtures,
+snapshots, property tests, and failure-path design.
+
+## Cross-Validate Continuously
+
+Run both implementations against the same input and compare every observable output:
+
+- stdout and stderr bytes;
+- exit status;
+- files, links, metadata, and directory state;
+- structured protocol messages;
+- ordering and repeated-run behavior;
+- performance only when the acceptance contract includes it.
+
+Keep the source and Rust runs isolated.
+Build the Rust binary once per validation run, use the locked source environment,
+disable incidental color or progress, and retain a useful unified diff for failures.
+
+Cross-validation belongs in CI while the source is available.
+If the source cannot be shipped or built indefinitely, archive the pinned evidence and
+document the replacement validation strategy before removing the live comparison.
+
+## Investigate Differences Systematically
+
+Classify each difference before changing either implementation:
+
+1. porting defect;
+2. source defect;
+3. dependency or platform behavior;
+4. nondeterministic observation;
+5. approved intentional divergence.
+
+First add or identify a failing test that isolates the class.
+Then search for other members of that class.
+Do not update expected output simply because the Rust result is plausible, and do not
+call an improvement intentional without explicit approval.
+
+## Completion Gate
+
+- [ ] The pinned source suite passes from its locked environment.
+- [ ] The source surface inventory has no unexplained missing families.
+- [ ] Every source test has a current mapping or tracked exclusion.
+- [ ] Fixture provenance and regeneration are reproducible.
+- [ ] Rust-native tests follow [`rust-testing-rules.md`](rust-testing-rules.md).
+- [ ] Differential validation covers success, errors, and stateful side effects.
+- [ ] Every difference is fixed or has an approved, tested, tracked disposition.
+- [ ] CI detects source-test drift and parity regressions.
 
 ## Related Guidelines
 
-- [Python-to-Rust Porting Rules](python-to-rust-porting-rules.md)
-- [CLI-Specific Porting](python-to-rust-cli-porting.md)
-- For golden testing patterns, see `tbd guidelines golden-testing-guidelines`
-- For general testing rules, see `tbd guidelines general-testing-rules`
-- For TDD methodology, see `tbd guidelines general-tdd-guidelines`
+- [`rust-testing-rules.md`](rust-testing-rules.md)
+- [`python-to-rust-porting-rules.md`](python-to-rust-porting-rules.md)
+- [`porting-principles-and-antipatterns.md`](porting-principles-and-antipatterns.md)
+- [`cross-language-test-mapping.md`](../references/cross-language-test-mapping.md)
+- `tbd guidelines general-testing-rules general-tdd-guidelines golden-testing-guidelines`
+
+<!-- This document follows common-doc-guidelines.md.
+See github.com/jlevy/practical-prose and review guidelines before editing.
+-->

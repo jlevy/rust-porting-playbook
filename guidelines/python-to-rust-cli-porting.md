@@ -1,512 +1,216 @@
 ---
 title: Python-to-Rust CLI Porting
-description: CLI-specific patterns for porting Python CLI applications to Rust, including argparse-to-clap mapping and cross-validation
+description: Rules for mapping and validating Python command-line interfaces against Rust implementations
 ---
 # Python-to-Rust CLI Porting
 
-CLI-specific patterns for porting Python CLI applications to Rust: argument parsing
-migration, output handling, cross-validation, and acceptance criteria.
+Use this guideline when a Rust CLI must preserve a Python CLI’s interface and behavior.
+It covers mappings, evidence, and parity decisions.
+Use [`rust-cli-rules.md`](rust-cli-rules.md) for the target-side architecture and
+`tbd guidelines python-cli-patterns` for the source-side architecture.
 
-For general porting rules, see `python-to-rust-porting-rules.md`. For Rust CLI patterns,
-see `rust-cli-app-patterns.md`. For Python CLI patterns, see `python-cli-patterns.md`.
+## Capture the Python CLI Contract Before Implementing
 
-## CLI Argument Mapping
+Record the pinned Python version and capture:
+
+- command and subcommand names;
+- positional arguments and whether they are optional or repeated;
+- long and short flags;
+- defaults, environment variables, and config precedence;
+- help, version, completion, and invalid-argument output;
+- stdin, stdout, stderr, and file behavior;
+- colors, progress, prompts, and non-TTY behavior;
+- exit codes, signals, broken pipes, and interruption;
+- filesystem or external side effects;
+- behavior of every meaningful flag combination.
+
+Generate machine-readable parser metadata where the Python framework supports it, but
+retain golden help and error sessions because parser metadata does not capture
+presentation or process behavior.
+
+## Map Python Argument Definitions to Rust Types
 
 ### argparse to clap
 
-| Python argparse | Rust clap (derive) | Notes |
+| Python `argparse` | Rust clap derive | Parity concern |
 | --- | --- | --- |
-| `add_argument("file")` | `file: PathBuf` | Required positional arg |
-| `add_argument("file", nargs="?")` | `file: Option<PathBuf>` | Optional positional arg |
-| `add_argument("-w", "--width")` | `#[arg(short = 'w', long)] width: Option<String>` | Short + long flag |
-| `add_argument("--flag", action="store_true")` | `#[arg(long)] flag: bool` | Boolean flag |
-| `add_argument("--count", required=True)` | `#[arg(long)] count: String` | Required named option (no `Option`) |
-| `default=80` | `#[arg(default_value_t = 80)]` | Default value |
-| `type=int` | `width: usize` | Type validation (clap parses automatically) |
-| `choices=["a","b"]` | `#[arg(value_enum)]` with `#[derive(ValueEnum)]` enum | Enum validation |
-| `nargs="+"` | `files: Vec<PathBuf>` | One or more values |
-| `nargs="*"` | `#[arg(num_args = 0..)] files: Vec<PathBuf>` | Zero or more values |
-| `help="description"` | `/// description` (doc comment) | Help text |
-| `metavar="FILE"` | `#[arg(value_name = "FILE")]` | Placeholder in help output |
+| `add_argument("file")` | `file: PathBuf` | required positional |
+| `nargs="?"` | `Option<PathBuf>` | absent vs present |
+| `-w`, `--width` | `#[arg(short = 'w', long)]` | exact aliases |
+| `store_true` | `bool` | default and negation |
+| `required=True` | non-`Option` field | parser error path |
+| `default=80` | `default_value_t = 80` | help and merged config |
+| `type=int` | numeric Rust field | accepted syntax and range |
+| `choices=[...]` | `ValueEnum` | spelling and case behavior |
+| `nargs="+"` | `Vec<T>` with one-or-more constraint | empty-input error |
+| `nargs="*"` | `Vec<T>` with zero-or-more constraint | delimiter behavior |
+| `metavar="FILE"` | `value_name = "FILE"` | help output |
 
-### typer/click to clap
+### Click or Typer to clap
 
-| Python typer/click | Rust clap (derive) | Notes |
+| Python Click/Typer | Rust clap derive | Parity concern |
 | --- | --- | --- |
-| `@app.command()` | `#[derive(Parser)]` | Command definition |
-| `@app.command()` + multiple | `#[derive(Subcommand)]` enum | Subcommands |
-| `typer.Argument()` | Positional field (no `long`/`short`) | Positional |
-| `typer.Option("--width", "-w")` | `#[arg(short = 'w', long)]` | Named option |
-| `typer.Option(help="...")` | `/// ...` (doc comment) | Help text |
-| `callback=...` | Implement in `main()` after parsing |  |
+| command decorator | `Parser` or `Subcommand` | command grouping and aliases |
+| positional argument | field without `long` or `short` | order and arity |
+| option declaration | `#[arg(long, short)]` | flag names and defaults |
+| callback | validation after parse or value parser | error timing and message |
+| boolean pair | explicit clap action or paired flags | precedence when both appear |
+| prompt/confirmation | explicit interactive boundary | non-interactive behavior |
 
-### Exact Flag Parity Requirements
+These are structural mappings, not proof of parity.
+Parser libraries differ in accepted syntax, wrapping, ordering, usage text, and error
+wording.
 
-The Rust CLI MUST match the Python CLI exactly:
-- Same flag names (long and short)
-- Same default values
-- Same help text (word-for-word when possible)
-- Same behavior when flags are combined
+## Preserve Flag and Help Semantics
 
-Validation approach:
-```bash
-python -m project --help > python-help.txt
-cargo run -- --help > rust-help.txt
-diff python-help.txt rust-help.txt  # Must show zero meaningful diffs
+- Match long names, short names, aliases, defaults, repeat behavior, and conflicts.
+- Test negative flags and paired positive/negative forms explicitly.
+- Preserve whether option order is flexible and whether values beginning with `-` are
+  accepted.
+- Compare help sections, command ordering, wrapping, default annotations, and exit code.
+- Treat a clearer Rust help message as a divergence until explicitly approved.
+- If exact formatting is impossible, define the meaningful equivalence rules and keep a
+  golden test for each parser version.
+
+## Compare Streams and Process Outcomes
+
+For each success and failure case, capture one record with:
+
+```text
+argv
+stdin bytes
+environment overrides
+stdout bytes
+stderr bytes
+exit status or signal
+files or external state changed
 ```
 
-## I/O Parity
+The Rust CLI must use the same stream contract even if its internal output architecture
+is different. Verify:
 
-### Stdin/Stdout Behavior
+- data vs diagnostic separation;
+- trailing newlines and byte encoding;
+- buffering and flush failures;
+- color and progress in TTY and non-TTY contexts;
+- JSON or other structured-output schemas;
+- broken-pipe behavior when the consumer closes early;
+- SIGINT behavior and cleanup;
+- prompts with and without a terminal;
+- partial side effects after failure.
 
-The Rust CLI must handle I/O exactly like Python:
-```bash
-# File input, stdout output
-python -m project input.md    # Python
-project input.md              # Rust -- same output
+Use [`rust-cli-rules.md`](rust-cli-rules.md) to implement these behaviors without
+duplicating the target-side design here.
 
-# Stdin input, stdout output
-cat input.md | python -m project    # Python
-cat input.md | project              # Rust -- same output
+## Treat Error Behavior as a First-Class Surface
 
-# File input, file output
-python -m project input.md -o output.md
-project input.md -o output.md
-diff <(cat output_py.md) <(cat output_rs.md)  # Zero diffs
-```
+Build a case table for:
 
-### Buffered Stdout
+- unknown command or flag;
+- missing required value;
+- invalid enum, number, path, or encoding;
+- missing or unreadable input;
+- malformed config or data;
+- permission and destination collision errors;
+- empty, binary, or otherwise unsupported input;
+- external command, network, or service failure;
+- interruption and broken output pipes.
 
-Python’s `print()` buffers efficiently when writing to a pipe.
-In Rust, `println!` acquires and releases the stdout lock on every call, which adds
-overhead for high-volume output.
-Lock stdout once and use `BufWriter`:
+Compare error class, text or documented equivalence, stderr, exit code, side effects,
+and recovery guidance.
+Do not validate only the happy path and assume both frameworks classify errors the same
+way.
 
-```rust
-use std::io::{self, BufWriter, Write};
+## Cross-Validate With a Structured Harness
 
-fn run() -> io::Result<()> {
-    let stdout = io::stdout().lock();
-    let mut out = BufWriter::new(stdout);
-    for line in results {
-        writeln!(out, "{line}")?;
-    }
-    Ok(())
-}
-```
+Build the Rust binary once, then run both programs through one harness that records
+streams and status separately.
+Use private temporary directories for each case and keep inputs immutable.
 
-This can make a 10--100x difference for tools that emit thousands of lines.
+The harness should:
 
-### Error Message Parity
+1. load a declarative case containing argv, stdin, environment, and initial filesystem
+   state;
+2. run the pinned Python command;
+3. run the exact Rust binary under test;
+4. normalize only approved nondeterministic fields;
+5. compare streams, status, and state;
+6. write a useful per-field diff;
+7. exit non-zero if any unexplained difference remains.
 
-Error messages should match Python’s format or be clearly improved:
-```
-# Python: "error: file not found: missing.md"
-# Rust:   "error: file not found: missing.md"  (exact match preferred)
-```
+A child can reject arguments and exit before reading piped stdin.
+The harness must treat a broken write to that child’s stdin as incidental and still
+collect its intended stderr and exit status; it must not panic before the assertion.
 
-All error messages go to stderr.
-All program output goes to stdout.
+Use a transcript or golden-session tool when shell composition, multiple invocations, or
+interactive behavior is part of the contract.
+Apply `tbd guidelines golden-testing-guidelines`.
 
-### Exit Code Parity
+## Track Source and Rust Versions Together
 
-| Condition | Python | Rust | Notes |
+Every released port should identify the source version or commit whose behavior it
+implements. Keep one machine-readable correspondence record with:
+
+| Rust release | Python version or commit | Parity status | Exceptions |
 | --- | --- | --- | --- |
-| Success | 0 | 0 |  |
-| General error | 1 | 1 |  |
-| Usage error | 2 | 2 | clap returns 2 by default |
-| SIGINT | 130 | 130 | Register `ctrlc` handler |
-
-Prefer `std::process::ExitCode` over `std::process::exit()` -- it lets destructors run
-and avoids abrupt termination:
-
-```rust
-use std::process::ExitCode;
-
-fn main() -> ExitCode {
-    match run() {
-        Ok(()) => ExitCode::SUCCESS,
-        Err(e) => {
-            eprintln!("error: {e}");
-            ExitCode::from(1)
-        }
-    }
-}
-```
-
-Use `process::exit()` only in signal handlers (e.g., the `ctrlc` handler) where you need
-immediate termination with a specific code.
-
-### Error Behavior as a First-Class Parity Surface
-
-Error handling is not an afterthought — it is a first-class parity surface that must be
-tested as rigorously as success-path output.
-During porting, it is common to focus on correct output for valid inputs and treat error
-paths as secondary. This leads to divergent error behavior that breaks drop-in
-compatibility.
-
-**What must match:**
-- Error message text (or be explicitly documented as an intentional improvement)
-- Exit codes for every error condition, not just the common ones
-- Whether errors go to stderr (they must)
-- Error behavior for invalid inputs, missing files, permission errors, malformed data
-- Error behavior for edge cases: empty input, input with only whitespace, binary input
-
-**How to test:**
-```bash
-# Test every error path in cross-validation
-project nonexistent.md 2>py_err; echo $? > py_exit
-project-rs nonexistent.md 2>rs_err; echo $? > rs_exit
-diff py_err rs_err         # Error message parity
-diff py_exit rs_exit       # Exit code parity
-```
-
-Add error-path fixtures to your test suite — files that should trigger errors, with
-expected stderr output and exit codes captured from the Python implementation.
-
-### SIGPIPE Handling
-
-Rust ignores SIGPIPE by default, which causes “broken pipe” panics when output is piped
-to tools like `head`, `less`, or any process that closes the read end early.
-Python handles SIGPIPE transparently, so this is a **common gotcha** when porting CLI
-tools. Users will see `Error: Broken pipe (os error 32)` where Python worked fine.
-
-**Option 1 (recommended):** Reset SIGPIPE to the default behavior at the start of
-`main()`. Requires the `libc` crate:
-```rust
-// Reset SIGPIPE signal handling to default (terminate silently).
-// Without this, piping to `head` etc. causes "broken pipe" errors.
-#[cfg(unix)]
-{
-    // SAFETY: We are restoring default SIGPIPE behavior before any I/O.
-    // This is standard practice for CLI tools and has no unsafe side effects.
-    unsafe {
-        libc::signal(libc::SIGPIPE, libc::SIG_DFL);
-    }
-}
-```
-
-**Option 2:** Handle `BrokenPipe` errors gracefully in your error handler:
-```rust
-use std::io;
-use std::process::ExitCode;
-
-fn main() -> ExitCode {
-    match run() {
-        Ok(()) => ExitCode::SUCCESS,
-        Err(e) if e.kind() == io::ErrorKind::BrokenPipe => ExitCode::SUCCESS,
-        Err(e) => {
-            eprintln!("error: {e}");
-            ExitCode::from(1)
-        }
-    }
-}
-```
-
-Option 1 is preferred because it matches Python’s behavior exactly and handles SIGPIPE
-in all code paths, including third-party libraries.
-Option 2 only catches errors that propagate through your own write calls.
-
-### Colored Output and Piping
-
-Python CLIs often use `colorama` or `rich` for colored output and automatically disable
-color when piped. Rust equivalents must replicate this behavior:
-
-- Use a color-aware crate such as `anstream` (from the clap ecosystem) or `console`.
-- Detect whether stdout/stderr is a terminal and suppress color/formatting when piped or
-  redirected:
-  ```rust
-  use std::io::IsTerminal;
-
-  let use_color = std::io::stdout().is_terminal();
-  ```
-- Respect the `NO_COLOR` environment variable (see <https://no-color.org/>). `anstream`
-  handles this automatically.
-  If using `console`, check with `console::colors_enabled()`.
-- Respect `--color=auto|always|never` flags when the Python CLI supports them:
-  ```rust
-  #[arg(long, default_value = "auto")]
-  color: clap::ColorChoice,
-  ```
-
-**Porting pitfall:** If the Python CLI’s output includes ANSI escape codes that end up
-in cross-validation diffs, strip them before diffing or ensure both sides use the same
-color mode (`--color=never`).
-
-### Shell Completions
-
-Python CLIs using `argcomplete` or click’s built-in completion should have equivalent
-Rust completions generated via `clap_complete`:
-
-```rust
-use clap::CommandFactory;
-use clap_complete::{generate, Shell};
-
-// Typically behind a hidden `--completions <SHELL>` flag or a subcommand
-fn print_completions(shell: Shell) {
-    let mut cmd = Args::command();
-    generate(shell, &mut cmd, "project", &mut std::io::stdout());
-}
-```
-
-Add `clap_complete` as an optional dependency so it does not bloat the binary for users
-who do not need completions:
-```toml
-[dependencies]
-clap_complete = { version = "4.6", optional = true }
-
-[features]
-completions = ["clap_complete"]
-```
-
-## Cross-Validation Methodology
-
-Cross-validation is the most important quality gate for a port.
-It runs both implementations against the same inputs and diffs the outputs.
-
-### Setup
-
-1. **Python source as submodule:**
-   ```bash
-   git submodule add https://github.com/org/project-python.git python-repo
-   ```
-
-2. **Shared test fixtures:**
-   ```
-   test-fixtures/
-   ├── input/          # Input files
-   │   ├── basic.md
-   │   ├── complex.md
-   │   └── edge-cases.md
-   └── expected/       # Expected outputs (generated by Python)
-       ├── basic.md
-       ├── complex.md
-       └── edge-cases.md
-   ```
-
-3. **Cross-validation script** (`scripts/cross-validate.sh`):
-   ```bash
-   #!/usr/bin/env bash
-   set -euo pipefail
-
-   cargo build --release
-   RUST_BIN="target/release/project"
-   PY_CMD=(uv run -q --project python-repo python -m project)
-
-   PASSED=0; FAILED=0
-   for input in test-fixtures/input/*.md; do
-       name="$(basename "$input")"
-       py_out=$(mktemp); rs_out=$(mktemp)
-
-       "${PY_CMD[@]}" "$input" > "$py_out"
-       "$RUST_BIN" "$input" > "$rs_out"
-
-       if diff -q "$py_out" "$rs_out" >/dev/null; then
-           echo "PASS: $name"
-           PASSED=$((PASSED + 1))
-       else
-           echo "FAIL: $name"
-           diff -u "$py_out" "$rs_out" | head -20
-           FAILED=$((FAILED + 1))
-       fi
-       rm -f "$py_out" "$rs_out"
-   done
-
-   echo "Results: $PASSED passed, $FAILED failed"
-   [ "$FAILED" -eq 0 ]
-   ```
-
-**Test harnesses that pipe stdin must tolerate a broken pipe.** A binary that rejects its
-arguments (for example `--inplace -`, or any invalid combination) exits *before* reading
-stdin, closing the read end of the pipe. A helper that does
-`child.stdin.take().unwrap().write_all(input).unwrap()` then races the child's exit and
-panics on `BrokenPipe` — intermittently, and more often on Windows where process teardown
-timing differs. Since the test asserts on the child's stderr and exit code, the write is
-incidental; ignore its error instead of unwrapping it:
-
-```rust
-if let Some(mut stdin) = child.stdin.take() {
-    // Child may reject its args and exit before reading; a broken-pipe write is expected.
-    let _ = stdin.write_all(input.as_bytes());
-}
-```
-
-### Running Cross-Validation
-
-1. Ensure Python environment is set up: `cd python-repo && uv sync`
-2. Build Rust: `cargo build --release`
-3. Run: `./scripts/cross-validate.sh`
-4. Investigate any diffs -- they reveal parser/behavioral differences
-
-### Interpreting Differences
-
-When cross-validation finds diffs:
-
-1. **Categorize the difference:**
-   - Parser behavior (different library, not a code bug)
-   - Porting bug (code error, fix immediately)
-   - Python bug (found a bug in the original -- coordinate with Python repo)
-   - Intentional improvement (Rust behavior is better -- document and accept)
-
-2. **For parser differences:**
-   - Can it be worked around with post-processing?
-     (preferred)
-   - Is it an edge case that rarely occurs?
-     (accept and document)
-   - Is it a core behavior difference?
-     (consider switching libraries)
-
-3. **Document everything** in `cross-validation-assessment.md`
-
-## Version Tracking Between Repos
-
-### Build-Time Version Extraction
-
-Use `build.rs` to extract the Python version from the submodule:
-```rust
-fn main() {
-    // Re-run only when the submodule HEAD changes
-    println!("cargo:rerun-if-changed=python-repo/.git/HEAD");
-
-    // Try git describe on the submodule
-    let version = std::process::Command::new("git")
-        .args(["describe", "--tags", "--always"])
-        .current_dir("python-repo")
-        .output()
-        .ok()
-        .and_then(|o| String::from_utf8(o.stdout).ok())
-        .unwrap_or_else(|| "unknown".into());
-
-    println!("cargo:rustc-env=PYTHON_SOURCE_VERSION={}", version.trim());
-}
-```
-
-### Version Display
-
-```
-$ project --version
-project 0.1.0 (port of python-project 0.5.5)
-```
-
-### Version Correspondence Table
-
-Maintain in `docs/version-history.md`:
-```markdown
-| Rust Version | Python Version | Date       | Notes         |
-|--------------|----------------|------------|---------------|
-| 0.1.0        | v0.5.5         | 2024-11-02 | Initial port  |
-| 0.1.1        | v0.5.6         | 2024-11-15 | Bug fixes     |
-```
-
-## Handling Python Bugs Found During Porting
-
-The porting process often discovers bugs in the original Python code.
-Strategy:
-
-1. **Confirm it’s a bug** -- not a feature or intentional behavior difference
-2. **File a bug/PR** on the Python repo with a test case
-3. **Decide whether to replicate the bug** in Rust for parity or fix it
-4. **If fixing:** document the intentional divergence from Python
-5. **If replicating:** add a `FIXME: Python bug` comment and track for future cleanup
-
-## Ongoing Synchronization
-
-When the Python repo gets updates:
-
-1. Update the submodule: `cd python-repo && git pull origin main`
-2. Categorize changes: bug fixes, new features, test additions, refactoring
-3. Port relevant changes to Rust
-4. Run cross-validation to verify parity is maintained
-5. Update version correspondence table
-6. Document in sync log
-
-## Resolving Submodule Conflicts
-
-When working with the Python source as a git submodule and merging branches, you may
-encounter submodule merge conflicts.
-Git cannot automatically resolve divergent submodule commits.
-
-**Typical conflict message:**
-```
-Failed to merge submodule python-repo
-CONFLICT (submodule): Merge conflict in python-repo
-```
-
-**Resolution steps:**
-
-1. Navigate into the submodule:
-   ```bash
-   cd python-repo
-   ```
-
-2. Check which commit each branch wants:
-   ```bash
-   git log --oneline --graph -10 <commit-from-yours> <commit-from-theirs>
-   ```
-
-3. Decide on resolution strategy:
-
-   **Option A: Merge both commits (recommended if both branches added new
-   tests/features)**
-   ```bash
-   git checkout <commit-from-your-branch>
-   git merge <commit-from-their-branch> -m "Merge submodule updates"
-   cd ..
-   git add python-repo
-   git commit
-   ```
-
-   **Option B: Use one commit (if one branch has the latest)**
-   ```bash
-   git checkout <the-latest-commit>
-   cd ..
-   git add python-repo
-   git commit
-   ```
-
-4. Return to parent repo and complete the merge:
-   ```bash
-   cd ..
-   git add python-repo
-   git commit -m "Resolve python-repo submodule conflict"
-   ```
-
-5. Verify the resolution:
-   ```bash
-   git submodule status  # Should show clean state
-   cd python-repo && git log --oneline -3  # Verify correct commit
-   ```
-
-**Prevention tip:** Before merging branches, sync submodule state explicitly:
-```bash
-git fetch origin
-git submodule update --remote python-repo
-```
-
-## Acceptance Criteria for CLI Parity
-
-**All of these must pass before the port is considered complete:**
-
-Behavioral parity:
-- [ ] `--help` output matches Python (format may differ slightly due to clap)
-- [ ] `--version` shows both Rust and Python source versions
-- [ ] All Python CLI flags have Rust equivalents with same names and defaults
-- [ ] Stdin/stdout/file-output behavior is identical
-- [ ] Exit codes match for all error conditions
-- [ ] Cross-validation passes with zero meaningful diffs on all test fixtures
-- [ ] Error messages go to stderr, program output to stdout
-- [ ] Piping to `head`/`less` works without errors (SIGPIPE handled)
-- [ ] Color output is suppressed when piped or when `NO_COLOR` is set
-
-Non-functional (adjust thresholds per project):
-- [ ] Performance meets or exceeds Python (typically 10--50x for CPU-bound work; the flowmark port measured ~20--40x)
-- [ ] Binary size is reasonable for distribution (check with `cargo bloat` if large)
-- [ ] Startup time is acceptable (measure with `hyperfine`)
+| `vX.Y.Z` | immutable source identifier | validated | linked records |
+
+Expose the source version in `--version` when that helps users assess compatibility.
+Derive it from reviewed build input rather than running unbounded network or source
+discovery during the build.
+
+## Handle Source Bugs Explicitly
+
+When validation reveals a likely Python defect:
+
+1. isolate it with a source-side test;
+2. confirm the pinned Python behavior;
+3. file or propose the source correction where practical;
+4. decide whether the Rust port temporarily preserves the defect or intentionally
+   diverges;
+5. add tests and a tracked disposition for that decision;
+6. remove temporary compatibility behavior when the source baseline advances and the
+   project policy permits it.
+
+Do not silently improve the behavior while still claiming exact parity.
+
+## Synchronize Without Redefining the Contract
+
+For each Python update:
+
+- update the source reference to an exact reviewed commit;
+- inventory source code, tests, CLI metadata, and dependency changes;
+- update the test map before implementation;
+- port behavior and fixtures;
+- rerun the full structured CLI comparison;
+- update the correspondence record and exception list;
+- release according to the project’s synchronization policy.
+
+Source refactors with no observed behavioral change still need evidence that the CLI
+surface and test inventory did not drift.
+
+## Acceptance Criteria
+
+- [ ] The Python source version and CLI contract inventory are fixed and reproducible.
+- [ ] Every Python command, argument, option, and alias has a Rust disposition.
+- [ ] Help, version, invalid-input, and completion behavior are tested.
+- [ ] Success and failure cases compare stdout, stderr, exit status, and side effects.
+- [ ] TTY, non-TTY, interruption, prompt, and broken-pipe behavior are covered where
+  applicable.
+- [ ] Every difference is fixed or explicitly approved and tracked.
+- [ ] The implementation follows [`rust-cli-rules.md`](rust-cli-rules.md).
+- [ ] Source and Rust version correspondence is current.
+- [ ] CI detects source test and CLI parity drift.
 
 ## Related Guidelines
 
-- General porting rules: `python-to-rust-porting-rules.md`
-- Rust CLI patterns: `rust-cli-app-patterns.md`
-- Python CLI patterns: `python-cli-patterns.md`
-- Test coverage for porting: `test-coverage-for-porting.md`
-- Golden testing: `golden-testing-guidelines.md`
+- [`python-to-rust-porting-rules.md`](python-to-rust-porting-rules.md)
+- [`rust-cli-rules.md`](rust-cli-rules.md)
+- [`filesystem-heavy-cli-porting.md`](filesystem-heavy-cli-porting.md)
+- [`test-coverage-for-porting.md`](test-coverage-for-porting.md)
+- [`cross-language-test-mapping.md`](../references/cross-language-test-mapping.md)
+- `tbd guidelines python-cli-patterns golden-testing-guidelines`
+
+<!-- This document follows common-doc-guidelines.md.
+See github.com/jlevy/practical-prose and review guidelines before editing.
+-->

@@ -39,8 +39,9 @@ review lifecycle scripts), and vet each proposed **target** crate (`cargo deny` 
 `cargo audit`, 14-day cool-off for brand-new versions, read any `build.rs`/proc-macro,
 `cargo-vet` for teams). This matters most for the native/LLM stack (`node-llama-cpp` →
 `llama_cpp`/`llama-cpp-2`, `sqlite-vec`), where C/C++ build systems widen the attack
-surface. See `tbd guidelines supply-chain-hardening`, §4.6 of
-`references/rust-cli-best-practices.md`, and the Supply Chain Hardening guidebook
+surface. See `tbd guidelines supply-chain-hardening`,
+`guidelines/rust-project-setup.md`, `guidelines/rust-release-rules.md`, and the Supply
+Chain Hardening guidebook
 (<https://github.com/jlevy/supply-chain-hardening>).
 
 ## Runtime Dependency Plan (`dependencies`)

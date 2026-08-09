@@ -363,13 +363,16 @@ Required updates (with specific changes):
 - Add TypeScript coverage examples alongside Python ones (Vitest, c8).
 - Generalize fixture generation commands to show both Python and TS examples.
 
-**`references/rust-cli-app-patterns.md`:**
-- Change “If you do not have a Python source to track” to “source language” (line ~458).
-- Update CLI patterns reference to list both Python and TypeScript guideline links.
+**Rust guideline suite:**
+- Keep `rust-rules.md`, `rust-project-setup.md`, and the focused Rust guidelines
+  source-language-independent.
+- Put Python and TypeScript CLI mappings in their respective porting guidelines rather
+  than adding source-language branches to `rust-cli-rules.md`.
 
 **`guidelines/rust-project-setup.md`:**
-- Change “When porting from Python, include the source as a submodule” to
-  language-neutral with both Python and TypeScript examples.
+- Keep the general Rust setup rules source-language-independent.
+- Put source checkout, submodule, and version-correspondence setup in each porting
+  playbook rather than adding Python and TypeScript branches here.
 
 **`playbooks/port-checklist-initial-template.md`:**
 - Replace Python-specific language throughout with language-neutral phrasing ("source
@@ -401,10 +404,13 @@ Required updates (with specific changes):
 - `guidelines/porting-principles-and-antipatterns.md` — principles are universal despite
   Python examples.
 - `guidelines/filesystem-heavy-cli-porting.md` — already language-neutral.
-- `guidelines/rust-general-rules.md` — Rust-target only.
+- `guidelines/rust-rules.md` — Rust-target only.
+- `guidelines/rust-cli-rules.md` — Rust-target only.
+- `guidelines/rust-filesystem-rules.md` — Rust-target only.
+- `guidelines/rust-testing-rules.md` — Rust-target only.
+- `guidelines/rust-release-rules.md` — Rust-target only.
+- `guidelines/rust-code-review-rules.md` — Rust-target only.
 - `references/cross-language-test-mapping.md` — already language-neutral.
-- `references/rust-cli-best-practices.md` — Rust-target only.
-- `references/rust-code-review-checklist.md` — Rust-target only.
 
 DoD:
 - No general-purpose doc implies Python is the only supported source language.
@@ -537,10 +543,10 @@ complete. See `plan-2026-03-04-qmd-ai-application-porting-path.md`.
   instructions, add TS playbook entry points to reference table.
 - [ ] Update `guidelines/test-coverage-for-porting.md`: language-neutral phrasing, add
   TS coverage examples.
-- [ ] Update `references/rust-cli-app-patterns.md`: generalize source-language
-  references.
-- [ ] Update `guidelines/rust-project-setup.md`: add TS submodule example alongside
-  Python.
+- [ ] Verify the standalone Rust guideline suite remains source-language-independent;
+  put TypeScript mappings in TypeScript-to-Rust guidance.
+- [ ] Verify `guidelines/rust-project-setup.md` remains source-language-independent;
+  add TypeScript source-checkout setup to the TypeScript porting workflow.
 - [ ] Update `playbooks/port-checklist-initial-template.md`: replace Python-specific
   language with source-language-neutral phrasing throughout.
 - [ ] Update `playbooks/port-checklist-update-template.md`: add header note, generalize

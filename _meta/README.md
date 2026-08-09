@@ -8,10 +8,7 @@ This directory contains documentation for improving the Rust Porting Playbook it
 | --- | --- |
 | [meta-improving-this-playbook.md](meta-improving-this-playbook.md) | Primary framework for using case studies to improve the playbook |
 | [playbook-improvement-log.md](playbook-improvement-log.md) | Chronological change log of playbook/meta-process improvements |
-| [plans/done/plan-2026-02-25-playbook-meta-gap-map-and-structure.md](plans/done/plan-2026-02-25-playbook-meta-gap-map-and-structure.md) | Consolidated gap map and implementation record |
-| [plans/done/plan-2026-02-25-flowmark-case-study-sync-and-readme-highlight.md](plans/done/plan-2026-02-25-flowmark-case-study-sync-and-readme-highlight.md) | Completed plan for Flowmark case-study sync and README highlight |
-| `plans/active/` | Active playbook-improvement plans currently being worked |
-| `plans/done/` | Completed playbook-improvement plans kept for history |
+| [plans/README.md](plans/README.md) | Stable lifecycle index for active and completed meta-plan records |
 | [case-study-observations-template.md](case-study-observations-template.md) | Template for structured per-phase observations during a case study |
 | [case-study-improvement-triage-template.md](case-study-improvement-triage-template.md) | Template for converting observations into actionable changes |
 
