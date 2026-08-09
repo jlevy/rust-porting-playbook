@@ -168,7 +168,10 @@ satisfying their conditions.
 
 ## 2. Resource Dependency Map
 
-This diagram groups the 34 documents by function and maps them to lifecycle stages.
+This diagram groups the 48 primary playbook, guideline, reference, research,
+case-study, and meta-process documents by function and maps them to lifecycle stages.
+Plans and dated reviews govern maintenance work but are not runtime porting resources,
+so they are not included in this count.
 Solid arrows show primary usage; dotted arrows show secondary usage (only some docs in
 the group apply). For exact per-document phase mappings, see the inventory table in
 Section 8.
@@ -179,17 +182,18 @@ flowchart LR
         PB_CORE[["★ python-to-rust-playbook.md<br/>port-checklist-initial-template.md"]]
     end
 
-    subgraph playbooks["Playbooks"]
+    subgraph playbooks["Porting Workflows and Quality Gates"]
         PB_TEST[["python-to-rust-test-coverage-playbook.md"]]
         PB_PORT[["python-to-rust-mapping-reference.md<br/>python-to-rust-porting-guide.md<br/>cross-language-test-mapping.md"]]
-        PB_INFRA[["rust-cli-best-practices.md<br/>rust-code-review-checklist.md"]]
+        PB_INFRA[["rust-release-rules.md<br/>rust-code-review-rules.md"]]
         PB_SYNC[["python-to-rust-sync-release-workflow.md<br/>auto-sync-agent-prompt-template.md<br/>port-checklist-update-template.md"]]
     end
 
     subgraph guidelines["Guidelines"]
         G_TEST_DOC[["test-coverage-for-porting.md"]]
-        G_SETUP_DOC[["rust-project-setup.md"]]
-        G_IMPL[["python-to-rust-porting-rules.md<br/>rust-general-rules.md<br/>rust-cli-app-patterns.md<br/>python-to-rust-cli-porting.md<br/>porting-principles-and-antipatterns.md<br/>filesystem-heavy-cli-porting.md"]]
+        G_SETUP_DOC[["rust-project-setup.md<br/>rust-testing-rules.md"]]
+        G_TARGET[["rust-rules.md<br/>rust-cli-rules.md<br/>rust-filesystem-rules.md"]]
+        G_IMPL[["python-to-rust-porting-rules.md<br/>python-to-rust-cli-porting.md<br/>porting-principles-and-antipatterns.md<br/>filesystem-heavy-cli-porting.md"]]
     end
 
     subgraph evidence["Research & Case Study"]
@@ -207,12 +211,15 @@ flowchart LR
     PB_TEST --> PREP
     G_TEST_DOC --> PREP
     G_SETUP_DOC --> PREP
+    G_TARGET --> PREP
     CS_PLAN_EV --> PREP
 
     PB_PORT --> IMPL_PH
     G_IMPL --> IMPL_PH
+    G_TARGET --> IMPL_PH
 
     PB_INFRA --> VAL_PH
+    G_SETUP_DOC --> VAL_PH
     CS_VAL_EV --> VAL_PH
     R_DIST --> VAL_PH
 
@@ -230,6 +237,7 @@ flowchart LR
     style PB_SYNC fill:#e0f2f1,stroke:#00897B
     style G_TEST_DOC fill:#e0f2f1,stroke:#00897B
     style G_SETUP_DOC fill:#e0f2f1,stroke:#00897B
+    style G_TARGET fill:#e0f2f1,stroke:#00897B
     style G_IMPL fill:#e0f2f1,stroke:#00897B
     style CS_PLAN_EV fill:#e0f2f1,stroke:#00897B
     style CS_VAL_EV fill:#e0f2f1,stroke:#00897B
@@ -262,10 +270,13 @@ flowchart TD
     MAIN[["<b>python-to-rust-playbook.md</b><br/>8-phase process"]]
     MAIN --> TEST_COV
     MAIN --> MAPPING
-    MAIN --> CLI_BP
+    MAIN --> G_INDEX
     MAIN --> TEST_MAP
     MAIN --> G_SETUP
     MAIN --> G_CLI
+    MAIN --> G_PORT
+    MAIN --> G_TEST
+    MAIN --> G_PRINC
     MAIN --> SYNC_WF
     MAIN --> G_FS
 
@@ -273,12 +284,13 @@ flowchart TD
     MAPPING[["python-to-rust-mapping-reference.md"]]
     GUIDE[["python-to-rust-porting-guide.md"]]
 
-    CLI_BP[["rust-cli-best-practices.md"]]
-    CLI_BP --> R_BIN
-    CLI_BP --> R_PYPI
+    G_INDEX[["<b>guidelines/README.md</b><br/>Rust guideline index"]]
+    G_INDEX --> G_RUST & G_SETUP & G_CLI_RULE & G_FS_RULE & G_TEST_RUST & G_RELEASE & REVIEW
+    G_RELEASE --> R_BIN
+    G_RELEASE --> R_PYPI
 
     TEST_MAP[["cross-language-test-mapping.md"]]
-    REVIEW[["rust-code-review-checklist.md"]]
+    REVIEW[["rust-code-review-rules.md"]]
 
     CHK_INIT[["port-checklist-initial-template.md"]]
     CHK_INIT --> MAIN
@@ -295,8 +307,11 @@ flowchart TD
     G_SETUP[["rust-project-setup.md"]]
     G_CLI[["python-to-rust-cli-porting.md"]]
     G_PORT[["python-to-rust-porting-rules.md"]]
-    G_RUST[["rust-general-rules.md"]]
-    G_CLI_PAT[["rust-cli-app-patterns.md"]]
+    G_RUST[["rust-rules.md"]]
+    G_CLI_RULE[["rust-cli-rules.md"]]
+    G_FS_RULE[["rust-filesystem-rules.md"]]
+    G_TEST_RUST[["rust-testing-rules.md"]]
+    G_RELEASE[["rust-release-rules.md"]]
     G_TEST[["test-coverage-for-porting.md"]]
     G_PRINC[["porting-principles-and-antipatterns.md"]]
     G_FS[["filesystem-heavy-cli-porting.md"]]
@@ -407,6 +422,7 @@ flowchart TD
     WHO{What are you doing?}
 
     WHO -->|"Starting a new<br/>Python→Rust port"| NEW
+    WHO -->|"Starting or improving<br/>a Rust project"| RUST
     WHO -->|"Syncing an existing<br/>port to new upstream"| SYNC
     WHO -->|"Setting up an AI agent<br/>for porting"| AGENT
     WHO -->|"Reviewing Rust<br/>port quality"| QA
@@ -414,16 +430,19 @@ flowchart TD
 
     NEW[["<b>1.</b> README.md<br/><b>2.</b> python-to-rust-playbook.md<br/><b>3.</b> port-checklist-initial-template.md<br/><b>4.</b> case-studies/flowmark/"]]
 
+    RUST[["<b>1.</b> guidelines/README.md<br/><b>2.</b> rust-rules.md<br/><b>3.</b> rust-project-setup.md<br/><b>4.</b> focused topic guideline"]]
+
     SYNC[["<b>1.</b> auto-sync-agent-prompt-template.md<br/><b>2.</b> port-checklist-update-template.md<br/><b>3.</b> python-to-rust-sync-release-workflow.md"]]
 
-    AGENT[["<b>1.</b> python-to-rust-porting-rules.md<br/><b>2.</b> rust-project-setup.md<br/><b>3.</b> rust-general-rules.md<br/><b>4.</b> python-to-rust-cli-porting.md<br/><b>5.</b> porting-principles-and-antipatterns.md"]]
+    AGENT[["<b>1.</b> rust-rules.md<br/><b>2.</b> rust-project-setup.md<br/><b>3.</b> python-to-rust-porting-rules.md<br/><b>4.</b> python-to-rust-cli-porting.md<br/><b>5.</b> focused Rust guideline"]]
 
-    QA[["<b>1.</b> rust-code-review-checklist.md<br/><b>2.</b> cross-language-test-mapping.md<br/><b>3.</b> flowmark-port-cross-validation.md"]]
+    QA[["<b>1.</b> rust-code-review-rules.md<br/><b>2.</b> rust-testing-rules.md<br/><b>3.</b> cross-language-test-mapping.md<br/><b>4.</b> flowmark-port-cross-validation.md"]]
 
     META_DOCS[["<b>1.</b> _meta/meta-improving-this-playbook.md<br/><b>2.</b> case-study-observations-template.md<br/><b>3.</b> playbook-improvement-log.md"]]
 
     style WHO fill:#fff9c4,stroke:#F9A825,stroke-width:2px
     style NEW fill:#e0f2f1,stroke:#00897B
+    style RUST fill:#e0f2f1,stroke:#00897B
     style SYNC fill:#e0f2f1,stroke:#00897B
     style AGENT fill:#e0f2f1,stroke:#00897B
     style QA fill:#e0f2f1,stroke:#00897B
@@ -472,30 +491,38 @@ flowchart TD
 
 * * *
 
-## 8. Complete Document Inventory
+## 8. Core Knowledge-Base Inventory
 
 | # | Document | Layer | Primary phases | Purpose |
 | --- | --- | --- | --- | --- |
 | 1 | `python-to-rust-playbook.md` | Playbook | All | Canonical 8-phase process |
 | 2 | `python-to-rust-mapping-reference.md` | Reference | 2, 5 | Type and API mappings |
 | 3 | `python-to-rust-porting-guide.md` | Playbook | 5, 6 | Deep methodology and pitfalls |
-| 4 | `rust-cli-best-practices.md` | Reference | 4, 7 | CI, linting, releases, distribution |
-| 5 | `rust-code-review-checklist.md` | Reference | 7 | 150+ quality checks |
-| 6 | `cross-language-test-mapping.md` | Reference | 5, 6, 7 | YAML test traceability + CI gates |
-| 7 | `python-to-rust-test-coverage-playbook.md` | Playbook | 1 (Phase 0) | Pre-port test enhancement |
-| 8 | `port-checklist-initial-template.md` | Playbook | 1-7 | Copy-and-fill execution checklist |
-| 9 | `port-checklist-update-template.md` | Playbook | 8 | Sync execution checklist |
-| 10 | `python-to-rust-sync-release-workflow.md` | Playbook | 8 | Mode A / Mode B release patterns |
-| 11 | `auto-sync-agent-prompt-template.md` | Playbook | 8 | Copy-paste prompt for sync agent |
-| 12 | `python-to-rust-porting-rules.md` | Guideline | 5 | Core rules for agent context |
-| 13 | `python-to-rust-cli-porting.md` | Guideline | 5, 7 | CLI-specific porting patterns |
-| 14 | `rust-general-rules.md` | Guideline | 5 | Edition 2024+ best practices |
-| 15 | `rust-cli-app-patterns.md` | Reference | 5 | CLI patterns (clap, errors, testing) |
-| 16 | `rust-project-setup.md` | Guideline | 4 | Cargo.toml, CI, release automation |
-| 17 | `test-coverage-for-porting.md` | Guideline | 1 | Test strategy for agent context |
-| 18 | `porting-principles-and-antipatterns.md` | Guideline | 5, 6 | 8 non-negotiable principles |
-| 19 | `filesystem-heavy-cli-porting.md` | Guideline | 2, 5 | Path, symlink, encoding patterns |
-| 20 | `research-rust-cli-binary-distribution.md` | Research | 7 | Survey of 14 Rust CLI tools |
-| 21 | `research-rust-cli-pypi-distribution.md` | Research | 7 | maturin / PyPI distribution |
-| 22-29 | `case-studies/flowmark/*` | Case Study | 2, 3, 6, 7 | Real-world port evidence |
-| 30-34 | `_meta/*` | Meta | — | Self-improvement framework |
+| 4 | `cross-language-test-mapping.md` | Reference | 5, 6, 7 | YAML test traceability and CI gates |
+| 5 | `python-to-rust-test-coverage-playbook.md` | Playbook | 1 (Phase 0) | Pre-port test enhancement |
+| 6 | `port-checklist-initial-template.md` | Playbook | 1-7 | Copy-and-fill execution checklist |
+| 7 | `port-checklist-update-template.md` | Playbook | 8 | Sync execution checklist |
+| 8 | `python-to-rust-sync-release-workflow.md` | Playbook | 8 | Mode A and Mode B release patterns |
+| 9 | `auto-sync-agent-prompt-template.md` | Playbook | 8 | Copy-paste prompt for a sync agent |
+| 10 | `guidelines/README.md` | Guideline index | All | General Rust and porting-layer navigation |
+| 11 | `rust-rules.md` | Rust guideline | 4-7 | Language, ownership, API, unsafe, async, and performance rules |
+| 12 | `rust-project-setup.md` | Rust guideline | 4 | Cargo, toolchain, lint, CI, dependency, and docs rules |
+| 13 | `rust-cli-rules.md` | Rust guideline | 4, 5, 7 | CLI architecture, streams, exits, configuration, and terminal behavior |
+| 14 | `rust-filesystem-rules.md` | Rust guideline | 4-7 | Safe mutation, traversal, paths, metadata, and recovery |
+| 15 | `rust-testing-rules.md` | Rust guideline | 4-7 | Unit, integration, property, snapshot, feature, and platform tests |
+| 16 | `rust-release-rules.md` | Rust guideline | 7 | Artifacts, permissions, publishing, channels, and incidents |
+| 17 | `rust-code-review-rules.md` | Rust guideline | 7 | Severity-ranked correctness, soundness, API, and maintenance review |
+| 18 | `python-to-rust-porting-rules.md` | Porting guideline | 5 | Core translation and parity rules |
+| 19 | `python-to-rust-cli-porting.md` | Porting guideline | 5, 7 | Python CLI contract mappings |
+| 20 | `test-coverage-for-porting.md` | Porting guideline | 1, 5, 6 | Source evidence, traceability, and differential validation |
+| 21 | `porting-principles-and-antipatterns.md` | Porting guideline | 5, 6 | Non-negotiable parity principles |
+| 22 | `filesystem-heavy-cli-porting.md` | Porting guideline | 2, 5, 6 | Filesystem contract inventory and cross-validation |
+| 23 | `rust-general-rules.md` | Compatibility | — | Redirect to `rust-rules.md` |
+| 24 | `rust-cli-app-patterns.md` | Compatibility | — | Redirect to `rust-cli-rules.md` |
+| 25 | `rust-cli-best-practices.md` | Compatibility map | — | Routes old sections to focused guidelines and research |
+| 26 | `rust-code-review-checklist.md` | Compatibility | — | Redirect to `rust-code-review-rules.md` |
+| 27 | `research-rust-cli-binary-distribution.md` | Research | 7 | Survey of 14 Rust CLI tools |
+| 28 | `research-rust-cli-pypi-distribution.md` | Research | 7 | maturin and PyPI distribution |
+| 29-32 | `research-{tbd,qmd}-*.md` | Research | 2, 3 | Fixed-commit dependency maps and lockfile evidence for TypeScript exemplars |
+| 33-43 | `case-studies/*` | Case Study | 2, 3, 6, 7, 8 | Real-world port, planning, and synchronization evidence |
+| 44-48 | `_meta/*.md` | Meta | — | Self-improvement framework |

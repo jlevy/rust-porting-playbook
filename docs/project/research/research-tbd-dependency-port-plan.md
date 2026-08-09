@@ -33,8 +33,9 @@ dependency selection as a supply-chain decision in both directions: audit the **
 npm tree before trusting it as the parity oracle (`npm audit` / `pnpm audit signatures`,
 review lifecycle scripts), and vet each proposed **target** crate (`cargo deny` /
 `cargo audit`, 14-day cool-off for brand-new versions, read any `build.rs`/proc-macro,
-`cargo-vet` for teams). See `tbd guidelines supply-chain-hardening`, §4.6 of
-`references/rust-cli-best-practices.md`, and the Supply Chain Hardening guidebook
+`cargo-vet` for teams). See `tbd guidelines supply-chain-hardening`,
+`guidelines/rust-project-setup.md`, `guidelines/rust-release-rules.md`, and the Supply
+Chain Hardening guidebook
 (<https://github.com/jlevy/supply-chain-hardening>).
 
 ## Runtime Dependency Plan (`packages/tbd`)

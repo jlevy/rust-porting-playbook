@@ -6,14 +6,19 @@ specific technical error, or make the existing process easier to apply.
 ## Choose the Right Location
 
 - Put executable workflows and checklists in `playbooks/`.
-- Put concise, reusable engineering rules in `guidelines/`.
+- Put source-language-independent Rust engineering rules in the general suite indexed
+  by `guidelines/README.md`.
+- Put translation, parity, traceability, and synchronization rules in the porting
+  section of `guidelines/`.
 - Put lookup material and pattern catalogs in `references/`.
 - Put source-backed investigations in `docs/project/research/`.
 - Put evidence from completed or active ports in `case-studies/`.
 - Put changes to the playbook-improvement process in `_meta/`.
 
-Avoid duplicating guidance across layers.
-Add a concise cross-reference to the detailed source instead.
+Classify guidance by the question it answers: how Rust should be built belongs in the
+general Rust suite; how source behavior maps to Rust belongs in porting guidance.
+Avoid duplicating guidance across layers. Add a concise cross-reference to the
+authoritative document instead.
 
 ## Validate Changes
 

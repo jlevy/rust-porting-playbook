@@ -23,9 +23,9 @@ the meta playbook will help improve the overall porting playbook!
 
 Notes and caveats:
 
-- Currently focused on **Python-to-Rust** porting.
-  (But a lot is reusable so future editions may cover TypeScript and other source
-  languages.)
+- The end-to-end porting workflow is currently focused on **Python-to-Rust**.
+  The standalone Rust guideline suite is source-language-independent, and an active
+  plan tracks the TypeScript-to-Rust path.
 
 - This requires **thoroughly testable** Python apps where all features can be mapped to
   Rust. (You don’t need perfect tests to begin with, as long as the agent can add them
@@ -51,6 +51,17 @@ Key elements of the approach:
 
 - Codifying the process for ongoing port updates into two kinds: improvements to Rust
   port (type A) and port synchronization with a new release (type B)
+
+## Rust Best Practices Without a Port
+
+The [Rust guideline index](guidelines/README.md) is independently useful for projects
+written in Rust from the start. It organizes language and API design, project setup,
+CLI behavior, filesystem safety, testing, releases, and code review as seven focused
+documents. Start with [`rust-rules.md`](guidelines/rust-rules.md) and add only the topic
+guidelines relevant to the work.
+
+Porting mappings and parity workflows are indexed separately, so loading general Rust
+guidance does not bring Python-specific assumptions into a new project.
 
 ## Flowchart
 
@@ -254,26 +265,33 @@ rust-porting-playbook/
 │   ├── port-checklist-initial-template.md
 │   ├── port-checklist-update-template.md
 │   └── auto-sync-agent-prompt-template.md
-├── references/                # Lookup tables, checklists, and pattern catalogs
+├── references/                # Porting lookup tables and compatibility maps
 │   ├── python-to-rust-mapping-reference.md
-│   ├── rust-cli-best-practices.md
-│   ├── rust-cli-app-patterns.md
-│   ├── rust-code-review-checklist.md
-│   └── cross-language-test-mapping.md
-├── guidelines/                # Compact rules for AI agent context
+│   ├── cross-language-test-mapping.md
+│   ├── rust-cli-best-practices.md       # Compatibility map
+│   ├── rust-cli-app-patterns.md         # Compatibility redirect
+│   └── rust-code-review-checklist.md    # Compatibility redirect
+├── guidelines/                # Standalone Rust rules and separate porting rules
+│   ├── README.md
+│   ├── rust-rules.md
+│   ├── rust-general-rules.md             # Compatibility redirect
+│   ├── rust-project-setup.md
+│   ├── rust-cli-rules.md
+│   ├── rust-filesystem-rules.md
+│   ├── rust-testing-rules.md
+│   ├── rust-release-rules.md
+│   ├── rust-code-review-rules.md
 │   ├── python-to-rust-porting-rules.md
 │   ├── python-to-rust-cli-porting.md
-│   ├── rust-general-rules.md
-│   ├── rust-project-setup.md
 │   ├── test-coverage-for-porting.md
 │   ├── porting-principles-and-antipatterns.md
-│   └── ...
+│   └── filesystem-heavy-cli-porting.md
 ├── docs/
 │   ├── project/research/      # In-depth research and dependency-port plans
 │   ├── project/specs/active/  # Governing plans linked to tbd features
 │   └── reviews/               # Dated repository engineering reviews
 ├── case-studies/              # Real-world porting examples
-│   └── flowmark/              # Python Markdown formatter → Rust
+│   ├── flowmark/              # Python Markdown formatter → Rust
 │       ├── README.md
 │       ├── flowmark-port-library-choices.md
 │       ├── flowmark-port-decision-log.md
@@ -282,7 +300,9 @@ rust-porting-playbook/
 │       ├── flowmark-port-migration-plan.md
 │       ├── flowmark-port-cross-validation.md
 │       ├── flowmark-port-comrak-bug.md
-│       └── flowmark-port-wrapping-solution.md
+│       ├── flowmark-port-wrapping-solution.md
+│       └── flowmark-sync-observations-v0.7.2.md
+│   └── repren/                # Planning evidence for a second port
 ```
 
 ### Kinds of Documentation
@@ -290,8 +310,8 @@ rust-porting-playbook/
 | Layer | Directory | Purpose | When to use |
 | --- | --- | --- | --- |
 | **Playbooks** | `playbooks/` | Step-by-step process guides and checklists | Start here. The playbook is the primary doc. |
-| **References** | `references/` | Lookup tables, pattern catalogs, and mapping references | When you need construct mappings, CLI patterns, or test mapping details |
-| **Guidelines** | `guidelines/` | Compact rules for porting principles, pitfalls, and acceptance criteria | Load into agent context before porting |
+| **References** | `references/` | Lookup tables, mapping schemas, and compatibility maps | When you need construct or test mappings rather than prescriptive rules |
+| **Guidelines** | `guidelines/` | Compact general Rust rules plus a separate porting layer | Load the smallest relevant set into agent context before writing or porting Rust |
 | **Research** | `docs/project/research/` | In-depth investigation of specific topics (distribution, packaging) | When you need deep research on a specific area |
 | **Case Studies** | `case-studies/` | Real-world examples with decisions, metrics, lessons | When you hit a specific problem and want to see how it was handled |
 | **Meta Process** | `_meta/` | How to improve the playbook itself via case studies | Use when contributing playbook improvements |
@@ -318,18 +338,27 @@ Thorough library evaluation in Phase 2 is the single highest-leverage activity.
 
 ## For AI Agents
 
-The `guidelines/` directory contains compact documents (~1.5-8k tokens each) designed to
-be loaded into an AI agent’s context window before starting work.
-Include the raw markdown files from `guidelines/` in your agent’s system prompt or
-context. The key guidelines for porting are:
+The [`guidelines/`](guidelines/) directory contains compact documents designed for an
+AI agent's context window. Its [index](guidelines/README.md) separates general Rust
+engineering from source-language mapping and parity concerns.
 
-- `guidelines/python-to-rust-porting-rules.md` — Core porting rules
-- `guidelines/rust-project-setup.md` — Project setup patterns
-- `guidelines/rust-general-rules.md` — General Rust best practices
-- `references/rust-cli-app-patterns.md` — CLI application patterns
-- `guidelines/python-to-rust-cli-porting.md` — CLI-specific porting rules
-- `guidelines/test-coverage-for-porting.md` — Test coverage strategy
-- `guidelines/porting-principles-and-antipatterns.md` — Principles and antipatterns
+For a new Rust project, start with:
+
+- [`rust-rules.md`](guidelines/rust-rules.md) — language and API design;
+- [`rust-project-setup.md`](guidelines/rust-project-setup.md) — Cargo, tooling, CI, and
+  dependency policy;
+- the focused CLI, filesystem, testing, release, or code-review guideline needed for
+  the task.
+
+For a port, add:
+
+- [`python-to-rust-porting-rules.md`](guidelines/python-to-rust-porting-rules.md) —
+  translation, traceability, and acceptance;
+- [`python-to-rust-cli-porting.md`](guidelines/python-to-rust-cli-porting.md) — CLI
+  contract mapping;
+- [`test-coverage-for-porting.md`](guidelines/test-coverage-for-porting.md) and
+  [`porting-principles-and-antipatterns.md`](guidelines/porting-principles-and-antipatterns.md)
+  — source evidence, differential testing, and parity discipline.
 
 For a **working reference project**, check out
 [flowmark-rs](https://github.com/jlevy/flowmark-rs) — it demonstrates all of these
@@ -341,10 +370,16 @@ automation, test organization, maturin/PyPI distribution, and more).
 | Document | What it covers |
 | --- | --- |
 | [python-to-rust-playbook.md](playbooks/python-to-rust-playbook.md) | The complete phased porting process |
+| [Rust guideline index](guidelines/README.md) | The reusable Rust suite and the separate porting-guideline layer |
+| [rust-rules.md](guidelines/rust-rules.md) | General language, ownership, API, error, unsafe, async, and performance rules |
+| [rust-project-setup.md](guidelines/rust-project-setup.md) | Cargo layout, toolchains, linting, CI, dependency policy, and documentation |
+| [rust-cli-rules.md](guidelines/rust-cli-rules.md) | Standalone Rust CLI architecture and behavior rules |
+| [rust-filesystem-rules.md](guidelines/rust-filesystem-rules.md) | Safe and deterministic Rust filesystem operations |
+| [rust-testing-rules.md](guidelines/rust-testing-rules.md) | Rust unit, integration, property, snapshot, and platform testing |
+| [rust-release-rules.md](guidelines/rust-release-rules.md) | Reproducible artifacts and least-privilege publishing |
+| [rust-code-review-rules.md](guidelines/rust-code-review-rules.md) | Severity-ranked Rust correctness and maintainability review |
 | [python-to-rust-mapping-reference.md](references/python-to-rust-mapping-reference.md) | Type mappings, project setup equivalences, dependency tables |
 | [python-to-rust-porting-guide.md](playbooks/python-to-rust-porting-guide.md) | Detailed methodology with pitfalls and automation scripts |
-| [rust-cli-best-practices.md](references/rust-cli-best-practices.md) | Modern Rust CLI project setup (CI, linting, releases, tooling) |
-| [rust-code-review-checklist.md](references/rust-code-review-checklist.md) | Code review checklist for Rust ports |
 | [cross-language-test-mapping.md](references/cross-language-test-mapping.md) | YAML-based test mapping with CI enforcement |
 | [python-to-rust-test-coverage-playbook.md](playbooks/python-to-rust-test-coverage-playbook.md) | Pre-port test coverage strategy and tooling |
 | [port-checklist-initial-template.md](playbooks/port-checklist-initial-template.md) | Expanded execution checklist template (copy and fill in) |
@@ -368,6 +403,8 @@ automation, test organization, maturin/PyPI distribution, and more).
 | Document | What it covers |
 | --- | --- |
 | [August 2026 repository refresh](docs/reviews/repository-refresh-2026-08-08.md) | Current maintenance, dependency-currency, documentation, automation, and supply-chain review |
+| [Rust guideline reorganization plan](docs/project/specs/active/plan-2026-08-08-rust-guideline-reorganization.md) | Governing plan for separating reusable Rust rules from porting mappings |
+| [Rust guideline reuse review](docs/reviews/rust-guideline-reuse-review-2026-08-08.md) | Section-level audit, extraction results, and tbd upstream candidates |
 | [TypeScript-to-Rust porting path](docs/project/specs/active/plan-2026-03-04-typescript-to-rust-porting-path.md) | Governing draft for the planned TypeScript core path and exemplar audits |
 | [Active plans](docs/project/specs/active/) | Current TypeScript, qmd, and knip workstreams linked to tbd features |
 | [Repository reviews](docs/reviews/) | Dated engineering, maintenance, and supply-chain assessments |

@@ -363,7 +363,7 @@ Easy / Moderate / Hard — and why]
 ### Suggested playbook change
 
 **File:**
-[e.g., `playbooks/python-to-rust-playbook.md` section “Phase 7” or `references/rust-cli-best-practices.md`]
+[e.g., `playbooks/python-to-rust-playbook.md` section “Phase 7” or `guidelines/rust-release-rules.md`]
 **Change:** [Specific text change or addition, or "None"]
 
 ### Difficulty

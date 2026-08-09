@@ -12,6 +12,7 @@ This technique was developed during the flowmark port and is generalizable to an
 Python-to-Rust porting effort.
 
 See also: [Test Coverage for Porting](../guidelines/test-coverage-for-porting.md),
+[Rust Testing Rules](../guidelines/rust-testing-rules.md),
 [Porting Principles and Anti-Patterns](../guidelines/porting-principles-and-antipatterns.md)
 (Principle 9: Dynamic Corpus Validation).
 

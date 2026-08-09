@@ -1,729 +1,314 @@
 ---
 title: Rust Project Setup
-description: Complete guide for setting up Rust packages, repos, CI/CD, security auditing, and release workflows
+description: Rules for structuring, validating, and maintaining modern Rust packages and workspaces
+category: rust
 ---
 # Rust Project Setup
 
-Complete guide for setting up a production-ready Rust project from scratch, including
-Cargo configuration, CI/CD pipelines, security tooling, release workflows, and
-development tooling.
+Use this guideline when starting or modernizing a Rust package, application, or
+workspace. It defines the project-level quality floor: Cargo metadata, package
+boundaries, toolchains, linting, CI, documentation, and dependency policy.
 
-Cross-referenced against real-world projects: flowmark-rs, ripgrep, bat, fd, jj.
+**Related:** [`rust-rules.md`](rust-rules.md),
+[`rust-testing-rules.md`](rust-testing-rules.md),
+[`rust-release-rules.md`](rust-release-rules.md), and
+`tbd guidelines supply-chain-hardening`.
 
-See also: [Rust General Rules](rust-general-rules.md),
-[Rust CLI App Patterns](../references/rust-cli-app-patterns.md).
-For commit conventions, see `tbd guidelines commit-conventions`.
+## Choose the Smallest Package Shape That Fits
 
-## Cargo.toml Configuration
+Start with one package unless the code has a concrete reason to be split.
 
-### Essential Fields
+- **Library only:** one `[lib]` target for a reusable API.
+- **Binary only:** one `[[bin]]` target when no library surface is useful.
+- **Library and binary:** keep domain behavior in the library and make the binary a thin
+  process boundary.
+- **Workspace:** use separate packages when they need different release lifecycles,
+  dependency sets, platform constraints, or public APIs.
+
+Do not create a workspace only to imitate a large project.
+Every package boundary adds feature resolution, publishing, ownership, and CI
+complexity.
+
+```text
+project/
+├── Cargo.toml
+├── Cargo.lock
+├── rust-toolchain.toml
+├── src/
+│   ├── lib.rs
+│   └── main.rs
+├── tests/
+├── docs/
+└── .github/workflows/
+```
+
+## Declare the Package Contract
+
+Every published package should declare its edition, MSRV, license, repository, readme,
+and a concise description.
+Use a valid SPDX expression for `license`.
 
 ```toml
 [package]
-name = "myproject"
+name = "example"
 version = "0.1.0"
-edition = "2024"                    # Use latest edition for new projects
-rust-version = "1.85"               # MSRV -- enforced by cargo and CI
-authors = ["Your Name <email>"]
-license = "MIT OR Apache-2.0"       # SPDX expression (dual license is standard)
-description = "Brief description for crates.io"
-repository = "https://github.com/user/project-rs"
-keywords = ["cli", "tool", "utility"]   # Up to 5, for crates.io search
-categories = ["command-line-utilities"]  # From crates.io fixed list
+edition = "2024"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+description = "A concise description"
+repository = "https://github.com/example/example"
 readme = "README.md"
 ```
 
-**Edition 2024** is now standard for new projects (stabilized in Rust 1.85). Always
-declare `rust-version` -- all major projects do this (bat, fd, jj, ripgrep).
-
-### Library + Binary in One Crate (Recommended)
-
-For projects that are both a library and a CLI tool, use feature-gated binaries:
-
-```toml
-# Library target (always available)
-[lib]
-name = "myproject"
-path = "src/lib.rs"
-
-# Binary target (only with cli feature)
-[[bin]]
-name = "myproject"
-path = "src/main.rs"
-required-features = ["cli"]
-
-[features]
-default = ["cli"]
-cli = ["clap", "color-eyre", "tracing", "tempfile", "indicatif", "ctrlc"]
-
-[dependencies]
-# Core deps (always included)
-regex = "1.13"
-thiserror = "2.0"
-
-# CLI deps (optional, behind feature gate)
-clap = { version = "4.6", features = ["derive", "cargo", "color"], optional = true }
-color-eyre = { version = "0.6", optional = true }
-```
-
-This pattern (used by flowmark-rs and bat) lets library users depend on the crate
-without pulling in CLI-only deps like clap and color-eyre.
-
-Test without default features in CI: `cargo test --no-default-features`
-
-### Workspace (for Larger Projects)
+For a workspace, centralize shared metadata, dependencies, and lint policy:
 
 ```toml
 [workspace]
-members = ["crates/project-core", "crates/project-cli"]
-resolver = "3"                     # Edition 2024 uses resolver v3 (MSRV-aware)
+members = ["crates/*"]
+resolver = "3"
 
-[workspace.lints.clippy]
-pedantic = { level = "warn", priority = -1 }
-```
+[workspace.package]
+edition = "2024"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
 
-Use workspaces when: independent versioning needed, very different dependency sets, or
-project has 3+ crates.
-jj uses a workspace (~30 crates).
-Start with single package and split only when you have a concrete reason.
-
-### Release Profile
-
-```toml
-[profile.release]
-opt-level = 3           # Maximum optimization
-lto = true              # Link-time optimization for smaller, faster binaries
-codegen-units = 1       # Better optimization at cost of compile time
-strip = true            # Remove debug symbols (smaller binary)
-panic = "abort"         # Smaller binary, no unwinding
-```
-
-This is the standard aggressive profile used by bat, fd, and flowmark-rs.
-
-**Consider:** ripgrep keeps `debug = 1` in the default release profile for useful
-backtraces, and uses a separate `release-lto` profile for maximum optimization:
-
-```toml
-[profile.release]
-debug = 1               # Keep some debug info for backtraces
-
-[profile.release-lto]
-inherits = "release"
-opt-level = 3
-lto = "fat"
-strip = true
-panic = "abort"
-codegen-units = 1
-```
-
-This lets you build quick release builds during development (`cargo build --release`)
-and use the full LTO profile only for distribution
-(`cargo build --profile release-lto`).
-
-### Lint Configuration
-
-Three approaches are used in practice:
-
-**Approach A: Blanket pedantic** (flowmark-rs).
-Enables all pedantic lints, allows the noisy ones individually.
-Catches more but requires more `allow` overrides:
-
-```toml
-[lints.clippy]
-pedantic = { level = "warn", priority = -1 }
-# Selectively allow noisy pedantic lints
-missing_errors_doc = "allow"
-missing_panics_doc = "allow"
-module_name_repetitions = "allow"
-must_use_candidate = "allow"
-
-[lints.rust]
+[workspace.lints.rust]
 unsafe_code = "forbid"
 ```
 
-Note: `priority = -1` is required on group lints so individual overrides take
-precedence.
+Virtual workspaces must declare the resolver because there is no root package edition
+from which Cargo can infer it.
 
-**Approach B: Curated lint list** (jj).
-Cherry-picks specific useful lints.
-More maintainable, avoids churn when new pedantic lints are added:
+## Separate Optional Surfaces With Features
+
+Use features to prevent consumers from paying for functionality they do not use.
+CLI, network, database, and platform integration dependencies are common feature
+boundaries.
 
 ```toml
-[lints.clippy]
-cloned_instead_of_copied = "warn"
-explicit_iter_loop = "warn"
-flat_map_option = "warn"
-implicit_clone = "warn"
-manual_let_else = "warn"
-needless_pass_by_value = "warn"
-redundant_closure_for_method_calls = "warn"
-semicolon_if_nothing_returned = "warn"
-uninlined_format_args = "warn"
-use_self = "warn"
+[features]
+default = ["cli"]
+cli = ["dep:clap"]
 
-[lints.rust]
-unsafe_code = "forbid"
-unused_qualifications = "warn"
+[[bin]]
+name = "example"
+path = "src/main.rs"
+required-features = ["cli"]
 ```
 
-**Approach C: No lint config** (ripgrep, bat, fd).
-Just run `cargo clippy -- -D warnings` in CI with defaults.
-Simplest, but catches fewer issues.
+- Keep the core library buildable with `--no-default-features` when that is part of the
+  package contract.
+- Avoid feature combinations that change the meaning of the same public API.
+- Test the feature sets users are expected to build; do not assume `--all-features`
+  covers mutually exclusive configurations.
+- Use target-specific dependencies for OS-specific integrations instead of compiling
+  unused platform code everywhere.
 
-All approaches are valid.
-Choose based on project size and team preference.
+## Pin the Development Toolchain Deliberately
 
-**Why `warn` in Cargo.toml + `-D warnings` in CI:** Setting pedantic lints to `warn`
-(not `deny`) in Cargo.toml lets developers see warnings during local development without
-blocking compilation. The CI command `cargo clippy -- -D warnings` then promotes all
-warnings to errors, enforcing zero-warning builds. This two-tier strategy gives fast
-local iteration while maintaining strict quality gates in CI.
+Use `rust-toolchain.toml` when contributors and CI should use the same Rust release and
+components:
 
-## CI/CD with GitHub Actions
-
-### Recommended: Separate Jobs (Modern Pattern)
-
-Split CI into independent parallel jobs for fast feedback.
-The example below defines 11 jobs; the three-platform test matrix expands it to 13 job
-executions. This is the pattern used by flowmark-rs, jj, and delta.
-Format and clippy fail fast; test and audit run in parallel.
-
-```yaml
-name: CI
-on:
-  push:
-    branches: [main]
-  pull_request:
-
-permissions:
-  contents: read
-
-env:
-  CARGO_TERM_COLOR: always
-  CARGO_INCREMENTAL: 0             # Faster CI (no incremental overhead)
-  CARGO_PROFILE_TEST_DEBUG: 0      # Smaller test binaries
-
-jobs:
-  fmt:
-    name: Format check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt
-      - run: cargo fmt --all -- --check
-
-  clippy:
-    name: Clippy lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy --locked --all-targets --all-features -- -D warnings
-
-  test:
-    name: Test (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo test --locked --all-features
-        env:
-          RUSTFLAGS: "-D warnings"
-
-  test-lib-only:
-    name: Test library (no default features)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo test --locked --no-default-features
-        env:
-          RUSTFLAGS: "-D warnings"
-
-  msrv:
-    name: MSRV check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@1.85   # Match rust-version in Cargo.toml
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo check --locked --all-features
-
-  deny:
-    name: Dependency audit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: EmbarkStudios/cargo-deny-action@v2
-
-  audit:
-    name: Vulnerability audit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: rustsec/audit-check@v2
-
-  docs:
-    name: Documentation
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo doc --locked --no-deps --all-features
-        env:
-          RUSTDOCFLAGS: "-D warnings"
-
-  coverage:
-    name: Code coverage
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: llvm-tools-preview
-      - uses: Swatinem/rust-cache@v2
-      - uses: taiki-e/install-action@cargo-llvm-cov
-      - run: cargo llvm-cov --locked --all-features --lcov --output-path lcov.info
-        env:
-          RUSTFLAGS: "-D warnings"
-      - uses: codecov/codecov-action@v7
-        with:
-          files: lcov.info
-          fail_ci_if_error: false
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-  semver-checks:
-    name: Semver compatibility
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - uses: obi1kenobi/cargo-semver-checks-action@v2
-
-  workflow-scripts:
-    name: Workflow script tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - run: python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v
-```
-
-**Key patterns from real-world projects:**
-- Use `actions/checkout@v7` (current), `dtolnay/rust-toolchain` (not `actions-rs`)
-- `Swatinem/rust-cache@v2` for build caching across jobs
-- `--locked` on all cargo commands enforces Cargo.lock reproducibility
-- `RUSTFLAGS: "-D warnings"` in test/build jobs treats warnings as errors
-- `CARGO_INCREMENTAL: 0` + `CARGO_PROFILE_TEST_DEBUG: 0` for faster CI builds
-- `test-lib-only` verifies library builds without CLI feature deps
-- `coverage` via `cargo-llvm-cov` + Codecov (use `taiki-e/install-action` for speed)
-- `semver-checks` on PRs only (needs `fetch-depth: 0`) catches API breakage
-- `workflow-scripts` validates testable release automation scripts
-- Use `EmbarkStudios/cargo-deny-action@v2` (no manual install needed)
-- Doc build with `RUSTDOCFLAGS: "-D warnings"` catches broken doc links
-
-### Cross-Platform Test Matrix
-
-For CLI tools, test on all three major platforms.
-The test job above already does this.
-For builds, add target-specific builds in the release workflow (see below).
-
-### MSRV Policy
-
-- Declare `rust-version` in `Cargo.toml` (all major projects do this)
-- Test MSRV in CI with `dtolnay/rust-toolchain@<version>` pinned to your MSRV
-- Update MSRV when you need new features, not on every Rust release
-- Document MSRV in README
-
-## Security Auditing
-
-### cargo-audit
-
-Checks for known vulnerabilities in dependencies via the RustSec advisory database:
-```bash
-cargo install cargo-audit
-cargo audit
-cargo audit fix   # Automatically update vulnerable dependencies when possible
-```
-
-In CI, use the `rustsec/audit-check@v2` action (faster, no install step).
-Alternative: `actions-rust-lang/audit` supports ignoring specific advisories via config.
-
-### cargo-deny
-
-Comprehensive dependency policy: licenses, advisories, bans, source restrictions.
-
-**`deny.toml` configuration** (based on flowmark-rs, validated against jj):
 ```toml
-[advisories]
-version = 2                         # Use v2 schema (required for current cargo-deny)
-# db-path and db-urls use sensible defaults; override only if needed
-
-[licenses]
-version = 2
-confidence-threshold = 0.8
-allow = [
-    "MIT",
-    "Apache-2.0",
-    "Apache-2.0 WITH LLVM-exception",
-    "BSD-2-Clause",
-    "BSD-3-Clause",
-    "ISC",
-    "Unicode-3.0",
-]
-
-# ring uses a non-standard license file; clarify it.
-# ring does not set a `license` field in Cargo.toml, only `license-file`,
-# so cargo-deny cannot determine the license automatically.
-[[licenses.clarify]]
-name = "ring"
-expression = "MIT AND ISC AND OpenSSL"
-license-files = [{ path = "LICENSE", hash = 0xbd0eed23 }]
-# IMPORTANT: hash is version-specific; if ring updates its LICENSE file,
-# run `cargo deny check licenses` to get the new hash from the error output.
-
-# ring's clarified license includes OpenSSL, which must be explicitly allowed
-[[licenses.exceptions]]
-allow = ["OpenSSL"]
-name = "ring"
-
-[bans]
-multiple-versions = "warn"          # Warn on duplicate deps in tree
-deny = []
-
-[sources]
-unknown-registry = "deny"           # Only allow crates.io
-unknown-git = "deny"                # No git dependencies
+[toolchain]
+channel = "1.97.1"
+components = ["clippy", "rustfmt"]
+profile = "minimal"
 ```
 
-**Important:** Use `version = 2` for `[advisories]` and `[licenses]`. The v1 schema is
-deprecated and will cause warnings or errors with current cargo-deny.
+The normal toolchain pin and the MSRV serve different purposes:
 
-## Release Workflow
+- the normal pin makes development and CI reproducible;
+- `rust-version` states the oldest compiler supported by the package;
+- a separate CI job proves the package still builds on the MSRV.
 
-### cargo-release (Version Bumping and Tagging)
+Review and update the toolchain pin intentionally.
+Do not use a moving `stable` channel in a reproducibility-sensitive workflow and assume
+the result will remain unchanged.
+
+## Let rustfmt Own Formatting
+
+Run rustfmt in fix mode locally and verification mode in CI:
 
 ```bash
-cargo install cargo-release
-cargo release patch --execute   # or minor, major
+cargo fmt --all
+cargo fmt --all -- --check
 ```
 
-**`release.toml` configuration** (based on flowmark-rs):
-```toml
-# Don't publish to crates.io from local machine (let CI handle it)
-publish = false
+Keep `rustfmt.toml` small.
+Edition should match the package; other settings require a clear readability or
+generated-code reason.
 
-# Tag format
-tag-prefix = "v"
-tag-name = "v{{version}}"
-
-# Push tag to remote (triggers release CI)
-push = true
-allow-branch = ["main", "master"]
-
-# Pre-release checks
-pre-release-commit-message = "Bump version to {{version}}"
-tag-message = "Release {{version}}"
-pre-release-hook = ["just", "check"]    # Run all checks before release
-```
-
-**Key decision:** `publish = false` locally, let GitHub Actions handle `cargo publish`
-after the tag push. This ensures binaries are built and uploaded alongside the crates.io
-publish. In workspaces, set `publish = false` in `Cargo.toml` for crates that should not
-be published (internal crates, test utilities, etc.).
-
-### Release CI Workflow
-
-All major Rust CLI projects (ripgrep, bat, fd, jj) hand-roll their release workflows.
-
-**Alternative: `cargo-dist`** (by axodotdev, now branded `dist`) can generate complete
-release CI workflows with `dist init`. It handles cross-compilation, installer
-generation (shell scripts, Homebrew, MSI), and GitHub Release uploads with minimal
-configuration.
-It has matured significantly (v0.32+ as of August 2026) and is a good choice when you
-don’t need full control over the release pipeline.
-See https://axodotdev.github.io/cargo-dist/ for details.
-
-For full control, the standard hand-rolled pattern:
-
-1. **cargo-release** bumps version, commits, tags, pushes
-2. **Tag push** triggers `release.yml` orchestrator
-3. **Release workflow** plans, builds binaries, generates checksums, publishes to
-   channels, and creates GitHub Release
-
-**Cross-compilation approach:** Use RUSTFLAGS linker overrides with apt-get packages
-instead of Docker-based `cross`. For musl targets, install `musl-tools`; for Linux
-ARM64, install `gcc-aarch64-linux-gnu` and set linker override via
-`--codegen linker=aarch64-linux-gnu-gcc`. This is simpler and more transparent.
-
-**Static linking:** Use `--codegen target-feature=+crt-static` for statically linked
-binaries on musl targets.
-
-**crates.io OIDC auth:** Use `rust-lang/crates-io-auth-action@v1` instead of
-long-lived `CARGO_REGISTRY_TOKEN` secrets. Same principle as PyPI trusted publishing.
-
-**Release automation scripts:** Extract complex workflow logic into testable Python
-scripts (`scripts/*.py`) with unit tests. Scripts handle semver parsing, archive
-creation, idempotency checks, and wheel validation. Run tests in CI with
-`python3 -m unittest discover -s scripts/tests -p 'test_*.py'`.
-
-See [Rust CLI Best Practices](../references/rust-cli-best-practices.md#64-release-ci-workflow)
-for the complete release workflow template with plan job, concurrency control,
-checksum generation, and reusable channel workflows.
-
-### Multi-Channel Distribution
-
-Beyond crates.io and GitHub Releases, distribute Rust CLI binaries through additional
-channels for broader reach. See
-[Rust CLI Best Practices](../references/rust-cli-best-practices.md#65-multi-channel-distribution)
-for full workflow templates.
-
-**PyPI via maturin is the recommended primary distribution channel** for Rust CLI
-binaries targeting a broad audience. `uvx <tool>` provides instant ephemeral execution
-with no Rust toolchain required — there is no cargo equivalent to this (`cargo install`
-compiles from source; `cargo binstall` requires a separate install and has no ephemeral
-mode). uv is now standard in modern Python environments, making PyPI the
-lowest-friction cross-platform distribution channel for Rust CLIs.
-
-Add `pyproject.toml` at repo root with `[tool.maturin] bindings = "bin"` and
-`dynamic = ["version"]` (reads from `Cargo.toml`). Build cross-platform wheels with
-`PyO3/maturin-action` in CI; publish with `uv publish --trusted-publishing always`.
-This is the pattern used by ruff, uv, and maturin itself.
-
-**Homebrew tap** (`brew install <tap>/<tool>`):
-Create a personal tap repo (`<user>/homebrew-<project>`) with a formula that downloads
-GitHub Release archives. Pin SHA256 checksums; update manually after each release.
-
-**Orchestration:** For multi-channel projects, use a single `release.yml` orchestrator
-that invokes reusable channel workflows (`publish.yml`, `pypi.yml`) with conditional
-gating. Keep complex logic in testable scripts, not inline YAML.
-
-**Idempotent publishing:** Each channel should detect already-published versions and skip
-gracefully (crates.io: API query; PyPI: `--check-url`; GitHub Releases: naturally
-idempotent).
-
-## Development Tooling
-
-### Task Runner: just
-
-`just` is the standard task runner for Rust projects (used by flowmark-rs, jj, delta).
-It replaces Makefiles with a simpler, cross-platform syntax.
-
-**`justfile`** for common development tasks (based on flowmark-rs):
-```just
-# Run all CI checks locally (same as CI)
-check: format-check lint test
-
-# Format Rust code (auto-fix)
-format-rust:
-    cargo fmt --all
-
-# Check code formatting (CI check only, no changes)
-format-check:
-    cargo fmt --all -- --check
-
-# Run clippy (CI check only, no changes)
-lint:
-    cargo clippy --all-targets --all-features --workspace -- -D warnings
-
-# Auto-fix clippy warnings where possible
-lint-fix:
-    cargo clippy --fix --all-targets --all-features --workspace --allow-dirty --allow-staged
-
-# Run tests
-test:
-    cargo test --all-features --workspace
-
-# Run tests (no default features -- verifies library builds alone)
-test-no-default:
-    cargo test --no-default-features --workspace
-
-# Auto-fix everything possible (format + clippy)
-fix: format-rust lint-fix
-
-# Run before committing (auto-fix then verify all checks pass)
-precommit: fix check
-
-# Build release binary
-build:
-    cargo build --release
-
-# Clean build artifacts
-clean:
-    cargo clean
-
-# Release a new version (requires cargo-release)
-# Usage: just release patch|minor|major
-release level:
-    cargo release {{level}} --execute
-```
-
-**Key patterns:**
-- `check` mirrors CI exactly (format-check + lint + test)
-- `precommit` runs auto-fix first, then verifies everything passes
-- `--workspace` flag ensures all crates are covered
-- `lint-fix` uses `--allow-dirty --allow-staged` so it can fix in-progress work
-- `test-no-default` catches library-only build issues early
-- `release` wraps cargo-release for convenience
-
-### Recommended Dev Tools
-
-```bash
-# Essential
-cargo install just              # Task runner (or: cargo binstall just)
-cargo install cargo-audit       # Security audit
-cargo install cargo-deny        # Dependency policy
-cargo install cargo-release     # Version bumping and tagging
-
-# Faster installs (pre-built binaries, no compile)
-cargo install cargo-binstall    # Then use: cargo binstall <tool>
-
-# Testing
-cargo install cargo-nextest     # Faster test runner (parallel, better output)
-
-# Development
-cargo install cargo-watch       # Auto-rebuild on file change
-cargo install bacon             # Background code checker (continuous clippy/test)
-
-# Analysis
-cargo install cargo-expand      # Expand macros for debugging
-cargo install cargo-bloat       # Analyze binary size
-cargo install cargo-udeps       # Find unused dependencies (requires nightly)
-cargo install cargo-machete     # Find unused dependencies (fast, no nightly needed)
-cargo install cargo-outdated    # Check for dependency updates
-```
-
-**`cargo-binstall`** is highly recommended: it downloads pre-built binaries instead of
-compiling from source, making tool installation 10-100x faster.
-
-**`cargo-nextest`** is used by jj and many large projects.
-It runs tests in parallel processes (not just threads), provides better output, and is
-significantly faster on multi-core machines.
-It’s a drop-in replacement: `cargo nextest run` instead of `cargo test`.
-
-### Editor Configuration
-
-**`rustfmt.toml`** (based on flowmark-rs):
 ```toml
 edition = "2024"
 max_width = 100
-use_small_heuristics = "Max"
 ```
 
-These three settings are the most common customizations.
-Most projects use the defaults for everything else.
-`use_small_heuristics = "Max"` tells rustfmt to use the full `max_width` for all
-constructs (structs, function args, etc.)
-rather than applying shorter limits.
+Do not mix manual layout rules with rustfmt output.
+Format Markdown, TOML, YAML, JSON, and scripts with their appropriate formatters too.
 
-## Documentation
+## Define a Clippy Policy
 
-### In-Code Documentation
+Choose and document one lint strategy:
 
-- Document all public items with `///` doc comments
-- Use `//!` for module-level documentation
-- Include examples in doc comments (they become doctests):
-  ```rust
-  /// Wraps text to the given width.
-  ///
-  /// # Examples
-  ///
-  /// ```
-  /// use myproject::wrap;
-  /// assert_eq!(wrap("hello world", 5), "hello\nworld");
-  /// ```
-  pub fn wrap(text: &str, width: usize) -> String { /* ... */ }
-  ```
+1. default Clippy lints plus `-D warnings`;
+2. a curated set of additional lints; or
+3. `clippy::pedantic` with explicit, reviewed exceptions.
 
-### cargo doc
+For group lints, use a lower priority so specific overrides win:
+
+```toml
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+module_name_repetitions = "allow"
+
+[lints.rust]
+unsafe_code = "forbid"
+```
+
+- Never enable the entire Clippy `restriction` group.
+  Select individual rules whose tradeoffs fit the project.
+- Treat warnings as errors in CI, not necessarily in every local build.
+- Add `#[allow(...)]` at the narrowest scope and explain a non-obvious exception.
+- Remove obsolete exceptions when the triggering code changes.
+
+## Make One Local Command Match CI
+
+Contributors and CI should run the same named validation entry point, implemented with
+`just`, a checked-in script, or another project-standard task runner.
+
+The baseline normally includes:
 
 ```bash
-cargo doc --open --no-deps  # Build and open docs locally
+cargo fmt --all -- --check
+cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
+cargo test --locked --workspace --all-features
+cargo doc --locked --workspace --all-features --no-deps
 ```
 
-Add doc build to CI with `-D warnings` to catch broken links and missing docs (already
-included in the CI workflow above).
+Add the checks that define the actual project contract:
 
-### User Documentation
+- MSRV compilation or tests
+- no-default-feature and selected-feature builds
+- cross-platform tests
+- documentation warnings as errors
+- dependency policy and advisory scans
+- code coverage or semver checks
+- tests for release and maintenance scripts
 
-Standard files for any published crate:
-- `README.md` -- quick start, installation, basic usage
-- `CHANGELOG.md` -- version history (keep-a-changelog format)
-- `LICENSE` or `LICENSE-MIT` + `LICENSE-APACHE` -- project license(s)
+Keep auto-fix and verification separate.
+CI verifies; it never commits formatter or lint changes.
 
-For complex tools, consider `clap_mangen` to auto-generate man pages from clap
-definitions.
+## Design CI as Independent Evidence
 
-## Dependency Management
+Use separate jobs when failures answer different questions, such as formatting, linting,
+unit tests, platform compatibility, MSRV, docs, or dependency policy.
+Parallel jobs improve feedback, but a large matrix without a supported-platform policy
+creates cost without clarity.
 
-- **Specify minimum minor versions:** Use `"4.5"` not `"4"` or `"*"` in Cargo.toml
-- **Commit `Cargo.lock`** for binary projects (ensures reproducible builds)
-- **Don’t commit `Cargo.lock`** for library-only crates (let downstream resolve)
-- **Review dependency diffs** before updating with `cargo update`
-- **Minimize dependency count.** Each dependency is a supply chain risk and compile time
-  cost. flowmark-rs has ~14 runtime deps; ripgrep has ~30+ but most are internal crates
-- **Use `--locked` in CI** to enforce that `Cargo.lock` is up to date and builds are
-  reproducible
-- **Feature-gate heavy deps:** Put CLI-only deps behind a feature flag (see lib+bin
-  pattern above) so library users don’t pay for them
+CI workflows should:
 
-## Git Configuration
+- start with read-only permissions and grant additional permissions per job;
+- pin third-party actions to reviewed immutable commit SHAs;
+- use `--locked` for Cargo commands that consume the committed lockfile;
+- pin or derive the Rust toolchain from reviewed repository configuration;
+- avoid downloading and executing unpinned tools at runtime;
+- make caches performance-only, never a source of correctness;
+- retain actionable logs and fail when a required check did not run.
 
-### `.gitignore`
+For release-only permissions and publishing, see
+[`rust-release-rules.md`](rust-release-rules.md).
 
-```
-/target
-*.swp
-*.swo
-.DS_Store
-```
+## Apply Dependency and Supply-Chain Policy
 
-### `.gitattributes`
+Every dependency can execute code at build time through its own `build.rs`, proc macros,
+native build tooling, or transitive dependencies.
+Treat additions and upgrades as code changes.
 
-Commit a `.gitattributes` that enforces LF line endings on every platform:
+- Apply the repository’s cool-off period before adopting a new release.
+- Record a concrete reason for adding or upgrading a crate.
+- Read new or changed `build.rs` scripts and proc-macro source.
+- Review the exact source diff and release notes for an upgrade.
+- Minimize enabled features and default features.
+- Prefer registry sources; justify git dependencies and pin them to immutable commits.
+- Run RustSec, OSV, license, source, and duplicate-version policy checks as appropriate.
+- Use `cargo tree` to understand ownership of transitive dependencies.
+- Use an unused-dependency tool as supporting evidence, then verify removals by build
+  and test.
 
-```gitattributes
-* text=auto eol=lf
-```
+Commit `Cargo.lock` for applications, binaries, and workspaces that ship or deploy a
+resolved tree. For a library-only repository, choose and document a lockfile policy;
+remember that downstream users resolve their own graph even when the repository keeps a
+lockfile for CI.
 
-This matters more than it looks for ports. A port that embeds text with `include_str!`
-(a `SKILL.md`, a help/usage doc, a template) bakes the file's bytes in at compile time,
-and golden tests often read fixtures from disk. Without `eol=lf`, a Windows checkout
-rewrites those files to CRLF, so embedded content and disk-read fixtures carry `\r\n` while
-the program emits `\n` — and newline-anchored assertions (`starts_with("---\n")`,
-`find("\n---\n")`) fail **only on Windows**, invisibly green on Linux and macOS. The
-failure is silent, platform-specific, and hard to diagnose when CI logs are not accessible.
-All sources are normally authored LF, so `git add --renormalize .` should report zero
-content changes; this only stops Windows from rewriting them on checkout.
+The authoritative cross-ecosystem policy is `tbd guidelines supply-chain-hardening` and
+this repository’s [`SUPPLY-CHAIN-SECURITY.md`](../SUPPLY-CHAIN-SECURITY.md).
 
-### Git Submodules (for ports)
+## Keep Development Automation Reviewable
 
-When porting from Python, include the source as a submodule:
+A task runner is useful when it names stable operations such as `format`, `lint`,
+`test`, `check`, and `precommit`. It should orchestrate checked-in commands, not hide
+network installs or environment mutation.
+
+- Put complex logic in typed or testable scripts rather than long YAML or shell blocks.
+- Make scripts accept explicit inputs and return non-zero on partial failure.
+- Test failure paths and machine-readable outputs.
+- Do not overwrite user configuration as a side effect of ordinary validation.
+- Keep editor tasks, agent hooks, and local bootstrap scripts subject to the same review
+  and pinning policy as CI.
+
+## Document the Supported Surface
+
+Published projects normally need:
+
+- `README.md` for purpose, installation, and a minimal example;
+- license files that match the manifest expression;
+- release notes or a changelog according to project policy;
+- public API documentation and doctests;
+- a security reporting path;
+- supported-platform, feature, MSRV, and deprecation policies;
+- extended docs only where the README would become difficult to navigate.
+
+Build docs with warnings denied where practical:
+
 ```bash
-git submodule add https://github.com/org/python-project.git python-repo
+RUSTDOCFLAGS="-D warnings" cargo doc --locked --workspace --all-features --no-deps
 ```
 
-This lets agents read the Python source directly and provides an exact commit reference.
+## Keep Repository Configuration Minimal
+
+Typical repository files include:
+
+```text
+Cargo.toml
+Cargo.lock
+rust-toolchain.toml
+rustfmt.toml
+README.md
+LICENSE-MIT
+LICENSE-APACHE
+.gitattributes
+.gitignore
+```
+
+- Ignore build output such as `/target`, not source or lock data needed for a clean
+  checkout.
+- Use `.gitattributes` to make text newline policy explicit across platforms.
+- Do not add generated files unless consumers need them or regeneration is not
+  sufficiently deterministic.
+- Keep source checkouts used for comparison, vendoring, or fixtures governed by an
+  explicit provenance and update policy.
 
 ## Related Guidelines
 
-- [Rust General Rules](rust-general-rules.md)
-- [Rust CLI App Patterns](../references/rust-cli-app-patterns.md)
-- [Python-to-Rust Porting Rules](python-to-rust-porting-rules.md)
-- For commit conventions, see `tbd guidelines commit-conventions`
-- For release notes, see `tbd guidelines release-notes-guidelines`
+- [`rust-rules.md`](rust-rules.md) for language and API design
+- [`rust-testing-rules.md`](rust-testing-rules.md) for test architecture and coverage
+- [`rust-release-rules.md`](rust-release-rules.md) for release artifacts and publishing
+- [`rust-code-review-rules.md`](rust-code-review-rules.md) for review gates
+- `tbd guidelines supply-chain-hardening commit-conventions`
+
+<!-- This document follows common-doc-guidelines.md.
+See github.com/jlevy/practical-prose and review guidelines before editing.
+-->

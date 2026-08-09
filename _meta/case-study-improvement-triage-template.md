@@ -61,7 +61,7 @@ Copy this file and fill it in during Phase B of the meta-playbook process.
 [Phase N from observations] **Severity:** [High / Medium / Low] **Impact:**
 [How many future ports affected — All / Most / Some / Niche]
 
-**Target file:** `[e.g., guidelines/rust-general-rules.md]` **Section:**
+**Target file:** `[e.g., guidelines/rust-rules.md]` **Section:**
 [Section heading, or "New section after X"]
 
 **Proposed text:**

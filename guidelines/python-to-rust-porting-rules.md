@@ -17,15 +17,16 @@ For construct-by-construct lookup (types, I/O, regex, project setup), see the
 non-negotiable principles that override all other guidance.
 
 See also: [CLI-Specific Porting Patterns](python-to-rust-cli-porting.md),
-[Rust General Rules](rust-general-rules.md),
+[Rust Rules](rust-rules.md),
 [Test Coverage for Porting](test-coverage-for-porting.md).
 For Python rules, see `tbd guidelines python-rules`.
 
 ## Core Principles
 
-1. **Tests are the specification.** The Python test suite defines exactly what the Rust
-   port must do. Byte-for-byte output matching is the *goal*; any deviation must be
-   explicitly documented, justified, and tracked.
+1. **Tests are executable evidence, not the whole specification.** Combine the Python
+   suite with an explicit source-surface inventory and differential runs. Byte-for-byte
+   output matching is the *goal*; any deviation must be explicitly documented,
+   justified, tested, and tracked.
    (See Strategy Matrix for handling unavoidable differences.)
 
 2. **Port behavior, not implementation.** Don’t translate Python idioms literally into
@@ -35,9 +36,9 @@ For Python rules, see `tbd guidelines python-rules`.
    which Python module it corresponds to.
    Every major function should reference its Python equivalent.
 
-4. **Zero-tolerance for test failures.** 100% of ported tests must pass.
-   If a difference is unavoidable (e.g., library behavior), document it explicitly and
-   mark the test `#[ignore]` with an explanation.
+4. **Zero-tolerance for unexplained test failures.** Every mapped test must pass or have
+   a current tracked gap. An approved intentional difference needs a test for the Rust
+   behavior and a recorded disposition; ignoring the parity test is not completion.
 
 ## Type and Error Mappings
 
@@ -48,13 +49,14 @@ for exhaustive mapping tables with code examples.
 
 **Porting-specific principles:**
 
-- Use `Cow<'_, str>` when a function sometimes modifies its input and sometimes returns
-  it unchanged -- avoids allocation in the pass-through case.
 - Use `Option<T>` for Python `None`. Never use sentinel values.
 - `HashMap` does **not** preserve insertion order (Python `dict` does since 3.7). Use
   `IndexMap` if order matters for behavioral parity.
-- **Critical rule:** If the Python function never raises an exception, the Rust function
-  should NOT return `Result`. Match the Python signature exactly.
+- Match the Python failure contract, not its syntax. If the source operation cannot
+  fail for valid inputs, the Rust public behavior should not invent a user-visible
+  failure mode. A Rust function may still return `Result` when its implementation is
+  genuinely fallible; handle or expose that failure according to the Rust API boundary
+  and parity contract.
 
 ## Module Mapping
 
@@ -202,12 +204,9 @@ let ch = text.chars().nth(5);
 
 ### 5. Library Type Differences
 
-Library types are version-dependent.
-Check current docs:
-```rust
-// comrak NodeValue::Text: Vec<u8> (pre-0.4), String (0.4-0.44), Cow<'static, str> (0.45+).
-// pulldown-cmark uses CowStr (different API). Always verify against your Cargo.lock version.
-```
+Library types are version-dependent. Inspect the exact locked crate source and its
+matching documentation rather than relying on examples written for another release.
+Record any API assumption that controls the port.
 
 ### 6. Integration Test Location
 
@@ -310,7 +309,7 @@ Schedule a cleanup pass:
 After porting is complete, audit `pub` visibility.
 During porting, agents tend to make everything `pub` for convenience.
 Convert internal-only items to `pub(crate)`. See
-[Code Review Checklist](../references/rust-code-review-checklist.md) for details.
+[Rust Code Review Rules](rust-code-review-rules.md) for details.
 
 ## Acceptance Criteria
 
@@ -321,7 +320,8 @@ Convert internal-only items to `pub(crate)`. See
 - [ ] Cross-validation with zero diffs on representative documents (or all diffs
   explained by documented workarounds)
 - [ ] All known differences documented with `HACK:` or `FIXME:` comments
-- [ ] All `#[ignore]` tests have documented reasons
+- [ ] Every remaining `#[ignore]` has a reason, tracking issue, and unblock condition;
+      the port is marked incomplete while it remains
 - [ ] CLI help text matches Python exactly
 - [ ] Exit codes match Python behavior
 - [ ] cargo clippy -- -D warnings passes with zero warnings
@@ -330,7 +330,8 @@ Convert internal-only items to `pub(crate)`. See
 ## Related Guidelines
 
 - [CLI-Specific Porting](python-to-rust-cli-porting.md)
-- [Rust General Rules](rust-general-rules.md)
+- [Rust Rules](rust-rules.md)
+- [Rust Code Review Rules](rust-code-review-rules.md)
 - [Test Coverage for Porting](test-coverage-for-porting.md)
 - For Python rules, see `tbd guidelines python-rules`
 - For golden testing, see `tbd guidelines golden-testing-guidelines`

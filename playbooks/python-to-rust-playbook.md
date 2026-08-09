@@ -13,10 +13,10 @@ but this playbook is validated most strongly on CLI-heavy projects.
 cross-validation (Phases 5-6), not initial implementation.
 Expect a few human review points regardless of project size.
 
-**Key principle:** Tests are the specification.
-The Python test suite defines what the Rust port must do.
-Without tests, porting is guesswork.
-With them, 100% passing tests equals correctness by definition.
+**Key principle:** Tests are the strongest executable evidence, not the whole
+specification. Combine the Python suite with a source-surface inventory and
+differential runs over representative and adversarial inputs. Without tests, porting is
+guesswork; with tests alone, unenumerated behavior can still be missed.
 
 To improve this playbook through your port, see the
 [meta-playbook](../_meta/meta-improving-this-playbook.md).
@@ -219,8 +219,9 @@ For each dependency rated Medium or High risk:
   surprising `build.rs`/proc-macro behavior. A port adds a whole new dependency tree, so
   treat library choice as a supply-chain decision — run `cargo deny`/`cargo audit`, apply
   the 14-day cool-off for brand-new versions, and prefer fewer, well-vetted crates.
-  See `tbd guidelines supply-chain-hardening`, §4.6 of
-  [Rust CLI Best Practices](../references/rust-cli-best-practices.md), and the
+  See `tbd guidelines supply-chain-hardening`,
+  [Rust Project Setup](../guidelines/rust-project-setup.md#apply-dependency-and-supply-chain-policy),
+  and the
   [Supply Chain Hardening guidebook](https://github.com/jlevy/supply-chain-hardening).
 
 **Tier 2 (Differentiators):**
@@ -242,8 +243,9 @@ application type. Document: recommended libraries, project setup patterns, CI
 configuration, release workflow.
 This prevents rework from poor initial choices.
 
-See [Rust Project Setup](../guidelines/rust-project-setup.md) and
-[Rust CLI Best Practices](../references/rust-cli-best-practices.md) for CLI projects.
+See [Rust Project Setup](../guidelines/rust-project-setup.md),
+[Rust CLI Rules](../guidelines/rust-cli-rules.md), and
+[Rust Release Rules](../guidelines/rust-release-rules.md) for CLI projects.
 
 * * *
 
@@ -641,9 +643,8 @@ install experience:
 - **Homebrew tap:** Personal tap with SHA256-pinned formula for macOS users.
 - **crates.io:** Standard Rust distribution (`cargo install` / `cargo binstall`).
 
-See
-[Rust CLI Best Practices](../references/rust-cli-best-practices.md#65-multi-channel-distribution)
-for workflow templates and the
+See [Rust Release Rules](../guidelines/rust-release-rules.md#coordinate-multiple-channels-without-rebuilding)
+for the release policy and the
 [PyPI distribution research](../docs/project/research/research-rust-cli-pypi-distribution.md)
 for detailed guidance on the maturin approach.
 
